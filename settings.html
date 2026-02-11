@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>s470s - Settings</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>s470s Settings</h1>
+      <p class="subtitle">Configure Google Sheets synchronization</p>
+    </header>
+
+    <!-- Sync Section -->
+    <section class="section sync-section">
+      <h2>Google Sheets Sync</h2>
+
+      <!-- Auth Status -->
+      <div id="auth-status" class="auth-status">
+        <div class="status-card">
+          <div class="status-icon">🔒</div>
+          <div class="status-content">
+            <div class="status-title">Not connected</div>
+            <div id="account-email" class="status-email hidden"></div>
+          </div>
+        </div>
+        <div class="status-actions">
+          <button id="connect-btn" class="btn btn-primary">Connect Google Account</button>
+          <button id="disconnect-btn" class="btn btn-secondary hidden">Disconnect</button>
+        </div>
+      </div>
+
+      <!-- Sheet Configuration (shown after auth) -->
+      <div id="sheet-config" class="sheet-config hidden">
+        <div class="form-group">
+          <label class="form-label">Sync Mode</label>
+          <select id="sync-mode" class="form-select">
+            <option value="create-new">Create new spreadsheet</option>
+            <option value="use-existing">Use existing spreadsheet</option>
+          </select>
+        </div>
+
+        <!-- For existing sheet -->
+        <div id="existing-sheet-group" class="form-group hidden">
+          <label class="form-label">Spreadsheet URL or ID</label>
+          <input type="text" id="sheet-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/...">
+          <button id="validate-sheet-btn" class="btn btn-secondary mt-2">Validate & Connect</button>
+          <div id="validation-message" class="validation-message hidden"></div>
+        </div>
+
+        <!-- For creating new sheet -->
+        <div id="new-sheet-group" class="form-group">
+          <label class="form-label">Spreadsheet Title (optional)</label>
+          <input type="text" id="sheet-title" class="form-input" placeholder="s470s Notes" value="s470s Notes">
+          <button id="create-sheet-btn" class="btn btn-primary mt-2">Create Spreadsheet</button>
+        </div>
+
+        <!-- Sheet name (tab name) -->
+        <div id="sheet-name-group" class="form-group hidden">
+          <label class="form-label">Sheet Name (tab)</label>
+          <input type="text" id="sheet-name" class="form-input" value="s470s Notes" placeholder="s470s Notes">
+          <p class="help-text">Name of the tab inside the spreadsheet</p>
+        </div>
+      </div>
+
+      <!-- Sync Info (shown when configured) -->
+      <div id="sync-info" class="sync-info hidden">
+        <h3>Sync Configuration</h3>
+
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-label">Spreadsheet:</span>
+            <a id="sheet-link" href="#" target="_blank" class="info-value link">Open in Google Sheets</a>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Last sync:</span>
+            <span id="last-sync-time" class="info-value">Never</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Status:</span>
+            <span id="sync-status-text" class="info-value">
+              <span class="status-badge status-ready">Ready</span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Pending changes:</span>
+            <span id="pending-changes" class="info-value">0</span>
+          </div>
+        </div>
+
+        <!-- Sync Options -->
+        <div class="sync-options">
+          <div class="option-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="auto-sync-enabled" checked>
+              <span>Enable automatic sync</span>
+            </label>
+            <p class="help-text">Sync automatically when notes change</p>
+          </div>
+
+          <div class="option-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="periodic-sync-enabled">
+              <span>Enable periodic sync</span>
+            </label>
+            <div id="periodic-interval-group" class="indent hidden">
+              <select id="periodic-sync-interval" class="form-select">
+                <option value="5">Every 5 minutes</option>
+                <option value="15" selected>Every 15 minutes</option>
+                <option value="30">Every 30 minutes</option>
+                <option value="60">Every hour</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button id="save-sync-config" class="btn btn-primary">Save Configuration</button>
+          <button id="force-sync-btn" class="btn btn-secondary">Sync Now</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Danger Zone -->
+    <section class="section danger-zone">
+      <h3>Danger Zone</h3>
+      <p class="danger-text">This will disconnect your Google account and clear all sync settings. Your local notes will not be affected.</p>
+      <button id="reset-sync-btn" class="btn btn-danger">Reset Sync Configuration</button>
+    </section>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="settings.js"></script>
+</body>
+</html>
