@@ -7,6 +7,9 @@ const saveBtn = document.getElementById('save-btn');
 const cancelBtn = document.getElementById('cancel-btn');
 const emptyState = document.getElementById('empty-state');
 const toast = document.getElementById('toast');
+const syncBtn = document.getElementById('sync-btn');
+const settingsBtn = document.getElementById('settings-btn');
+const syncStatus = document.getElementById('sync-status');
 
 let notes = [];
 let editingId = null;
@@ -24,10 +27,25 @@ function loadNotes() {
   });
 }
 
-function saveNotes() {
-  return new Promise((resolve) => {
-    chrome.storage.local.set({ notes }, resolve);
+async function saveNotes() {
+  // Update updatedAt for changed notes
+  notes.forEach(note => {
+    if (!note.updatedAt) {
+      note.updatedAt = Date.now();
+    }
   });
+
+  await chrome.storage.local.set({ notes });
+
+  // Notify background about change for auto-sync
+  try {
+    await chrome.runtime.sendMessage({
+      action: 'NOTE_CHANGED',
+      timestamp: Date.now()
+    });
+  } catch (err) {
+    console.warn('Failed to notify background:', err);
+  }
 }
 
 // --- Render ---
@@ -97,12 +115,17 @@ function escapeHtml(str) {
 
 function addNote(copyText, description) {
   const maxOrder = notes.length > 0 ? Math.max(...notes.map((n) => n.order)) : -1;
+  const now = Date.now();
   const note = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    id: now.toString(36) + Math.random().toString(36).slice(2, 6),
     copyText,
     description,
     order: maxOrder + 1,
-    createdAt: Date.now(),
+    createdAt: now,
+    updatedAt: now,
+    syncedAt: null,
+    sheetRowIndex: null,
+    version: 1
   };
   notes.push(note);
   saveNotes().then(render);
@@ -113,6 +136,8 @@ function updateNote(id, copyText, description) {
   if (note) {
     note.copyText = copyText;
     note.description = description;
+    note.updatedAt = Date.now();
+    note.version = (note.version || 1) + 1;
     saveNotes().then(render);
   }
 }
@@ -250,6 +275,81 @@ function handleDrop(e) {
   saveNotes().then(render);
 }
 
+// --- Sync Functions ---
+
+async function syncNow() {
+  syncBtn.disabled = true;
+  syncBtn.classList.add('syncing');
+  showSyncStatus('↻', 'Syncing...', '');
+
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'SYNC_NOW' });
+
+    if (response.success) {
+      showSyncStatus('✓', 'Synced', 'success');
+
+      // Reload notes to get synced data
+      await loadNotes();
+      render();
+
+      setTimeout(() => {
+        syncStatus.classList.add('hidden');
+      }, 2000);
+    } else {
+      throw new Error(response.error || 'Sync failed');
+    }
+  } catch (error) {
+    console.error('Sync failed:', error);
+    showSyncStatus('⚠', 'Sync failed', 'error');
+
+    setTimeout(() => {
+      syncStatus.classList.add('hidden');
+    }, 3000);
+  } finally {
+    syncBtn.disabled = false;
+    syncBtn.classList.remove('syncing');
+  }
+}
+
+async function checkSyncStatus() {
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'GET_SYNC_STATE' });
+
+    if (response.success && response.state) {
+      const { pendingChanges } = response.state;
+
+      if (pendingChanges > 0) {
+        syncBtn.classList.add('has-pending');
+        syncBtn.title = `Sync with Google Sheets (${pendingChanges} pending)`;
+      } else {
+        syncBtn.classList.remove('has-pending');
+        syncBtn.title = 'Sync with Google Sheets';
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to check sync status:', error);
+  }
+}
+
+function showSyncStatus(icon, text, type = '') {
+  syncStatus.querySelector('.status-icon').textContent = icon;
+  syncStatus.querySelector('.status-text').textContent = text;
+  syncStatus.className = `sync-status ${type}`;
+  syncStatus.classList.remove('hidden');
+}
+
+function openSettings() {
+  chrome.runtime.openOptionsPage();
+}
+
+// --- Event Listeners ---
+
+syncBtn.addEventListener('click', syncNow);
+settingsBtn.addEventListener('click', openSettings);
+
 // --- Init ---
 
-loadNotes().then(render);
+loadNotes().then(() => {
+  render();
+  checkSyncStatus();
+});

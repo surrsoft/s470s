@@ -7,7 +7,20 @@
 <body>
   <div class="header">
     <h1>s470s</h1>
-    <button id="add-btn" title="Add note">+</button>
+    <div class="header-actions">
+      <button id="sync-btn" class="icon-btn" title="Sync with Google Sheets">
+        <span class="sync-icon">↻</span>
+      </button>
+      <button id="settings-btn" class="icon-btn" title="Settings">
+        <span class="settings-icon">⚙</span>
+      </button>
+      <button id="add-btn" title="Add note">+</button>
+    </div>
+  </div>
+
+  <div id="sync-status" class="sync-status hidden">
+    <span class="status-icon"></span>
+    <span class="status-text"></span>
   </div>
 
   <div id="form-container" class="form-container hidden">
