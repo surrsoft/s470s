@@ -1,0 +1,264 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 360px;
+  min-height: 200px;
+  max-height: 500px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  color: #1a1a1a;
+  background: #fff;
+  overflow-y: auto;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e5e5;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
+}
+
+.header h1 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+#add-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+#add-btn:hover {
+  background: #333;
+}
+
+/* Form */
+.form-container {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #fafafa;
+}
+
+.form-container input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.form-container input:focus {
+  border-color: #888;
+}
+
+.form-container input + input {
+  margin-top: 8px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.form-actions button {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#save-btn {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+#save-btn:hover {
+  background: #333;
+}
+
+.secondary {
+  background: #fff;
+  color: #666;
+}
+
+.secondary:hover {
+  background: #f0f0f0;
+}
+
+/* Notes list */
+.notes-list {
+  padding: 4px 0;
+}
+
+.note-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background 0.1s;
+  user-select: none;
+}
+
+.note-item:hover {
+  background: #f7f7f7;
+}
+
+.note-item.dragging {
+  opacity: 0.4;
+  background: #f0f0f0;
+}
+
+.note-item.drag-over {
+  border-top: 2px solid #1a1a1a;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  padding: 0 8px 0 0;
+  color: #ccc;
+  cursor: grab;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.note-content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.note-copy-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-description {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.note-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.note-item:hover .note-actions {
+  opacity: 1;
+}
+
+.note-actions button {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s;
+}
+
+.note-actions button:hover {
+  background: #e8e8e8;
+}
+
+.btn-delete:hover {
+  background: #fee !important;
+}
+
+/* Empty state */
+.empty-state {
+  padding: 40px 16px;
+  text-align: center;
+}
+
+.empty-state p {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.empty-state .hint {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  z-index: 100;
+  animation: toast-in 0.2s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}

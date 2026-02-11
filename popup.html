@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <h1>s470s</h1>
+    <button id="add-btn" title="Add note">+</button>
+  </div>
+
+  <div id="form-container" class="form-container hidden">
+    <input type="text" id="input-copy" placeholder="Text to copy">
+    <input type="text" id="input-desc" placeholder="Description">
+    <div class="form-actions">
+      <button id="save-btn">Save</button>
+      <button id="cancel-btn" class="secondary">Cancel</button>
+    </div>
+  </div>
+
+  <div id="notes-list" class="notes-list"></div>
+
+  <div id="empty-state" class="empty-state hidden">
+    <p>No notes yet</p>
+    <p class="hint">Click + to create one</p>
+  </div>
+
+  <div id="toast" class="toast hidden">Copied!</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
