@@ -165,7 +165,21 @@ async function handleConnect() {
     }
   } catch (error) {
     console.error('Connection error:', error);
-    showToast('Failed to connect: ' + error.message, 'error');
+
+    // Show detailed error message
+    let errorMsg = error.message;
+    if (errorMsg.includes('YOUR_CLIENT_ID')) {
+      errorMsg = '❌ OAuth Client ID not configured!\n\nPlease update manifest.json with your actual Google Cloud OAuth Client ID.\n\nSee instructions in the console for setup steps.';
+      console.error('%c⚠️ SETUP REQUIRED ⚠️', 'color: red; font-size: 16px; font-weight: bold;');
+      console.error('Step 1: Go to https://console.cloud.google.com/');
+      console.error('Step 2: Create/select project → Enable Google Sheets API');
+      console.error('Step 3: Create OAuth 2.0 Client ID (Chrome Extension type)');
+      console.error('Step 4: Replace "YOUR_CLIENT_ID" in manifest.json with your actual Client ID');
+      console.error('Step 5: Reload extension');
+    }
+
+    alert(errorMsg);
+    showToast('Failed to connect - check console for details', 'error');
   } finally {
     connectBtn.disabled = false;
     connectBtn.textContent = 'Connect Google Account';
