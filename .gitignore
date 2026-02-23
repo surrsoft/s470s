@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets (никогда не коммитить!)
+*.env
+.env.*
+secrets.json
+client_secret*.json
+
+# Claude
+.claude/
+
+# Logs
+*.log
