@@ -191,21 +191,21 @@ function urlHostname(rawUrl) {
 // --- CRUD ---
 
 function addNote(copyText, description, url) {
-  const maxOrder = notes.length > 0 ? Math.max(...notes.map((n) => n.order)) : -1;
   const now = Date.now();
   const note = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     copyText,
     description,
     url,
-    order: maxOrder + 1,
+    order: 0,
     createdAt: now,
     updatedAt: now,
   };
-  notes.push(note);
+  notes.unshift(note);
+  reorderNotes();
   saveNotes().then(() => {
     render();
-    scheduleSync(note, 'upsert');
+    scheduleBatchSync();
   });
 }
 
