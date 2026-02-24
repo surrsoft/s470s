@@ -129,7 +129,7 @@ function render() {
       <div class="note-content">
         <div class="note-copy-text">${escapeHtml(note.copyText)}</div>
         ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
-        ${note.url ? `<button class="btn-url">open url</button>` : ''}
+        ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       </div>
       <div class="note-actions">
         <button class="btn-edit" title="Edit">&#9998;</button>
@@ -177,6 +177,15 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+function urlHostname(rawUrl) {
+  try {
+    const full = /^https?:\/\//i.test(rawUrl) ? rawUrl : 'https://' + rawUrl;
+    return new URL(full).hostname;
+  } catch {
+    return 'invalid url';
+  }
 }
 
 // --- CRUD ---
