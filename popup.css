@@ -374,7 +374,7 @@ body.dark .header h1 {
 }
 
 body.dark .icon-btn {
-  color: #666;
+  color: #999;
 }
 
 body.dark .icon-btn:hover {
@@ -455,8 +455,13 @@ body.dark .note-description {
   color: #777;
 }
 
+body.dark .note-actions button {
+  color: #aaa;
+}
+
 body.dark .note-actions button:hover {
   background: #333;
+  color: #e8e8e8;
 }
 
 body.dark .btn-delete:hover {
