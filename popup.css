@@ -38,6 +38,12 @@ body {
   letter-spacing: 0.5px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 #add-btn {
   width: 28px;
   height: 28px;
@@ -56,6 +62,56 @@ body {
 
 #add-btn:hover {
   background: #333;
+}
+
+/* Sync icon buttons */
+.icon-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: #888;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.icon-btn:hover {
+  background: #f0f0f0;
+  color: #1a1a1a;
+}
+
+/* Sync indicator dot */
+.sync-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+.sync-indicator.syncing {
+  background: #4a90d9;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.sync-indicator.success {
+  background: #28a745;
+}
+
+.sync-indicator.error {
+  background: #dc3545;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 /* Form */

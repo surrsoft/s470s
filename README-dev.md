@@ -17,7 +17,14 @@ s470s/
 ├── manifest.json      # Конфигурация расширения
 ├── popup.html         # HTML-разметка всплывающего окна
 ├── popup.css          # Стили интерфейса
-├── popup.js           # Основная логика приложения
+├── popup.js           # Основная логика + интеграция синхронизации
+├── settings.html      # Страница настроек (Supabase + аутентификация)
+├── settings.css       # Стили страницы настроек
+├── settings.js        # Логика настроек и OTP-аутентификации
+├── lib/
+│   └── supabase.min.js  # Локальная копия Supabase JS SDK (UMD)
+├── sync/
+│   └── supabase.js    # Клиент Supabase, CRUD, Realtime-подписки
 ├── icons/             # Иконки расширения
 │   ├── icon16.png
 │   ├── icon48.png
@@ -31,7 +38,37 @@ s470s/
 - **Permissions**:
   - `storage` — для сохранения заметок
   - `clipboardWrite` — для копирования в буфер обмена
+- **Host Permissions**: `https://*.supabase.co/*` — для API-запросов к Supabase
 - **Хранилище**: Chrome Storage API (локальное)
+- **Синхронизация**: Supabase (PostgreSQL + Realtime WebSocket), опционально
+
+## Настройка Supabase (для разработки)
+
+1. Создайте проект на [supabase.com](https://supabase.com)
+2. Перейдите в **SQL Editor** и выполните:
+
+```sql
+create table notes (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid references auth.users not null,
+  local_id     text not null,
+  copy_text    text not null,
+  description  text,
+  "order"      integer not null default 0,
+  created_at   bigint not null,
+  updated_at   bigint not null,
+  unique(user_id, local_id)
+);
+
+alter table notes enable row level security;
+
+create policy "Users manage own notes" on notes
+  for all using (auth.uid() = user_id);
+```
+
+3. В разделе **Authentication → Email** включите "Enable Email OTP" и отключите "Confirm email" (если нужен вход без подтверждения)
+4. Скопируйте **Project URL** и **Anon Key** из **Settings → API**
+5. Вставьте их в настройках расширения (кнопка ⚙)
 
 ## Требования
 
@@ -42,9 +79,11 @@ s470s/
 1. Внесите изменения в код
 2. Перезагрузите расширение на странице расширений (кнопка ↻)
 3. Для инспекции popup: правый клик по popup → Inspect
+4. Для инспекции settings: откройте настройки через ⚙ → правый клик → Inspect
 
-## Основные функции (popup.js)
+## Основные функции
 
+### popup.js
 - `loadNotes()` — загрузка заметок из хранилища
 - `saveNotes()` — сохранение заметок в хранилище
 - `render()` — отрисовка списка заметок
@@ -52,4 +91,19 @@ s470s/
 - `updateNote()` — обновление существующей заметки
 - `deleteNote()` — удаление заметки
 - `copyToClipboard()` — копирование текста в буфер обмена
+- `initSync()` — инициализация синхронизации при загрузке
+- `runFullSync()` — полная двусторонняя синхронизация с Supabase
+- `scheduleSync()` — отложенная отправка изменений (debounce 1.5с)
 - Функции drag & drop для изменения порядка заметок
+
+### sync/supabase.js
+- `setConfig(config)` — установка конфигурации клиента
+- `setSession(session)` — установка сессии аутентификации
+- `signIn(email)` — отправка OTP-кода на email
+- `verifyOtp(email, token)` — верификация кода, получение сессии
+- `signOut()` — выход из аккаунта
+- `fetchNotes()` — получение заметок из Supabase
+- `upsertNote(note)` / `upsertNotesBatch(notes)` — сохранение заметок
+- `deleteNote(localId)` — удаление заметки
+- `subscribeRealtime(handlers)` — подписка на изменения в реальном времени
+- `serverRowToNote(row)` — конвертация строки БД в формат заметки

@@ -4,6 +4,11 @@
   "version": "1.0.0",
   "description": "Quick copy notes — click to copy, organize your snippets",
   "permissions": ["storage", "clipboardWrite"],
+  "host_permissions": ["https://*.supabase.co/*"],
+  "options_ui": {
+    "page": "settings.html",
+    "open_in_tab": true
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
