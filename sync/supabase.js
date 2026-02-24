@@ -80,6 +80,7 @@ async function upsertNote(note) {
   const client = getClient();
   if (!client || !_session) return;
   const row = {
+    user_id: _session.user.id,
     local_id: note.id,
     copy_text: note.copyText,
     description: note.description || '',
@@ -89,7 +90,7 @@ async function upsertNote(note) {
   };
   const { error } = await client
     .from('notes')
-    .upsert(row, { onConflict: 'local_id' });
+    .upsert(row, { onConflict: 'user_id,local_id' });
   if (error) throw error;
 }
 
@@ -97,6 +98,7 @@ async function upsertNotesBatch(notes) {
   const client = getClient();
   if (!client || !_session) return;
   const rows = notes.map((note) => ({
+    user_id: _session.user.id,
     local_id: note.id,
     copy_text: note.copyText,
     description: note.description || '',
@@ -106,7 +108,7 @@ async function upsertNotesBatch(notes) {
   }));
   const { error } = await client
     .from('notes')
-    .upsert(rows, { onConflict: 'local_id' });
+    .upsert(rows, { onConflict: 'user_id,local_id' });
   if (error) throw error;
 }
 
