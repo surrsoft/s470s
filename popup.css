@@ -293,11 +293,21 @@ body {
 }
 
 .btn-url {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.846em;
+  font-family: inherit;
   color: #4a90d9;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .btn-url:hover {
-  background: #e8f0fb !important;
+  color: #2a70b9;
 }
 
 /* Empty state */
@@ -448,7 +458,7 @@ body.dark .btn-delete:hover {
 }
 
 body.dark .btn-url:hover {
-  background: #1a2a3a !important;
+  color: #7ab8f5;
 }
 
 body.dark .empty-state p {

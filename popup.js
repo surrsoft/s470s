@@ -123,9 +123,9 @@ function render() {
       <div class="note-content">
         <div class="note-copy-text">${escapeHtml(note.copyText)}</div>
         ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
+        ${note.url ? `<button class="btn-url">open url</button>` : ''}
       </div>
       <div class="note-actions">
-        ${note.url ? `<button class="btn-url" title="Open URL">&#8599;</button>` : ''}
         <button class="btn-edit" title="Edit">&#9998;</button>
         <button class="btn-delete" title="Delete">&#10005;</button>
       </div>
