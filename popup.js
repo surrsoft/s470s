@@ -131,9 +131,12 @@ function render() {
         ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
         ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       </div>
-      <div class="note-actions">
-        <button class="btn-edit" title="Edit">&#9998;</button>
-        <button class="btn-delete" title="Delete">&#10005;</button>
+      <div class="note-menu">
+        <button class="btn-menu" title="Actions">&#8943;</button>
+        <div class="note-dropdown hidden">
+          <button class="menu-edit">&#9998; Edit</button>
+          <button class="menu-delete">&#10005; Delete</button>
+        </div>
       </div>
     `;
 
@@ -149,15 +152,34 @@ function render() {
       });
     }
 
-    // Edit
-    el.querySelector('.btn-edit').addEventListener('click', (e) => {
+    // Menu button
+    const noteMenu = el.querySelector('.note-menu');
+    const dropdown = el.querySelector('.note-dropdown');
+
+    el.querySelector('.btn-menu').addEventListener('click', (e) => {
       e.stopPropagation();
+      const isOpen = !dropdown.classList.contains('hidden');
+      document.querySelectorAll('.note-dropdown').forEach((d) => d.classList.add('hidden'));
+      document.querySelectorAll('.note-menu').forEach((m) => m.classList.remove('open'));
+      if (!isOpen) {
+        dropdown.classList.remove('hidden');
+        noteMenu.classList.add('open');
+      }
+    });
+
+    // Edit
+    el.querySelector('.menu-edit').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.add('hidden');
+      noteMenu.classList.remove('open');
       startEdit(note);
     });
 
     // Delete
-    el.querySelector('.btn-delete').addEventListener('click', (e) => {
+    el.querySelector('.menu-delete').addEventListener('click', (e) => {
       e.stopPropagation();
+      dropdown.classList.add('hidden');
+      noteMenu.classList.remove('open');
       deleteNote(note.id);
     });
 
@@ -591,6 +613,11 @@ syncBtn.addEventListener('click', () => {
 
 settingsBtn.addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
+});
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.note-dropdown').forEach((d) => d.classList.add('hidden'));
+  document.querySelectorAll('.note-menu').forEach((m) => m.classList.remove('open'));
 });
 
 // Listen for SYNC_NOW message from settings page

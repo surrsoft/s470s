@@ -263,38 +263,76 @@ body.side-panel {
   margin-top: 2px;
 }
 
-.note-actions {
-  display: flex;
-  gap: 4px;
-  margin-left: 8px;
-  opacity: 0;
-  transition: opacity 0.15s;
+.note-menu {
+  position: relative;
   flex-shrink: 0;
+  margin-left: 8px;
 }
 
-.note-item:hover .note-actions {
-  opacity: 1;
-}
-
-.note-actions button {
+.btn-menu {
   width: 26px;
   height: 26px;
   border: none;
   background: transparent;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 18px;
+  color: #888;
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.1s;
+  line-height: 1;
+  padding: 0;
+}
+
+.note-item:hover .btn-menu,
+.note-menu.open .btn-menu {
+  opacity: 1;
+}
+
+.btn-menu:hover {
+  background: #e8e8e8;
+  color: #1a1a1a;
+}
+
+.note-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 2px);
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  min-width: 110px;
+  overflow: hidden;
+}
+
+.note-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  color: #1a1a1a;
   transition: background 0.1s;
 }
 
-.note-actions button:hover {
-  background: #e8e8e8;
+.note-dropdown button:hover {
+  background: #f0f0f0;
 }
 
-.btn-delete:hover {
+.menu-delete {
+  color: #c0392b;
+}
+
+.menu-delete:hover {
   background: #fee !important;
 }
 
@@ -455,16 +493,34 @@ body.dark .note-description {
   color: #777;
 }
 
-body.dark .note-actions button {
-  color: #aaa;
+body.dark .btn-menu {
+  color: #999;
 }
 
-body.dark .note-actions button:hover {
-  background: #333;
+body.dark .btn-menu:hover {
+  background: #2a2a2c;
   color: #e8e8e8;
 }
 
-body.dark .btn-delete:hover {
+body.dark .note-dropdown {
+  background: #252527;
+  border-color: #3a3a3c;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+body.dark .note-dropdown button {
+  color: #e8e8e8;
+}
+
+body.dark .note-dropdown button:hover {
+  background: #333;
+}
+
+body.dark .menu-delete {
+  color: #ff6b6b;
+}
+
+body.dark .menu-delete:hover {
   background: #3a1515 !important;
 }
 
