@@ -10,11 +10,50 @@ const toast = document.getElementById('toast');
 const syncIndicator = document.getElementById('sync-indicator');
 const syncBtn = document.getElementById('sync-btn');
 const settingsBtn = document.getElementById('settings-btn');
+const fontDecBtn = document.getElementById('font-dec-btn');
+const fontIncBtn = document.getElementById('font-inc-btn');
 
 let notes = [];
 let editingId = null;
 let draggedId = null;
 let toastTimeout = null;
+
+// --- Font size ---
+
+const FONT_SIZE_DEFAULT = 13;
+const FONT_SIZE_MIN = 10;
+const FONT_SIZE_MAX = 22;
+let fontSize = FONT_SIZE_DEFAULT;
+
+function applyFontSize() {
+  notesList.style.fontSize = fontSize + 'px';
+}
+
+function loadFontSize() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get({ fontSize: FONT_SIZE_DEFAULT }, (data) => {
+      fontSize = data.fontSize;
+      applyFontSize();
+      resolve();
+    });
+  });
+}
+
+fontDecBtn.addEventListener('click', () => {
+  if (fontSize > FONT_SIZE_MIN) {
+    fontSize--;
+    applyFontSize();
+    chrome.storage.local.set({ fontSize });
+  }
+});
+
+fontIncBtn.addEventListener('click', () => {
+  if (fontSize < FONT_SIZE_MAX) {
+    fontSize++;
+    applyFontSize();
+    chrome.storage.local.set({ fontSize });
+  }
+});
 
 // --- Storage ---
 
@@ -490,4 +529,4 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
 // --- Init ---
 
-loadNotes().then(render).then(initSync);
+loadNotes().then(render).then(loadFontSize).then(initSync);

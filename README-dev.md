@@ -91,6 +91,8 @@ create policy "Users manage own notes" on notes
 - `updateNote()` — обновление существующей заметки
 - `deleteNote()` — удаление заметки
 - `copyToClipboard()` — копирование текста в буфер обмена
+- `loadFontSize()` — загрузка и применение сохранённого размера шрифта
+- `applyFontSize()` — применение текущего размера к списку заметок
 - `initSync()` — инициализация синхронизации при загрузке
 - `runFullSync()` — полная двусторонняя синхронизация с Supabase
 - `scheduleSync()` — отложенная отправка изменений (debounce 1.5с)

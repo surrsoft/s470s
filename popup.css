@@ -86,6 +86,14 @@ body {
   color: #1a1a1a;
 }
 
+.font-btn {
+  font-size: 11px;
+  font-weight: 600;
+  width: auto;
+  padding: 0 4px;
+  letter-spacing: -0.5px;
+}
+
 /* Sync indicator dot */
 .sync-indicator {
   width: 8px;
@@ -225,7 +233,7 @@ body {
 }
 
 .note-copy-text {
-  font-size: 13px;
+  font-size: 1em;
   font-weight: 500;
   color: #1a1a1a;
   white-space: nowrap;
@@ -234,7 +242,7 @@ body {
 }
 
 .note-description {
-  font-size: 12px;
+  font-size: 0.923em;
   color: #888;
   white-space: nowrap;
   overflow: hidden;
