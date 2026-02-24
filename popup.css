@@ -326,3 +326,116 @@ body {
     transform: translateX(-50%) translateY(0);
   }
 }
+
+/* Dark theme */
+body.dark {
+  background: #1c1c1e;
+  color: #e8e8e8;
+}
+
+body.dark .header {
+  background: #1c1c1e;
+  border-color: #2d2d2f;
+}
+
+body.dark .header h1 {
+  color: #e8e8e8;
+}
+
+body.dark .icon-btn {
+  color: #666;
+}
+
+body.dark .icon-btn:hover {
+  background: #2a2a2c;
+  color: #e8e8e8;
+}
+
+body.dark #add-btn {
+  background: #3a3a3c;
+}
+
+body.dark #add-btn:hover {
+  background: #4a4a4c;
+}
+
+body.dark .form-container {
+  background: #252527;
+  border-color: #2d2d2f;
+}
+
+body.dark .form-container input {
+  background: #2a2a2c;
+  border-color: #3a3a3c;
+  color: #e8e8e8;
+}
+
+body.dark .form-container input:focus {
+  border-color: #666;
+}
+
+body.dark .form-actions button {
+  border-color: #3a3a3c;
+}
+
+body.dark #save-btn {
+  background: #3a3a3c;
+  border-color: #3a3a3c;
+}
+
+body.dark #save-btn:hover {
+  background: #4a4a4c;
+}
+
+body.dark .secondary {
+  background: #252527;
+  color: #999;
+}
+
+body.dark .secondary:hover {
+  background: #2a2a2c;
+}
+
+body.dark .note-item {
+  border-color: #2d2d2f;
+}
+
+body.dark .note-item:hover {
+  background: #252527;
+}
+
+body.dark .note-item.dragging {
+  background: #2a2a2c;
+}
+
+body.dark .note-item.drag-over {
+  border-top-color: #888;
+}
+
+body.dark .drag-handle {
+  color: #444;
+}
+
+body.dark .note-copy-text {
+  color: #e8e8e8;
+}
+
+body.dark .note-description {
+  color: #777;
+}
+
+body.dark .note-actions button:hover {
+  background: #333;
+}
+
+body.dark .btn-delete:hover {
+  background: #3a1515 !important;
+}
+
+body.dark .empty-state p {
+  color: #555;
+}
+
+body.dark .toast {
+  background: #3a3a3c;
+}

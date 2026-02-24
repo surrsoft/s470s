@@ -93,6 +93,9 @@ create policy "Users manage own notes" on notes
 - `copyToClipboard()` — копирование текста в буфер обмена
 - `loadFontSize()` — загрузка и применение сохранённого размера шрифта
 - `applyFontSize()` — применение текущего размера к списку заметок
+- `loadTheme()` — загрузка и применение сохранённой темы
+- `applyTheme()` — применение текущей темы (light/dark) к body
+- `serverRowToNote(row)` — конвертация строки Supabase в формат заметки
 - `initSync()` — инициализация синхронизации при загрузке
 - `runFullSync()` — полная двусторонняя синхронизация с Supabase
 - `scheduleSync()` — отложенная отправка изменений (debounce 1.5с)
@@ -108,4 +111,4 @@ create policy "Users manage own notes" on notes
 - `upsertNote(note)` / `upsertNotesBatch(notes)` — сохранение заметок
 - `deleteNote(localId)` — удаление заметки
 - `subscribeRealtime(handlers)` — подписка на изменения в реальном времени
-- `serverRowToNote(row)` — конвертация строки БД в формат заметки
+- `deleteNoteRemote(localId)` — удаление заметки из Supabase (переименовано из `deleteNote` во избежание конфликта с UI-функцией)

@@ -12,6 +12,7 @@ const syncBtn = document.getElementById('sync-btn');
 const settingsBtn = document.getElementById('settings-btn');
 const fontDecBtn = document.getElementById('font-dec-btn');
 const fontIncBtn = document.getElementById('font-inc-btn');
+const themeBtn = document.getElementById('theme-btn');
 
 let notes = [];
 let editingId = null;
@@ -53,6 +54,32 @@ fontIncBtn.addEventListener('click', () => {
     applyFontSize();
     chrome.storage.local.set({ fontSize });
   }
+});
+
+// --- Theme ---
+
+let theme = 'light';
+
+function applyTheme() {
+  document.body.classList.toggle('dark', theme === 'dark');
+  themeBtn.textContent = theme === 'dark' ? '\u2600' : '\u263E';
+  themeBtn.title = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+}
+
+function loadTheme() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get({ theme: 'light' }, (data) => {
+      theme = data.theme;
+      applyTheme();
+      resolve();
+    });
+  });
+}
+
+themeBtn.addEventListener('click', () => {
+  theme = theme === 'light' ? 'dark' : 'light';
+  applyTheme();
+  chrome.storage.local.set({ theme });
 });
 
 // --- Storage ---
@@ -310,6 +337,18 @@ function handleDrop(e) {
 
 // --- Sync ---
 
+// Convert a Supabase row to local note format
+function serverRowToNote(row) {
+  return {
+    id: row.local_id,
+    copyText: row.copy_text,
+    description: row.description || '',
+    order: row.order,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 let _syncSession = null;
 let _syncDebounceTimer = null;
 let _batchSyncTimer = null;
@@ -365,7 +404,7 @@ async function flushPendingChanges() {
       await upsertNote(note);
     }
     for (const localId of PENDING_DELETES) {
-      await deleteNote(localId);
+      await deleteNoteRemote(localId);
     }
     PENDING_UPSERTS.clear();
     PENDING_DELETES.clear();
@@ -529,4 +568,4 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
 // --- Init ---
 
-loadNotes().then(render).then(loadFontSize).then(initSync);
+loadNotes().then(render).then(loadFontSize).then(loadTheme).then(initSync);

@@ -112,7 +112,7 @@ async function upsertNotesBatch(notes) {
   if (error) throw error;
 }
 
-async function deleteNote(localId) {
+async function deleteNoteRemote(localId) {
   const client = getClient();
   if (!client || !_session) return;
   const { error } = await client
@@ -157,14 +157,3 @@ function unsubscribeRealtime() {
   }
 }
 
-// Convert a server row to local note format
-function serverRowToNote(row) {
-  return {
-    id: row.local_id,
-    copyText: row.copy_text,
-    description: row.description || '',
-    order: row.order,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
