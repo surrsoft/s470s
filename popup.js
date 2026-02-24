@@ -2,6 +2,7 @@ const notesList = document.getElementById('notes-list');
 const formContainer = document.getElementById('form-container');
 const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
+const inputUrl = document.getElementById('input-url');
 const addBtn = document.getElementById('add-btn');
 const saveBtn = document.getElementById('save-btn');
 const cancelBtn = document.getElementById('cancel-btn');
@@ -124,6 +125,7 @@ function render() {
         ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
       </div>
       <div class="note-actions">
+        ${note.url ? `<button class="btn-url" title="Open URL">&#8599;</button>` : ''}
         <button class="btn-edit" title="Edit">&#9998;</button>
         <button class="btn-delete" title="Delete">&#10005;</button>
       </div>
@@ -131,6 +133,15 @@ function render() {
 
     // Click to copy
     el.querySelector('.note-content').addEventListener('click', () => copyToClipboard(note.copyText));
+
+    // Open URL
+    if (note.url) {
+      el.querySelector('.btn-url').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const url = /^https?:\/\//i.test(note.url) ? note.url : 'https://' + note.url;
+        window.open(url, '_blank');
+      });
+    }
 
     // Edit
     el.querySelector('.btn-edit').addEventListener('click', (e) => {
@@ -164,13 +175,14 @@ function escapeHtml(str) {
 
 // --- CRUD ---
 
-function addNote(copyText, description) {
+function addNote(copyText, description, url) {
   const maxOrder = notes.length > 0 ? Math.max(...notes.map((n) => n.order)) : -1;
   const now = Date.now();
   const note = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     copyText,
     description,
+    url,
     order: maxOrder + 1,
     createdAt: now,
     updatedAt: now,
@@ -182,11 +194,12 @@ function addNote(copyText, description) {
   });
 }
 
-function updateNote(id, copyText, description) {
+function updateNote(id, copyText, description, url) {
   const note = notes.find((n) => n.id === id);
   if (note) {
     note.copyText = copyText;
     note.description = description;
+    note.url = url;
     note.updatedAt = Date.now();
     saveNotes().then(() => {
       render();
@@ -222,6 +235,7 @@ function hideForm() {
   formContainer.classList.add('hidden');
   inputCopy.value = '';
   inputDesc.value = '';
+  inputUrl.value = '';
   editingId = null;
 }
 
@@ -229,6 +243,7 @@ function startEdit(note) {
   editingId = note.id;
   inputCopy.value = note.copyText;
   inputDesc.value = note.description;
+  inputUrl.value = note.url || '';
   showForm();
 }
 
@@ -236,6 +251,7 @@ addBtn.addEventListener('click', () => {
   editingId = null;
   inputCopy.value = '';
   inputDesc.value = '';
+  inputUrl.value = '';
   showForm();
 });
 
@@ -248,18 +264,23 @@ saveBtn.addEventListener('click', () => {
     return;
   }
   const description = inputDesc.value.trim();
+  const url = inputUrl.value.trim();
 
   if (editingId) {
-    updateNote(editingId, copyText, description);
+    updateNote(editingId, copyText, description, url);
   } else {
-    addNote(copyText, description);
+    addNote(copyText, description, url);
   }
   hideForm();
 });
 
 // Save on Enter in last field
-inputDesc.addEventListener('keydown', (e) => {
+inputUrl.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') saveBtn.click();
+});
+
+inputDesc.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') inputUrl.focus();
 });
 
 inputCopy.addEventListener('keydown', (e) => {
@@ -343,6 +364,7 @@ function serverRowToNote(row) {
     id: row.local_id,
     copyText: row.copy_text,
     description: row.description || '',
+    url: row.url || '',
     order: row.order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

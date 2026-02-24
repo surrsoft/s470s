@@ -55,6 +55,7 @@ create table notes (
   local_id     text not null,
   copy_text    text not null,
   description  text,
+  url          text,
   "order"      integer not null default 0,
   created_at   bigint not null,
   updated_at   bigint not null,
@@ -94,13 +95,14 @@ create policy "Users manage own notes" on notes
 Форма (скрыта по умолчанию, открывается при добавлении/редактировании)
 ├── Поле: текст для копирования (обязательное)
 ├── Поле: описание (необязательное)
+├── Поле: URL (необязательное)
 └── Кнопки: Save · Cancel
 
 Список заметок (динамический)
 └── Заметка (повторяется)
     ├── ⋮⋮  — drag & drop
     ├── Текст + описание  — клик копирует текст
-    └── ✎ · ✕  — редактировать / удалить (видны при hover)
+    └── ↗ · ✎ · ✕  — открыть URL (только если задан) · редактировать · удалить (видны при hover)
 
 Пустое состояние (когда заметок нет)
 

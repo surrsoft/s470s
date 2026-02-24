@@ -291,6 +291,14 @@ body {
   background: #fee !important;
 }
 
+.btn-url {
+  color: #4a90d9;
+}
+
+.btn-url:hover {
+  background: #e8f0fb !important;
+}
+
 /* Empty state */
 .empty-state {
   padding: 40px 16px;
@@ -436,6 +444,10 @@ body.dark .note-actions button:hover {
 
 body.dark .btn-delete:hover {
   background: #3a1515 !important;
+}
+
+body.dark .btn-url:hover {
+  background: #1a2a3a !important;
 }
 
 body.dark .empty-state p {
