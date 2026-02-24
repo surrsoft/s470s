@@ -19,7 +19,8 @@
 ```
 s470s/
 ├── manifest.json      # Конфигурация расширения
-├── popup.html         # HTML-разметка всплывающего окна
+├── background.js      # Service worker: включает side panel в Chrome
+├── popup.html         # HTML-разметка (используется и как popup, и как side panel)
 ├── popup.css          # Стили интерфейса
 ├── popup.js           # Основная логика + интеграция синхронизации
 ├── settings.html      # Страница настроек (Supabase + аутентификация)
@@ -43,9 +44,11 @@ s470s/
 - **Permissions**:
   - `storage` — для сохранения заметок
   - `clipboardWrite` — для копирования в буфер обмена
+  - `sidePanel` — для открытия боковой панели в Chrome
 - **Host Permissions**: `https://*.supabase.co/*` — для API-запросов к Supabase
 - **Хранилище**: Chrome Storage API (локальное)
 - **Синхронизация**: Supabase (PostgreSQL + Realtime WebSocket), опционально
+- **Side Panel**: в Chrome 114+ расширение открывается как боковая панель; в других браузерах — как popup
 
 ## Настройка Supabase (для разработки)
 

@@ -15,6 +15,12 @@ const fontDecBtn = document.getElementById('font-dec-btn');
 const fontIncBtn = document.getElementById('font-inc-btn');
 const themeBtn = document.getElementById('theme-btn');
 
+// Side panel detection: popup height is constrained by CSS max-height (500px),
+// side panel fills the full window height
+if (window.innerHeight > 550) {
+  document.body.classList.add('side-panel');
+}
+
 let notes = [];
 let editingId = null;
 let draggedId = null;
