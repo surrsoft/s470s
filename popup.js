@@ -100,8 +100,20 @@ function updateNavBar() {
   });
 }
 
+function ensureArray(val) {
+  if (Array.isArray(val)) return val;
+  if (!val) return [];
+  if (typeof val === 'string') {
+    if (val.startsWith('{') && val.endsWith('}')) {
+      return val.slice(1, -1).split(',').filter(Boolean);
+    }
+    try { const parsed = JSON.parse(val); if (Array.isArray(parsed)) return parsed; } catch {}
+  }
+  return [];
+}
+
 function hasChildren(noteId) {
-  return notes.some((n) => n.parentId === noteId || (n.parentIdsOther || []).includes(noteId));
+  return notes.some((n) => n.parentId === noteId || ensureArray(n.parentIdsOther).includes(noteId));
 }
 
 function collectDescendants(id) {
@@ -224,6 +236,14 @@ function loadNotes() {
   return new Promise((resolve) => {
     chrome.storage.local.get({ notes: [] }, (data) => {
       notes = data.notes.sort((a, b) => a.order - b.order);
+      let sanitized = false;
+      for (const n of notes) {
+        if (n.parentIdsOther && !Array.isArray(n.parentIdsOther)) {
+          n.parentIdsOther = ensureArray(n.parentIdsOther);
+          sanitized = true;
+        }
+      }
+      if (sanitized) saveNotes();
       resolve();
     });
   });
@@ -244,7 +264,7 @@ function render() {
   const currentNotes = notes
     .filter((n) => {
       const isPrimary = (n.parentId || null) === parentId;
-      const isSimlink = parentId !== null && (n.parentIdsOther || []).includes(parentId);
+      const isSimlink = parentId !== null && ensureArray(n.parentIdsOther).includes(parentId);
       return isPrimary || isSimlink;
     })
     .sort((a, b) => a.order - b.order);
@@ -258,7 +278,7 @@ function render() {
 
   currentNotes.forEach((note) => {
     const isFolder = hasChildren(note.id);
-    const isSimlink = parentId !== null && (note.parentIdsOther || []).includes(parentId);
+    const isSimlink = parentId !== null && ensureArray(note.parentIdsOther).includes(parentId);
     const el = document.createElement('div');
     el.className = 'note-item';
     el.dataset.id = note.id;
@@ -456,7 +476,7 @@ function startEdit(note) {
   inputUrl.value = note.url || '';
   populateParentSelect(note.id);
   inputParent.value = note.parentId || '';
-  currentSymlinks = note.parentIdsOther || [];
+  currentSymlinks = [...ensureArray(note.parentIdsOther)];
   renderSymlinksList();
   populateSelectAddSymlink(note.id);
   inputFastCopy.checked = !!note.isFastCopy;
@@ -639,7 +659,7 @@ function serverRowToNote(row) {
     description: row.description || '',
     url: row.url || '',
     parentId: row.parent_id || null,
-    parentIdsOther: row.parent_ids_other || [],
+    parentIdsOther: ensureArray(row.parent_ids_other),
     isFastCopy: row.is_fast_copy || false,
     order: row.order,
     createdAt: row.created_at,
