@@ -63,7 +63,7 @@ create table notes (
   copy_text    text not null,
   description  text,
   url          text,
-  parent_id    text,
+  parent_id    text,             -- ссылка на local_id родительской заметки
   "order"      integer not null default 0,
   created_at   bigint not null,
   updated_at   bigint not null,
