@@ -1,7 +1,7 @@
 const notesList = document.getElementById('notes-list');
 const navBar = document.getElementById('nav-bar');
 const backBtn = document.getElementById('back-btn');
-const navTitle = document.getElementById('nav-title');
+const navBreadcrumbs = document.getElementById('nav-breadcrumbs');
 const formContainer = document.getElementById('form-container');
 const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
@@ -60,7 +60,40 @@ function updateNavBar() {
     return;
   }
   navBar.classList.remove('hidden');
-  navTitle.textContent = navStack[navStack.length - 1].copyText;
+
+  // Back button: show parent name
+  const parentName = navStack.length > 1 ? navStack[navStack.length - 2].copyText : 'Root';
+  backBtn.textContent = '\u2190 ' + parentName;
+
+  // Breadcrumbs: Root › Level1 › ... › Current
+  navBreadcrumbs.innerHTML = '';
+
+  const rootCrumb = document.createElement('span');
+  rootCrumb.className = 'nav-crumb';
+  rootCrumb.textContent = 'Root';
+  rootCrumb.addEventListener('click', () => { navStack = []; updateNavBar(); render(); });
+  navBreadcrumbs.appendChild(rootCrumb);
+
+  navStack.forEach((item, index) => {
+    const sep = document.createElement('span');
+    sep.className = 'nav-crumb-sep';
+    sep.textContent = ' › ';
+    navBreadcrumbs.appendChild(sep);
+
+    const crumb = document.createElement('span');
+    const isCurrent = index === navStack.length - 1;
+    crumb.className = 'nav-crumb' + (isCurrent ? ' nav-crumb-current' : '');
+    crumb.textContent = item.copyText;
+    if (!isCurrent) {
+      const depth = index;
+      crumb.addEventListener('click', () => {
+        navStack = navStack.slice(0, depth + 1);
+        updateNavBar();
+        render();
+      });
+    }
+    navBreadcrumbs.appendChild(crumb);
+  });
 }
 
 function hasChildren(noteId) {
