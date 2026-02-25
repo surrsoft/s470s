@@ -258,6 +258,25 @@ body.side-panel {
   border-color: #888;
 }
 
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+}
+
+.form-check input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #1a1a1a;
+  flex-shrink: 0;
+}
+
 .form-actions {
   display: flex;
   gap: 8px;
@@ -549,6 +568,14 @@ body.dark .form-container select {
 
 body.dark .form-container select:focus {
   border-color: #666;
+}
+
+body.dark .form-check {
+  color: #999;
+}
+
+body.dark .form-check input[type="checkbox"] {
+  accent-color: #e8e8e8;
 }
 
 body.dark .form-actions button {

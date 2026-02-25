@@ -7,6 +7,7 @@ const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
 const inputParent = document.getElementById('input-parent');
+const inputFastCopy = document.getElementById('input-fast-copy');
 const addBtn = document.getElementById('add-btn');
 const saveBtn = document.getElementById('save-btn');
 const cancelBtn = document.getElementById('cancel-btn');
@@ -203,8 +204,14 @@ function render() {
       </div>
     `;
 
-    // Click to copy
-    el.querySelector('.note-content').addEventListener('click', () => copyToClipboard(note.copyText));
+    // Click: copy if isFastCopy, else navigate into
+    el.querySelector('.note-content').addEventListener('click', () => {
+      if (note.isFastCopy) {
+        copyToClipboard(note.copyText);
+      } else {
+        navigateInto(note);
+      }
+    });
 
     // Open URL
     if (note.url) {
@@ -283,7 +290,7 @@ function urlHostname(rawUrl) {
 
 // --- CRUD ---
 
-function addNote(copyText, description, url, parentId) {
+function addNote(copyText, description, url, parentId, isFastCopy) {
   const now = Date.now();
   const note = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -291,6 +298,7 @@ function addNote(copyText, description, url, parentId) {
     description,
     url,
     parentId: parentId !== undefined ? parentId : getCurrentParentId(),
+    isFastCopy: !!isFastCopy,
     order: 0,
     createdAt: now,
     updatedAt: now,
@@ -303,13 +311,14 @@ function addNote(copyText, description, url, parentId) {
   });
 }
 
-function updateNote(id, copyText, description, url, parentId) {
+function updateNote(id, copyText, description, url, parentId, isFastCopy) {
   const note = notes.find((n) => n.id === id);
   if (note) {
     note.copyText = copyText;
     note.description = description;
     note.url = url;
     note.parentId = parentId;
+    note.isFastCopy = !!isFastCopy;
     note.updatedAt = Date.now();
     const navItem = navStack.find((item) => item.id === id);
     if (navItem) { navItem.copyText = copyText; updateNavBar(); }
@@ -351,6 +360,7 @@ function hideForm() {
   inputDesc.value = '';
   inputUrl.value = '';
   inputParent.innerHTML = '';
+  inputFastCopy.checked = false;
   editingId = null;
 }
 
@@ -361,6 +371,7 @@ function startEdit(note) {
   inputUrl.value = note.url || '';
   populateParentSelect(note.id);
   inputParent.value = note.parentId || '';
+  inputFastCopy.checked = !!note.isFastCopy;
   showForm();
 }
 
@@ -385,11 +396,12 @@ saveBtn.addEventListener('click', () => {
   const description = inputDesc.value.trim();
   const url = inputUrl.value.trim();
   const parentId = inputParent.value || null;
+  const isFastCopy = inputFastCopy.checked;
 
   if (editingId) {
-    updateNote(editingId, copyText, description, url, parentId);
+    updateNote(editingId, copyText, description, url, parentId, isFastCopy);
   } else {
-    addNote(copyText, description, url, parentId);
+    addNote(copyText, description, url, parentId, isFastCopy);
   }
   hideForm();
 });
@@ -486,6 +498,7 @@ function serverRowToNote(row) {
     description: row.description || '',
     url: row.url || '',
     parentId: row.parent_id || null,
+    isFastCopy: row.is_fast_copy || false,
     order: row.order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
