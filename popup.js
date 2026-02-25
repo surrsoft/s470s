@@ -268,9 +268,16 @@ function render() {
     if (parentNote && (parentNote.description || parentNote.url)) {
       const metaEl = document.createElement('div');
       metaEl.className = 'folder-meta';
+      const dateActualStr = parentNote.dateActual
+        ? new Date(parentNote.dateActual).toLocaleString()
+        : new Date(parentNote.createdAt).toLocaleString();
       metaEl.innerHTML = `
         ${parentNote.description ? `<div class="folder-meta-description">${escapeHtml(parentNote.description)}</div>` : ''}
         ${parentNote.url ? `<button class="btn-url folder-meta-url">${escapeHtml(parentNote.url)}</button>` : ''}
+        <div class="folder-meta-actual">
+          <span class="folder-meta-actual-date">${escapeHtml(dateActualStr)}</span>
+          <button class="folder-meta-actual-btn">update date actual</button>
+        </div>
       `;
       if (parentNote.url) {
         metaEl.querySelector('.folder-meta-url').addEventListener('click', () => {
@@ -278,6 +285,13 @@ function render() {
           window.open(url, '_blank');
         });
       }
+      metaEl.querySelector('.folder-meta-actual-btn').addEventListener('click', () => {
+        parentNote.dateActual = Date.now();
+        saveNotes().then(() => {
+          scheduleSync(parentNote, 'upsert');
+          render();
+        });
+      });
       notesList.appendChild(metaEl);
     }
   }
@@ -421,6 +435,7 @@ function addNote(copyText, description, url, parentId, isFastCopy, parentIdsOthe
     order: 0,
     createdAt: now,
     updatedAt: now,
+    dateActual: now,
   };
   notes.unshift(note);
   reorderNotes();
@@ -684,6 +699,7 @@ function serverRowToNote(row) {
     order: row.order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    dateActual: row.date_actual || row.created_at,
   };
 }
 

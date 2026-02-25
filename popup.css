@@ -562,6 +562,33 @@ body.dark .form-id-value {
   line-height: 1.4;
 }
 
+.folder-meta-actual {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.folder-meta-actual-date {
+  font-size: 0.846em;
+  color: #888;
+}
+
+.folder-meta-actual-btn {
+  font-size: 0.769em;
+  padding: 2px 7px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f5f5f5;
+  color: #555;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.folder-meta-actual-btn:hover {
+  background: #e8e8e8;
+}
+
 .note-description {
   font-size: 0.923em;
   color: #888;
@@ -840,6 +867,20 @@ body.dark .folder-meta {
 
 body.dark .folder-meta-description {
   color: #aaa;
+}
+
+body.dark .folder-meta-actual-date {
+  color: #666;
+}
+
+body.dark .folder-meta-actual-btn {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #aaa;
+}
+
+body.dark .folder-meta-actual-btn:hover {
+  background: #333;
 }
 
 body.dark .nav-bar {
