@@ -387,6 +387,12 @@ body.dark .form-id-value {
   border-top: 2px solid #1a1a1a;
 }
 
+.note-item.drag-nest {
+  background: #edf6ea;
+  outline: 2px solid #5a9a5a;
+  outline-offset: -2px;
+}
+
 .drag-handle {
   display: flex;
   align-items: center;
@@ -660,6 +666,11 @@ body.dark .note-item.dragging {
 
 body.dark .note-item.drag-over {
   border-top-color: #888;
+}
+
+body.dark .note-item.drag-nest {
+  background: #1a2f1a;
+  outline-color: #4a7a4a;
 }
 
 body.dark .drag-handle {

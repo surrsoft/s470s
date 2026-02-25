@@ -34,6 +34,7 @@ if (window.innerHeight > 550) {
 let notes = [];
 let editingId = null;
 let draggedId = null;
+let dropMode = null; // 'before' | 'nest'
 let toastTimeout = null;
 let navStack = []; // [{id: string, copyText: string}]
 
@@ -453,46 +454,78 @@ function handleDragStart(e) {
 
 function handleDragEnd() {
   this.classList.remove('dragging');
-  document.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'));
+  document.querySelectorAll('.drag-over, .drag-nest').forEach((el) => {
+    el.classList.remove('drag-over', 'drag-nest');
+  });
   draggedId = null;
+  dropMode = null;
 }
 
 function handleDragOver(e) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
+  if (this.dataset.id === draggedId) return;
+
+  const rect = this.getBoundingClientRect();
+  const isTopZone = (e.clientY - rect.top) < rect.height * 0.35;
+
+  document.querySelectorAll('.drag-over, .drag-nest').forEach((el) => {
+    if (el !== this) el.classList.remove('drag-over', 'drag-nest');
+  });
+
+  if (isTopZone) {
+    this.classList.add('drag-over');
+    this.classList.remove('drag-nest');
+    dropMode = 'before';
+  } else {
+    this.classList.add('drag-nest');
+    this.classList.remove('drag-over');
+    dropMode = 'nest';
+  }
 }
 
 function handleDragEnter(e) {
   e.preventDefault();
-  if (this.dataset.id !== draggedId) {
-    this.classList.add('drag-over');
-  }
 }
 
-function handleDragLeave() {
-  this.classList.remove('drag-over');
+function handleDragLeave(e) {
+  if (!this.contains(e.relatedTarget)) {
+    this.classList.remove('drag-over', 'drag-nest');
+  }
 }
 
 function handleDrop(e) {
   e.preventDefault();
-  this.classList.remove('drag-over');
-
   const targetId = this.dataset.id;
+  const mode = dropMode;
+  this.classList.remove('drag-over', 'drag-nest');
+
   if (targetId === draggedId) return;
 
-  const draggedIndex = notes.findIndex((n) => n.id === draggedId);
-  const targetIndex = notes.findIndex((n) => n.id === targetId);
-
-  if (draggedIndex === -1 || targetIndex === -1) return;
-
-  const [moved] = notes.splice(draggedIndex, 1);
-  notes.splice(targetIndex, 0, moved);
-  reorderNotes();
-  saveNotes().then(() => {
-    render();
-    // Push reordered notes to server
-    scheduleBatchSync();
-  });
+  if (mode === 'nest') {
+    // Prevent nesting into own descendant (circular reference)
+    if (new Set(collectDescendants(draggedId)).has(targetId)) return;
+    const draggedNote = notes.find((n) => n.id === draggedId);
+    if (!draggedNote) return;
+    draggedNote.parentId = targetId;
+    draggedNote.updatedAt = Date.now();
+    reorderNotes();
+    saveNotes().then(() => {
+      render();
+      scheduleSync(draggedNote, 'upsert');
+    });
+  } else {
+    const draggedIndex = notes.findIndex((n) => n.id === draggedId);
+    const targetIndex = notes.findIndex((n) => n.id === targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    const [moved] = notes.splice(draggedIndex, 1);
+    notes.splice(targetIndex, 0, moved);
+    reorderNotes();
+    saveNotes().then(() => {
+      render();
+      scheduleBatchSync();
+    });
+  }
 }
 
 // --- Sync ---
