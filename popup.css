@@ -550,6 +550,18 @@ body.dark .form-id-value {
   text-overflow: ellipsis;
 }
 
+.folder-meta {
+  padding: 8px 12px 10px;
+  border-bottom: 1px solid #e8e8e8;
+  margin-bottom: 4px;
+}
+
+.folder-meta-description {
+  font-size: 0.923em;
+  color: #555;
+  line-height: 1.4;
+}
+
 .note-description {
   font-size: 0.923em;
   color: #888;
@@ -820,6 +832,14 @@ body.dark .note-copy-text {
 
 body.dark .note-description {
   color: #777;
+}
+
+body.dark .folder-meta {
+  border-bottom-color: #2a2a2a;
+}
+
+body.dark .folder-meta-description {
+  color: #aaa;
 }
 
 body.dark .nav-bar {

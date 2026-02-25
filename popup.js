@@ -261,6 +261,26 @@ function render() {
   notesList.innerHTML = '';
 
   const parentId = getCurrentParentId();
+
+  // Show current folder's description and url at the top
+  if (navStack.length > 0) {
+    const parentNote = notes.find((n) => n.id === parentId);
+    if (parentNote && (parentNote.description || parentNote.url)) {
+      const metaEl = document.createElement('div');
+      metaEl.className = 'folder-meta';
+      metaEl.innerHTML = `
+        ${parentNote.description ? `<div class="folder-meta-description">${escapeHtml(parentNote.description)}</div>` : ''}
+        ${parentNote.url ? `<button class="btn-url folder-meta-url">${escapeHtml(parentNote.url)}</button>` : ''}
+      `;
+      if (parentNote.url) {
+        metaEl.querySelector('.folder-meta-url').addEventListener('click', () => {
+          const url = /^https?:\/\//i.test(parentNote.url) ? parentNote.url : 'https://' + parentNote.url;
+          window.open(url, '_blank');
+        });
+      }
+      notesList.appendChild(metaEl);
+    }
+  }
   const currentNotes = notes
     .filter((n) => {
       const isPrimary = (n.parentId || null) === parentId;
