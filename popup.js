@@ -1,8 +1,12 @@
 const notesList = document.getElementById('notes-list');
+const navBar = document.getElementById('nav-bar');
+const backBtn = document.getElementById('back-btn');
+const navTitle = document.getElementById('nav-title');
 const formContainer = document.getElementById('form-container');
 const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
+const inputParent = document.getElementById('input-parent');
 const addBtn = document.getElementById('add-btn');
 const saveBtn = document.getElementById('save-btn');
 const cancelBtn = document.getElementById('cancel-btn');
@@ -25,6 +29,55 @@ let notes = [];
 let editingId = null;
 let draggedId = null;
 let toastTimeout = null;
+let navStack = []; // [{id: string, copyText: string}]
+
+function getCurrentParentId() {
+  return navStack.length > 0 ? navStack[navStack.length - 1].id : null;
+}
+
+function navigateInto(note) {
+  navStack.push({ id: note.id, copyText: note.copyText });
+  updateNavBar();
+  render();
+}
+
+function navigateBack() {
+  navStack.pop();
+  updateNavBar();
+  render();
+}
+
+function updateNavBar() {
+  if (navStack.length === 0) {
+    navBar.classList.add('hidden');
+    return;
+  }
+  navBar.classList.remove('hidden');
+  navTitle.textContent = navStack[navStack.length - 1].copyText;
+}
+
+function hasChildren(noteId) {
+  return notes.some((n) => n.parentId === noteId);
+}
+
+function collectDescendants(id) {
+  const children = notes.filter((n) => n.parentId === id);
+  return [id, ...children.flatMap((c) => collectDescendants(c.id))];
+}
+
+function populateParentSelect(excludeId) {
+  const excludeIds = excludeId ? new Set(collectDescendants(excludeId)) : new Set();
+  inputParent.innerHTML = '<option value="">— Root (top level) —</option>';
+  notes
+    .filter((n) => !excludeIds.has(n.id))
+    .sort((a, b) => a.order - b.order)
+    .forEach((n) => {
+      const opt = document.createElement('option');
+      opt.value = n.id;
+      opt.textContent = n.copyText.length > 50 ? n.copyText.slice(0, 50) + '…' : n.copyText;
+      inputParent.appendChild(opt);
+    });
+}
 
 // --- Font size ---
 
@@ -111,14 +164,20 @@ function saveNotes() {
 function render() {
   notesList.innerHTML = '';
 
-  if (notes.length === 0) {
+  const parentId = getCurrentParentId();
+  const currentNotes = notes
+    .filter((n) => (n.parentId || null) === parentId)
+    .sort((a, b) => a.order - b.order);
+
+  if (currentNotes.length === 0) {
     emptyState.classList.remove('hidden');
     return;
   }
 
   emptyState.classList.add('hidden');
 
-  notes.forEach((note) => {
+  currentNotes.forEach((note) => {
+    const isFolder = hasChildren(note.id);
     const el = document.createElement('div');
     el.className = 'note-item';
     el.dataset.id = note.id;
@@ -127,13 +186,14 @@ function render() {
     el.innerHTML = `
       <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
       <div class="note-content">
-        <div class="note-copy-text">${escapeHtml(note.copyText)}</div>
+        <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${escapeHtml(note.copyText)}</div>
         ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
         ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       </div>
       <div class="note-menu">
         <button class="btn-menu" title="Actions">&#8943;</button>
         <div class="note-dropdown hidden">
+          <button class="menu-open">Open</button>
           <button class="menu-edit">&#9998; Edit</button>
           <button class="menu-delete">&#10005; Delete</button>
         </div>
@@ -165,6 +225,14 @@ function render() {
         dropdown.classList.remove('hidden');
         noteMenu.classList.add('open');
       }
+    });
+
+    // Open (navigate into)
+    el.querySelector('.menu-open').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.add('hidden');
+      noteMenu.classList.remove('open');
+      navigateInto(note);
     });
 
     // Edit
@@ -212,13 +280,14 @@ function urlHostname(rawUrl) {
 
 // --- CRUD ---
 
-function addNote(copyText, description, url) {
+function addNote(copyText, description, url, parentId) {
   const now = Date.now();
   const note = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     copyText,
     description,
     url,
+    parentId: parentId !== undefined ? parentId : getCurrentParentId(),
     order: 0,
     createdAt: now,
     updatedAt: now,
@@ -231,13 +300,16 @@ function addNote(copyText, description, url) {
   });
 }
 
-function updateNote(id, copyText, description, url) {
+function updateNote(id, copyText, description, url, parentId) {
   const note = notes.find((n) => n.id === id);
   if (note) {
     note.copyText = copyText;
     note.description = description;
     note.url = url;
+    note.parentId = parentId;
     note.updatedAt = Date.now();
+    const navItem = navStack.find((item) => item.id === id);
+    if (navItem) { navItem.copyText = copyText; updateNavBar(); }
     saveNotes().then(() => {
       render();
       scheduleSync(note, 'upsert');
@@ -246,12 +318,14 @@ function updateNote(id, copyText, description, url) {
 }
 
 function deleteNote(id) {
-  if (!confirm('Delete this note?')) return;
-  notes = notes.filter((n) => n.id !== id);
+  const idsToDelete = new Set(collectDescendants(id));
+  const msg = idsToDelete.size > 1 ? 'Delete this folder and all its contents?' : 'Delete this note?';
+  if (!confirm(msg)) return;
+  notes = notes.filter((n) => !idsToDelete.has(n.id));
   reorderNotes();
   saveNotes().then(() => {
     render();
-    scheduleSync({ id }, 'delete');
+    for (const delId of idsToDelete) scheduleSync({ id: delId }, 'delete');
   });
 }
 
@@ -273,6 +347,7 @@ function hideForm() {
   inputCopy.value = '';
   inputDesc.value = '';
   inputUrl.value = '';
+  inputParent.innerHTML = '';
   editingId = null;
 }
 
@@ -281,6 +356,8 @@ function startEdit(note) {
   inputCopy.value = note.copyText;
   inputDesc.value = note.description;
   inputUrl.value = note.url || '';
+  populateParentSelect(note.id);
+  inputParent.value = note.parentId || '';
   showForm();
 }
 
@@ -289,6 +366,8 @@ addBtn.addEventListener('click', () => {
   inputCopy.value = '';
   inputDesc.value = '';
   inputUrl.value = '';
+  populateParentSelect(null);
+  inputParent.value = getCurrentParentId() || '';
   showForm();
 });
 
@@ -302,11 +381,12 @@ saveBtn.addEventListener('click', () => {
   }
   const description = inputDesc.value.trim();
   const url = inputUrl.value.trim();
+  const parentId = inputParent.value || null;
 
   if (editingId) {
-    updateNote(editingId, copyText, description, url);
+    updateNote(editingId, copyText, description, url, parentId);
   } else {
-    addNote(copyText, description, url);
+    addNote(copyText, description, url, parentId);
   }
   hideForm();
 });
@@ -402,6 +482,7 @@ function serverRowToNote(row) {
     copyText: row.copy_text,
     description: row.description || '',
     url: row.url || '',
+    parentId: row.parent_id || null,
     order: row.order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -538,6 +619,12 @@ async function runFullSync() {
       await upsertNotesBatch(toUpsert);
     }
 
+    // Reset nav if current parent was deleted on server
+    if (getCurrentParentId() && !notes.find((n) => n.id === getCurrentParentId())) {
+      navStack = [];
+      updateNavBar();
+    }
+
     if (changed) {
       reorderNotes();
       await saveNotes();
@@ -614,6 +701,8 @@ syncBtn.addEventListener('click', () => {
 settingsBtn.addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
 });
+
+backBtn.addEventListener('click', navigateBack);
 
 document.addEventListener('click', () => {
   document.querySelectorAll('.note-dropdown').forEach((d) => d.classList.add('hidden'));
