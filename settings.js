@@ -47,6 +47,8 @@ async function init() {
     setSession(stored.supabaseSession);
     const session = await getSession();
     if (session) {
+      // Persist refreshed tokens (access token may have been renewed)
+      await chrome.storage.local.set({ supabaseSession: session });
       showSignedIn(session.user.email);
       return;
     }

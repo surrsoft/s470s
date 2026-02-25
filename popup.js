@@ -856,6 +856,8 @@ async function initSync() {
       await chrome.storage.local.remove('supabaseSession');
       return;
     }
+    // Persist refreshed tokens (access token may have been renewed)
+    await chrome.storage.local.set({ supabaseSession: session });
     _syncSession = session;
   } catch {
     return;
