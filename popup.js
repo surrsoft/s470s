@@ -28,6 +28,13 @@ const statusClose = document.getElementById('status-close');
 const fontDecBtn = document.getElementById('font-dec-btn');
 const fontIncBtn = document.getElementById('font-inc-btn');
 const themeBtn = document.getElementById('theme-btn');
+const searchInput = document.getElementById('search-input');
+const searchClear = document.getElementById('search-clear');
+const searchTitleCb = document.getElementById('search-title');
+const searchDescCb = document.getElementById('search-desc');
+const searchUrlCb = document.getElementById('search-url');
+const searchCaseCb = document.getElementById('search-case');
+const searchSort = document.getElementById('search-sort');
 
 // Side panel detection: popup height is constrained by CSS max-height (500px),
 // side panel fills the full window height
@@ -255,10 +262,142 @@ function saveNotes() {
   });
 }
 
+// --- Search (F7F) ---
+
+function createNoteEl(note, isSimlink, withDrag) {
+  const isFolder = hasChildren(note.id);
+  const el = document.createElement('div');
+  el.className = 'note-item';
+  el.dataset.id = note.id;
+  if (withDrag) el.draggable = true;
+
+  el.innerHTML = `
+    ${withDrag ? '<div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>' : ''}
+    <div class="note-content">
+      <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${escapeHtml(note.copyText)}${isSimlink ? '<span class="simlink-badge">simlink</span>' : ''}</div>
+      ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
+      ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
+    </div>
+    ${note.isFastCopy ? '<span class="copy-icon">&#10697;</span>' : ''}
+    <div class="note-menu">
+      <button class="btn-menu" title="Actions">&#8943;</button>
+      <div class="note-dropdown hidden">
+        <button class="menu-open">Open</button>
+        <button class="menu-edit">&#9998; Edit</button>
+        <button class="menu-delete">&#10005; Delete</button>
+      </div>
+    </div>
+  `;
+
+  el.addEventListener('click', () => {
+    if (note.isFastCopy) {
+      copyToClipboard(note.copyText);
+    } else {
+      navigateInto(note);
+    }
+  });
+
+  if (note.url) {
+    el.querySelector('.btn-url').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const url = /^https?:\/\//i.test(note.url) ? note.url : 'https://' + note.url;
+      window.open(url, '_blank');
+    });
+  }
+
+  const noteMenu = el.querySelector('.note-menu');
+  const dropdown = el.querySelector('.note-dropdown');
+
+  el.querySelector('.btn-menu').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = !dropdown.classList.contains('hidden');
+    document.querySelectorAll('.note-dropdown').forEach((d) => d.classList.add('hidden'));
+    document.querySelectorAll('.note-menu').forEach((m) => m.classList.remove('open'));
+    if (!isOpen) {
+      dropdown.classList.remove('hidden');
+      noteMenu.classList.add('open');
+    }
+  });
+
+  el.querySelector('.menu-open').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.add('hidden');
+    noteMenu.classList.remove('open');
+    navigateInto(note);
+  });
+
+  el.querySelector('.menu-edit').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.add('hidden');
+    noteMenu.classList.remove('open');
+    startEdit(note);
+  });
+
+  el.querySelector('.menu-delete').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.add('hidden');
+    noteMenu.classList.remove('open');
+    deleteNote(note.id);
+  });
+
+  if (withDrag) {
+    el.addEventListener('dragstart', handleDragStart);
+    el.addEventListener('dragend', handleDragEnd);
+    el.addEventListener('dragover', handleDragOver);
+    el.addEventListener('dragenter', handleDragEnter);
+    el.addEventListener('dragleave', handleDragLeave);
+    el.addEventListener('drop', handleDrop);
+  }
+
+  return el;
+}
+
+function renderSearchResults(query) {
+  const caseSensitive = searchCaseCb.checked;
+  const q = caseSensitive ? query : query.toLowerCase();
+
+  const matched = notes.filter((note) => {
+    const fields = [];
+    if (searchTitleCb.checked) fields.push(caseSensitive ? note.copyText : note.copyText.toLowerCase());
+    if (searchDescCb.checked && note.description) fields.push(caseSensitive ? note.description : note.description.toLowerCase());
+    if (searchUrlCb.checked && note.url) fields.push(caseSensitive ? note.url : note.url.toLowerCase());
+    return fields.some((f) => f.includes(q));
+  });
+
+  if (searchSort.value === 'date') {
+    const now = Date.now();
+    matched.sort((a, b) => {
+      const da = Math.abs((a.dateActual || a.createdAt) - now);
+      const db = Math.abs((b.dateActual || b.createdAt) - now);
+      return da - db;
+    });
+  } else {
+    // F15F: title matches first
+    matched.sort((a, b) => {
+      const aHit = (caseSensitive ? a.copyText : a.copyText.toLowerCase()).includes(q) ? 0 : 1;
+      const bHit = (caseSensitive ? b.copyText : b.copyText.toLowerCase()).includes(q) ? 0 : 1;
+      return aHit - bHit;
+    });
+  }
+
+  if (matched.length === 0) {
+    const noResults = document.createElement('div');
+    noResults.className = 'search-no-results';
+    noResults.textContent = 'Ничего не найдено';
+    notesList.appendChild(noResults);
+    return;
+  }
+
+  matched.forEach((note) => {
+    notesList.appendChild(createNoteEl(note, false, false));
+  });
+}
+
 // --- Render ---
 
 function render() {
   notesList.innerHTML = '';
+  emptyState.classList.add('hidden');
 
   const parentId = getCurrentParentId();
 
@@ -317,6 +456,14 @@ function render() {
       notesList.appendChild(metaEl);
     }
   }
+
+  // F8F: search mode — show global results instead of current level
+  const query = searchInput.value.trim();
+  if (query) {
+    renderSearchResults(query);
+    return;
+  }
+
   const currentNotes = notes
     .filter((n) => {
       const isPrimary = (n.parentId || null) === parentId;
@@ -330,100 +477,9 @@ function render() {
     return;
   }
 
-  emptyState.classList.add('hidden');
-
   currentNotes.forEach((note) => {
-    const isFolder = hasChildren(note.id);
     const isSimlink = parentId !== null && ensureArray(note.parentIdsOther).includes(parentId);
-    const el = document.createElement('div');
-    el.className = 'note-item';
-    el.dataset.id = note.id;
-    el.draggable = true;
-
-    el.innerHTML = `
-      <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
-      <div class="note-content">
-        <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${escapeHtml(note.copyText)}${isSimlink ? '<span class="simlink-badge">simlink</span>' : ''}</div>
-        ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
-        ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
-      </div>
-      ${note.isFastCopy ? '<span class="copy-icon">&#10697;</span>' : ''}
-      <div class="note-menu">
-        <button class="btn-menu" title="Actions">&#8943;</button>
-        <div class="note-dropdown hidden">
-          <button class="menu-open">Open</button>
-          <button class="menu-edit">&#9998; Edit</button>
-          <button class="menu-delete">&#10005; Delete</button>
-        </div>
-      </div>
-    `;
-
-    // Click: copy if isFastCopy, else navigate into
-    el.addEventListener('click', () => {
-      if (note.isFastCopy) {
-        copyToClipboard(note.copyText);
-      } else {
-        navigateInto(note);
-      }
-    });
-
-    // Open URL
-    if (note.url) {
-      el.querySelector('.btn-url').addEventListener('click', (e) => {
-        e.stopPropagation();
-        const url = /^https?:\/\//i.test(note.url) ? note.url : 'https://' + note.url;
-        window.open(url, '_blank');
-      });
-    }
-
-    // Menu button
-    const noteMenu = el.querySelector('.note-menu');
-    const dropdown = el.querySelector('.note-dropdown');
-
-    el.querySelector('.btn-menu').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = !dropdown.classList.contains('hidden');
-      document.querySelectorAll('.note-dropdown').forEach((d) => d.classList.add('hidden'));
-      document.querySelectorAll('.note-menu').forEach((m) => m.classList.remove('open'));
-      if (!isOpen) {
-        dropdown.classList.remove('hidden');
-        noteMenu.classList.add('open');
-      }
-    });
-
-    // Open (navigate into)
-    el.querySelector('.menu-open').addEventListener('click', (e) => {
-      e.stopPropagation();
-      dropdown.classList.add('hidden');
-      noteMenu.classList.remove('open');
-      navigateInto(note);
-    });
-
-    // Edit
-    el.querySelector('.menu-edit').addEventListener('click', (e) => {
-      e.stopPropagation();
-      dropdown.classList.add('hidden');
-      noteMenu.classList.remove('open');
-      startEdit(note);
-    });
-
-    // Delete
-    el.querySelector('.menu-delete').addEventListener('click', (e) => {
-      e.stopPropagation();
-      dropdown.classList.add('hidden');
-      noteMenu.classList.remove('open');
-      deleteNote(note.id);
-    });
-
-    // Drag events
-    el.addEventListener('dragstart', handleDragStart);
-    el.addEventListener('dragend', handleDragEnd);
-    el.addEventListener('dragover', handleDragOver);
-    el.addEventListener('dragenter', handleDragEnter);
-    el.addEventListener('dragleave', handleDragLeave);
-    el.addEventListener('drop', handleDrop);
-
-    notesList.appendChild(el);
+    notesList.appendChild(createNoteEl(note, isSimlink, true));
   });
 }
 
@@ -960,6 +1016,25 @@ syncBtn.addEventListener('click', () => {
 
 settingsBtn.addEventListener('click', () => {
   chrome.runtime.openOptionsPage();
+});
+
+// F7F: search controls
+searchInput.addEventListener('input', () => {
+  searchClear.classList.toggle('hidden', searchInput.value === '');
+  render();
+});
+
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchClear.classList.add('hidden');
+  render();
+  searchInput.focus();
+});
+
+[searchTitleCb, searchDescCb, searchUrlCb, searchCaseCb, searchSort].forEach((el) => {
+  el.addEventListener('change', () => {
+    if (searchInput.value) render();
+  });
 });
 
 backBtn.addEventListener('click', navigateBack);

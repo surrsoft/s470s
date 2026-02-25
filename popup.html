@@ -20,6 +20,23 @@
     </div>
   </div>
 
+  <div id="search-block" class="search-block">
+    <div class="search-input-row">
+      <input type="text" id="search-input" placeholder="Search...">
+      <button id="search-clear" class="search-clear hidden">&#10005;</button>
+    </div>
+    <div class="search-options">
+      <label class="search-check"><input type="checkbox" id="search-title" checked> заголовок</label>
+      <label class="search-check"><input type="checkbox" id="search-desc" checked> описание</label>
+      <label class="search-check"><input type="checkbox" id="search-url"> url</label>
+      <label class="search-check"><input type="checkbox" id="search-case"> Aa</label>
+      <select id="search-sort" class="search-sort-select">
+        <option value="default">по умолч.</option>
+        <option value="date">по дате</option>
+      </select>
+    </div>
+  </div>
+
   <div id="nav-bar" class="nav-bar hidden">
     <button id="back-btn" class="nav-back-btn"></button>
     <div id="nav-breadcrumbs" class="nav-breadcrumbs"></div>
