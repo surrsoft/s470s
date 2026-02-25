@@ -194,6 +194,7 @@ function render() {
         ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
         ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       </div>
+      ${note.isFastCopy ? '<span class="copy-icon">&#10697;</span>' : ''}
       <div class="note-menu">
         <button class="btn-menu" title="Actions">&#8943;</button>
         <div class="note-dropdown hidden">
