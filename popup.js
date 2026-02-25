@@ -15,6 +15,9 @@ const toast = document.getElementById('toast');
 const syncIndicator = document.getElementById('sync-indicator');
 const syncBtn = document.getElementById('sync-btn');
 const settingsBtn = document.getElementById('settings-btn');
+const statusBar = document.getElementById('status-bar');
+const statusText = document.getElementById('status-text');
+const statusClose = document.getElementById('status-close');
 const fontDecBtn = document.getElementById('font-dec-btn');
 const fontIncBtn = document.getElementById('font-inc-btn');
 const themeBtn = document.getElementById('theme-btn');
@@ -495,6 +498,22 @@ let _batchSyncTimer = null;
 const PENDING_UPSERTS = new Map(); // id → note
 const PENDING_DELETES = new Set(); // local_id
 
+let _statusTimeout = null;
+
+function setStatusMessage(msg) {
+  statusText.textContent = msg;
+  statusBar.classList.remove('hidden');
+  clearTimeout(_statusTimeout);
+  _statusTimeout = setTimeout(clearStatus, 15000);
+}
+
+function clearStatus() {
+  clearTimeout(_statusTimeout);
+  statusBar.classList.add('hidden');
+}
+
+statusClose.addEventListener('click', clearStatus);
+
 function setSyncIndicator(state) {
   syncIndicator.className = 'sync-indicator' + (state ? ' ' + state : '');
   if (state === 'success') {
@@ -550,9 +569,11 @@ async function flushPendingChanges() {
     PENDING_DELETES.clear();
     await updateLastSync();
     setSyncIndicator('success');
+    clearStatus();
   } catch (err) {
     console.error('Sync error:', err);
     setSyncIndicator('error');
+    setStatusMessage('Sync error: ' + (err.message || String(err)));
   }
 }
 
@@ -633,9 +654,11 @@ async function runFullSync() {
 
     await updateLastSync();
     setSyncIndicator('success');
+    clearStatus();
   } catch (err) {
     console.error('Full sync error:', err);
     setSyncIndicator('error');
+    setStatusMessage('Sync error: ' + (err.message || String(err)));
   }
 }
 
