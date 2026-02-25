@@ -39,8 +39,16 @@
     <input type="text" id="input-desc" placeholder="Description">
     <input type="url" id="input-url" placeholder="URL (optional)">
     <select id="input-parent"></select>
-    <label class="form-label-small" for="input-parent-other">Additional parents (simlinks):</label>
-    <select id="input-parent-other" multiple size="3"></select>
+    <div class="form-symlinks">
+      <label class="form-label-small">Additional parents (simlinks):</label>
+      <div id="symlinks-list" class="symlinks-list"></div>
+      <div class="symlink-add-row">
+        <button id="btn-add-symlink" class="btn-icon" title="Add simlink" type="button">+</button>
+        <select id="select-add-symlink" class="hidden">
+          <option value="" disabled selected>Select note...</option>
+        </select>
+      </div>
+    </div>
     <label class="form-check">
       <input type="checkbox" id="input-fast-copy">
       Fast copy (click copies text)

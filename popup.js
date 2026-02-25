@@ -7,7 +7,10 @@ const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
 const inputParent = document.getElementById('input-parent');
-const inputParentOther = document.getElementById('input-parent-other');
+const symlinksList = document.getElementById('symlinks-list');
+const btnAddSymlink = document.getElementById('btn-add-symlink');
+const selectAddSymlink = document.getElementById('select-add-symlink');
+let currentSymlinks = [];
 const inputFastCopy = document.getElementById('input-fast-copy');
 const formIdRow = document.getElementById('form-id-row');
 const formIdValue = document.getElementById('form-id-value');
@@ -120,17 +123,35 @@ function populateParentSelect(excludeId) {
     });
 }
 
-function populateParentOtherSelect(excludeId) {
+function renderSymlinksList() {
+  symlinksList.innerHTML = '';
+  currentSymlinks.forEach((id) => {
+    const note = notes.find((n) => n.id === id);
+    if (!note) return;
+    const el = document.createElement('div');
+    el.className = 'symlink-item';
+    const text = note.copyText.length > 50 ? note.copyText.slice(0, 50) + '…' : note.copyText;
+    el.innerHTML = `<span>${escapeHtml(text)}</span><button class="symlink-item-remove" type="button" title="Remove">&times;</button>`;
+    el.querySelector('.symlink-item-remove').addEventListener('click', () => {
+      currentSymlinks = currentSymlinks.filter((s) => s !== id);
+      renderSymlinksList();
+      populateSelectAddSymlink(editingId);
+    });
+    symlinksList.appendChild(el);
+  });
+}
+
+function populateSelectAddSymlink(excludeId) {
   const excludeIds = excludeId ? new Set(collectDescendants(excludeId)) : new Set();
-  inputParentOther.innerHTML = '';
+  selectAddSymlink.innerHTML = '<option value="" disabled selected>Select note...</option>';
   notes
-    .filter((n) => !excludeIds.has(n.id))
+    .filter((n) => !excludeIds.has(n.id) && !currentSymlinks.includes(n.id))
     .sort((a, b) => a.order - b.order)
     .forEach((n) => {
       const opt = document.createElement('option');
       opt.value = n.id;
       opt.textContent = n.copyText.length > 50 ? n.copyText.slice(0, 50) + '…' : n.copyText;
-      inputParentOther.appendChild(opt);
+      selectAddSymlink.appendChild(opt);
     });
 }
 
@@ -262,7 +283,7 @@ function render() {
     `;
 
     // Click: copy if isFastCopy, else navigate into
-    el.querySelector('.note-content').addEventListener('click', () => {
+    el.addEventListener('click', () => {
       if (note.isFastCopy) {
         copyToClipboard(note.copyText);
       } else {
@@ -419,7 +440,9 @@ function hideForm() {
   inputDesc.value = '';
   inputUrl.value = '';
   inputParent.innerHTML = '';
-  inputParentOther.innerHTML = '';
+  currentSymlinks = [];
+  symlinksList.innerHTML = '';
+  selectAddSymlink.classList.add('hidden');
   inputFastCopy.checked = false;
   formIdRow.classList.add('hidden');
   formIdValue.textContent = '';
@@ -433,11 +456,9 @@ function startEdit(note) {
   inputUrl.value = note.url || '';
   populateParentSelect(note.id);
   inputParent.value = note.parentId || '';
-  populateParentOtherSelect(note.id);
-  const otherParents = note.parentIdsOther || [];
-  Array.from(inputParentOther.options).forEach((opt) => {
-    opt.selected = otherParents.includes(opt.value);
-  });
+  currentSymlinks = note.parentIdsOther || [];
+  renderSymlinksList();
+  populateSelectAddSymlink(note.id);
   inputFastCopy.checked = !!note.isFastCopy;
   formIdValue.textContent = note.id;
   formIdRow.classList.remove('hidden');
@@ -451,7 +472,9 @@ addBtn.addEventListener('click', () => {
   inputUrl.value = '';
   populateParentSelect(null);
   inputParent.value = getCurrentParentId() || '';
-  populateParentOtherSelect(null);
+  currentSymlinks = [];
+  renderSymlinksList();
+  populateSelectAddSymlink(null);
   showForm();
 });
 
@@ -467,7 +490,7 @@ saveBtn.addEventListener('click', () => {
   const url = inputUrl.value.trim();
   const parentId = inputParent.value || null;
   const isFastCopy = inputFastCopy.checked;
-  const parentIdsOther = Array.from(inputParentOther.selectedOptions).map((o) => o.value);
+  const parentIdsOther = [...currentSymlinks];
 
   if (editingId) {
     updateNote(editingId, copyText, description, url, parentId, isFastCopy, parentIdsOther);
@@ -475,6 +498,21 @@ saveBtn.addEventListener('click', () => {
     addNote(copyText, description, url, parentId, isFastCopy, parentIdsOther);
   }
   hideForm();
+});
+
+btnAddSymlink.addEventListener('click', () => {
+  selectAddSymlink.classList.toggle('hidden');
+});
+
+selectAddSymlink.addEventListener('change', (e) => {
+  const selectedId = e.target.value;
+  if (!selectedId) return;
+  if (!currentSymlinks.includes(selectedId)) {
+    currentSymlinks.push(selectedId);
+    renderSymlinksList();
+    populateSelectAddSymlink(editingId);
+  }
+  selectAddSymlink.classList.add('hidden');
 });
 
 // Save on Enter in last field

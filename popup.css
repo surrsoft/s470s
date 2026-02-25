@@ -349,9 +349,74 @@ body.dark .form-id-value {
   margin-bottom: 2px;
 }
 
-#input-parent-other {
-  min-height: 62px;
-  height: auto;
+.form-symlinks {
+  margin-top: 8px;
+}
+
+.symlinks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.symlink-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0f6fc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #1a1a1a;
+  border: 1px solid #c0d8f0;
+}
+
+.symlink-item-remove {
+  cursor: pointer;
+  color: #c0392b;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+}
+
+.symlink-item-remove:hover {
+  color: #a02820;
+}
+
+.symlink-add-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  color: #555;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+}
+
+.btn-icon:hover {
+  background: #f0f0f0;
+}
+
+#select-add-symlink {
+  flex: 1;
+  margin: 0;
 }
 
 .simlink-badge {
