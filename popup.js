@@ -7,6 +7,7 @@ const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
 const inputParent = document.getElementById('input-parent');
+const inputParentOther = document.getElementById('input-parent-other');
 const inputFastCopy = document.getElementById('input-fast-copy');
 const formIdRow = document.getElementById('form-id-row');
 const formIdValue = document.getElementById('form-id-value');
@@ -97,7 +98,7 @@ function updateNavBar() {
 }
 
 function hasChildren(noteId) {
-  return notes.some((n) => n.parentId === noteId);
+  return notes.some((n) => n.parentId === noteId || (n.parentIdsOther || []).includes(noteId));
 }
 
 function collectDescendants(id) {
@@ -116,6 +117,20 @@ function populateParentSelect(excludeId) {
       opt.value = n.id;
       opt.textContent = n.copyText.length > 50 ? n.copyText.slice(0, 50) + '…' : n.copyText;
       inputParent.appendChild(opt);
+    });
+}
+
+function populateParentOtherSelect(excludeId) {
+  const excludeIds = excludeId ? new Set(collectDescendants(excludeId)) : new Set();
+  inputParentOther.innerHTML = '';
+  notes
+    .filter((n) => !excludeIds.has(n.id))
+    .sort((a, b) => a.order - b.order)
+    .forEach((n) => {
+      const opt = document.createElement('option');
+      opt.value = n.id;
+      opt.textContent = n.copyText.length > 50 ? n.copyText.slice(0, 50) + '…' : n.copyText;
+      inputParentOther.appendChild(opt);
     });
 }
 
@@ -206,7 +221,11 @@ function render() {
 
   const parentId = getCurrentParentId();
   const currentNotes = notes
-    .filter((n) => (n.parentId || null) === parentId)
+    .filter((n) => {
+      const isPrimary = (n.parentId || null) === parentId;
+      const isSimlink = parentId !== null && (n.parentIdsOther || []).includes(parentId);
+      return isPrimary || isSimlink;
+    })
     .sort((a, b) => a.order - b.order);
 
   if (currentNotes.length === 0) {
@@ -218,6 +237,7 @@ function render() {
 
   currentNotes.forEach((note) => {
     const isFolder = hasChildren(note.id);
+    const isSimlink = parentId !== null && (note.parentIdsOther || []).includes(parentId);
     const el = document.createElement('div');
     el.className = 'note-item';
     el.dataset.id = note.id;
@@ -226,7 +246,7 @@ function render() {
     el.innerHTML = `
       <div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>
       <div class="note-content">
-        <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${escapeHtml(note.copyText)}</div>
+        <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${escapeHtml(note.copyText)}${isSimlink ? '<span class="simlink-badge">simlink</span>' : ''}</div>
         ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
         ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       </div>
@@ -327,7 +347,7 @@ function urlHostname(rawUrl) {
 
 // --- CRUD ---
 
-function addNote(copyText, description, url, parentId, isFastCopy) {
+function addNote(copyText, description, url, parentId, isFastCopy, parentIdsOther) {
   const now = Date.now();
   const note = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -335,6 +355,7 @@ function addNote(copyText, description, url, parentId, isFastCopy) {
     description,
     url,
     parentId: parentId !== undefined ? parentId : getCurrentParentId(),
+    parentIdsOther: parentIdsOther || [],
     isFastCopy: !!isFastCopy,
     order: 0,
     createdAt: now,
@@ -348,13 +369,14 @@ function addNote(copyText, description, url, parentId, isFastCopy) {
   });
 }
 
-function updateNote(id, copyText, description, url, parentId, isFastCopy) {
+function updateNote(id, copyText, description, url, parentId, isFastCopy, parentIdsOther) {
   const note = notes.find((n) => n.id === id);
   if (note) {
     note.copyText = copyText;
     note.description = description;
     note.url = url;
     note.parentId = parentId;
+    note.parentIdsOther = parentIdsOther || [];
     note.isFastCopy = !!isFastCopy;
     note.updatedAt = Date.now();
     const navItem = navStack.find((item) => item.id === id);
@@ -397,6 +419,7 @@ function hideForm() {
   inputDesc.value = '';
   inputUrl.value = '';
   inputParent.innerHTML = '';
+  inputParentOther.innerHTML = '';
   inputFastCopy.checked = false;
   formIdRow.classList.add('hidden');
   formIdValue.textContent = '';
@@ -410,6 +433,11 @@ function startEdit(note) {
   inputUrl.value = note.url || '';
   populateParentSelect(note.id);
   inputParent.value = note.parentId || '';
+  populateParentOtherSelect(note.id);
+  const otherParents = note.parentIdsOther || [];
+  Array.from(inputParentOther.options).forEach((opt) => {
+    opt.selected = otherParents.includes(opt.value);
+  });
   inputFastCopy.checked = !!note.isFastCopy;
   formIdValue.textContent = note.id;
   formIdRow.classList.remove('hidden');
@@ -423,6 +451,7 @@ addBtn.addEventListener('click', () => {
   inputUrl.value = '';
   populateParentSelect(null);
   inputParent.value = getCurrentParentId() || '';
+  populateParentOtherSelect(null);
   showForm();
 });
 
@@ -438,11 +467,12 @@ saveBtn.addEventListener('click', () => {
   const url = inputUrl.value.trim();
   const parentId = inputParent.value || null;
   const isFastCopy = inputFastCopy.checked;
+  const parentIdsOther = Array.from(inputParentOther.selectedOptions).map((o) => o.value);
 
   if (editingId) {
-    updateNote(editingId, copyText, description, url, parentId, isFastCopy);
+    updateNote(editingId, copyText, description, url, parentId, isFastCopy, parentIdsOther);
   } else {
-    addNote(copyText, description, url, parentId, isFastCopy);
+    addNote(copyText, description, url, parentId, isFastCopy, parentIdsOther);
   }
   hideForm();
 });
@@ -571,6 +601,7 @@ function serverRowToNote(row) {
     description: row.description || '',
     url: row.url || '',
     parentId: row.parent_id || null,
+    parentIdsOther: row.parent_ids_other || [],
     isFastCopy: row.is_fast_copy || false,
     order: row.order,
     createdAt: row.created_at,

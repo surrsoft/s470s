@@ -63,7 +63,8 @@ create table notes (
   copy_text    text not null,
   description  text,
   url          text,
-  parent_id    text,             -- ссылка на local_id родительской заметки
+  parent_id        text,             -- ссылка на local_id родительской заметки
+  parent_ids_other text[],           -- массив local_id дополнительных родителей (симлинки)
   is_fast_copy boolean not null default false,
   "order"      integer not null default 0,
   created_at   bigint not null,
