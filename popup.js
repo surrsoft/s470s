@@ -699,7 +699,7 @@ function serverRowToNote(row) {
     order: row.order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    dateActual: row.date_actual || row.created_at,
+    dateActual: row.date_actual ? new Date(row.date_actual).getTime() : (row.created_at || Date.now()),
   };
 }
 

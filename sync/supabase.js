@@ -91,7 +91,7 @@ async function upsertNote(note) {
     order: note.order,
     created_at: note.createdAt,
     updated_at: note.updatedAt || note.createdAt,
-    date_actual: note.dateActual || note.createdAt,
+    date_actual: new Date(note.dateActual || note.createdAt).toISOString(),
   };
   const { error } = await client
     .from('notes')
@@ -114,7 +114,7 @@ async function upsertNotesBatch(notes) {
     order: note.order,
     created_at: note.createdAt,
     updated_at: note.updatedAt || note.createdAt,
-    date_actual: note.dateActual || note.createdAt,
+    date_actual: new Date(note.dateActual || note.createdAt).toISOString(),
   }));
   const { error } = await client
     .from('notes')
