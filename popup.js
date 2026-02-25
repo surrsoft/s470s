@@ -8,6 +8,8 @@ const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
 const inputParent = document.getElementById('input-parent');
 const inputFastCopy = document.getElementById('input-fast-copy');
+const formIdRow = document.getElementById('form-id-row');
+const formIdValue = document.getElementById('form-id-value');
 const addBtn = document.getElementById('add-btn');
 const saveBtn = document.getElementById('save-btn');
 const cancelBtn = document.getElementById('cancel-btn');
@@ -362,6 +364,8 @@ function hideForm() {
   inputUrl.value = '';
   inputParent.innerHTML = '';
   inputFastCopy.checked = false;
+  formIdRow.classList.add('hidden');
+  formIdValue.textContent = '';
   editingId = null;
 }
 
@@ -373,6 +377,8 @@ function startEdit(note) {
   populateParentSelect(note.id);
   inputParent.value = note.parentId || '';
   inputFastCopy.checked = !!note.isFastCopy;
+  formIdValue.textContent = note.id;
+  formIdRow.classList.remove('hidden');
   showForm();
 }
 

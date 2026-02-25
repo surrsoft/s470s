@@ -222,6 +222,44 @@ body.side-panel {
 }
 
 /* Form */
+.form-id-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background: #f0f0f0;
+  border-radius: 5px;
+  font-size: 11px;
+}
+
+.form-id-label {
+  color: #999;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.form-id-value {
+  color: #555;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.dark .form-id-row {
+  background: #2a2a2c;
+}
+
+body.dark .form-id-label {
+  color: #666;
+}
+
+body.dark .form-id-value {
+  color: #999;
+}
+
 .form-container {
   padding: 12px 16px;
   border-bottom: 1px solid #e5e5e5;
