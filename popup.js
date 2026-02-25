@@ -262,10 +262,10 @@ function render() {
 
   const parentId = getCurrentParentId();
 
-  // Show current folder's description and url at the top
+  // Show current folder's meta at the top
   if (navStack.length > 0) {
     const parentNote = notes.find((n) => n.id === parentId);
-    if (parentNote && (parentNote.description || parentNote.url)) {
+    if (parentNote) {
       const metaEl = document.createElement('div');
       metaEl.className = 'folder-meta';
       const dateActualStr = parentNote.dateActual
@@ -277,6 +277,10 @@ function render() {
         <div class="folder-meta-actual">
           <span class="folder-meta-actual-date">${escapeHtml(dateActualStr)}</span>
           <button class="folder-meta-actual-btn">update date actual</button>
+        </div>
+        <div class="folder-meta-actions">
+          <button class="folder-meta-edit">&#9998; edit</button>
+          <button class="folder-meta-delete">&#10005; delete</button>
         </div>
       `;
       if (parentNote.url) {
@@ -290,6 +294,24 @@ function render() {
         saveNotes().then(() => {
           scheduleSync(parentNote, 'upsert');
           render();
+        });
+      });
+      // F2F: edit current folder
+      metaEl.querySelector('.folder-meta-edit').addEventListener('click', () => {
+        startEdit(parentNote);
+      });
+      // F3F: delete current folder and navigate to parent
+      metaEl.querySelector('.folder-meta-delete').addEventListener('click', () => {
+        const idsToDelete = new Set(collectDescendants(parentNote.id));
+        const msg = idsToDelete.size > 1 ? 'Delete this folder and all its contents?' : 'Delete this note?';
+        if (!confirm(msg)) return;
+        navStack.pop();
+        updateNavBar();
+        notes = notes.filter((n) => !idsToDelete.has(n.id));
+        reorderNotes();
+        saveNotes().then(() => {
+          render();
+          for (const delId of idsToDelete) scheduleSync({ id: delId }, 'delete');
         });
       });
       notesList.appendChild(metaEl);

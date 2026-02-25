@@ -598,6 +598,42 @@ body.dark .form-id-value {
   background: #e8e8e8;
 }
 
+.folder-meta-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.folder-meta-edit,
+.folder-meta-delete {
+  font-size: 0.769em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s;
+  font-family: inherit;
+}
+
+.folder-meta-edit {
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  color: #555;
+}
+
+.folder-meta-edit:hover {
+  background: #e8e8e8;
+}
+
+.folder-meta-delete {
+  border: 1px solid #f0b8b8;
+  background: #fff0f0;
+  color: #c0392b;
+}
+
+.folder-meta-delete:hover {
+  background: #fdd;
+}
+
 .note-description {
   font-size: 0.923em;
   color: #888;
@@ -890,6 +926,26 @@ body.dark .folder-meta-actual-btn {
 
 body.dark .folder-meta-actual-btn:hover {
   background: #333;
+}
+
+body.dark .folder-meta-edit {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #aaa;
+}
+
+body.dark .folder-meta-edit:hover {
+  background: #333;
+}
+
+body.dark .folder-meta-delete {
+  background: #2a1515;
+  border-color: #5a2222;
+  color: #ff6b6b;
+}
+
+body.dark .folder-meta-delete:hover {
+  background: #3a1515;
 }
 
 body.dark .nav-bar {
