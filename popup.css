@@ -182,7 +182,7 @@ body.side-panel {
 .copy-icon {
   flex-shrink: 0;
   margin-left: 6px;
-  font-size: 0.85em;
+  font-size: 1.1em;
   color: #bbb;
   line-height: 1;
 }
