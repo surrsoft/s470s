@@ -411,6 +411,7 @@ function render() {
         ? new Date(parentNote.dateActual).toLocaleString()
         : new Date(parentNote.createdAt).toLocaleString();
       metaEl.innerHTML = `
+        <div class="folder-meta-title">${escapeHtml(parentNote.copyText)}</div>
         ${parentNote.description ? `<div class="folder-meta-description">${escapeHtml(parentNote.description)}</div>` : ''}
         ${parentNote.url ? `<button class="btn-url folder-meta-url">${escapeHtml(parentNote.url)}</button>` : ''}
         <div class="folder-meta-actual">

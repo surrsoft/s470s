@@ -655,6 +655,16 @@ body.dark .form-id-value {
   box-sizing: border-box;
 }
 
+.folder-meta-title {
+  font-size: 1em;
+  font-weight: 600;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
 .folder-meta-description {
   font-size: 0.923em;
   color: #555;
@@ -998,6 +1008,10 @@ body.dark .note-description {
 
 body.dark .folder-meta {
   border-bottom-color: #2a2a2a;
+}
+
+body.dark .folder-meta-title {
+  color: #e8e8e8;
 }
 
 body.dark .folder-meta-description {
