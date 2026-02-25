@@ -508,11 +508,13 @@ function reorderNotes() {
 
 function showForm() {
   formContainer.classList.remove('hidden');
+  navBar.classList.add('hidden');
   inputCopy.focus();
 }
 
 function hideForm() {
   formContainer.classList.add('hidden');
+  updateNavBar();
   inputCopy.value = '';
   inputDesc.value = '';
   inputUrl.value = '';
