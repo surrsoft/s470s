@@ -59,8 +59,10 @@
     <input type="text" id="input-copy" placeholder="Text to copy">
     <input type="text" id="input-desc" placeholder="Description">
     <input type="url" id="input-url" placeholder="URL (optional)">
-    <input type="text" id="filter-parent" class="select-filter" placeholder="Filter parent...">
-    <select id="input-parent"></select>
+    <div class="select-with-filter">
+      <input type="text" id="filter-parent" class="select-filter" placeholder="Filter parent...">
+      <select id="input-parent"></select>
+    </div>
     <div class="form-symlinks">
       <label class="form-label-small">Additional parents (simlinks):</label>
       <div id="symlinks-list" class="symlinks-list"></div>
