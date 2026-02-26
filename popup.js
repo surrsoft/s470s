@@ -164,6 +164,13 @@ function collectDescendants(id) {
   return [id, ...children.flatMap((c) => collectDescendants(c.id))];
 }
 
+function collectAllDescendants(id, visited = new Set()) {
+  if (visited.has(id)) return [];
+  visited.add(id);
+  const children = notes.filter((n) => n.parentId === id || ensureArray(n.parentIdsOther).includes(id));
+  return [id, ...children.flatMap((c) => collectAllDescendants(c.id, visited))];
+}
+
 function populateParentSelect(excludeId, query = '') {
   const excludeIds = excludeId ? new Set(collectDescendants(excludeId)) : new Set();
   const q = query.toLowerCase();
@@ -306,8 +313,8 @@ function saveNotes() {
 
 function createNoteEl(note, isSimlink, withDrag) {
   const isFolder = hasChildren(note.id);
-  const directCount = isFolder ? notes.filter((n) => n.parentId === note.id).length : 0;
-  const totalCount = isFolder ? collectDescendants(note.id).length - 1 : 0;
+  const directCount = isFolder ? notes.filter((n) => n.parentId === note.id || ensureArray(n.parentIdsOther).includes(note.id)).length : 0;
+  const totalCount = isFolder ? collectAllDescendants(note.id).length - 1 : 0;
   const folderCountLabel = directCount === totalCount ? `${totalCount}` : `${directCount}/${totalCount}`;
   const folderCountHtml = isFolder ? `<span class="folder-count">${folderCountLabel}</span>` : '';
   const el = document.createElement('div');
