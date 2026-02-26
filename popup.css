@@ -919,6 +919,23 @@ body.dark .form-id-value {
   background: #fdd;
 }
 
+.delete-selected-btn {
+  align-self: flex-start;
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
+  background: #c0392b;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.delete-selected-btn:hover {
+  background: #a02820;
+}
+
 /* Dark theme */
 body.dark {
   background: #1c1c1e;
@@ -1241,4 +1258,13 @@ body.dark .reset-selected-btn {
 
 body.dark .reset-selected-btn:hover {
   background: #3a1515;
+}
+
+body.dark .delete-selected-btn {
+  background: #7a2020;
+  border-color: #9a2828;
+}
+
+body.dark .delete-selected-btn:hover {
+  background: #8a2525;
 }

@@ -3,6 +3,7 @@ const navBar = document.getElementById('nav-bar');
 const backBtn = document.getElementById('back-btn');
 const navBreadcrumbs = document.getElementById('nav-breadcrumbs');
 const resetSelectedBtn = document.getElementById('reset-selected-btn');
+const deleteSelectedBtn = document.getElementById('delete-selected-btn');
 const formContainer = document.getElementById('form-container');
 const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
@@ -123,8 +124,9 @@ function updateNavBar() {
     });
   }
 
-  // F21F: show reset button only when in select mode
+  // F21F/F22F: show select-mode buttons only when in select mode
   resetSelectedBtn.classList.toggle('hidden', !selectMode);
+  deleteSelectedBtn.classList.toggle('hidden', !selectMode);
 }
 
 function ensureArray(val) {
@@ -1114,6 +1116,34 @@ resetSelectedBtn.addEventListener('click', () => {
   exitSelectMode();
   updateNavBar();
   render();
+});
+
+// F22F: delete selected notes (with all descendants)
+deleteSelectedBtn.addEventListener('click', () => {
+  if (selectedNoteIds.size === 0) return;
+
+  const idsToDelete = new Set();
+  for (const id of selectedNoteIds) {
+    for (const descendant of collectDescendants(id)) {
+      idsToDelete.add(descendant);
+    }
+  }
+
+  const totalCount = idsToDelete.size;
+  const msg = totalCount === 1
+    ? 'Delete 1 selected note?'
+    : `Delete ${selectedNoteIds.size} selected note(s) and their contents (${totalCount} total)?`;
+  if (!confirm(msg)) return;
+
+  notes = notes.filter((n) => !idsToDelete.has(n.id));
+  reorderNotes();
+  const deletedIds = [...idsToDelete];
+  exitSelectMode();
+  saveNotes().then(() => {
+    updateNavBar();
+    render();
+    for (const delId of deletedIds) scheduleSync({ id: delId }, 'delete');
+  });
 });
 
 document.addEventListener('click', () => {
