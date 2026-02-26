@@ -377,7 +377,10 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
   const directCount = isFolder ? notes.filter((n) => n.parentId === note.id || ensureArray(n.parentIdsOther).includes(note.id)).length : 0;
   const totalCount = isFolder ? collectAllDescendants(note.id).length - 1 : 0;
   const folderCountLabel = directCount === totalCount ? `${totalCount}` : `${directCount}/${totalCount}`;
-  const folderCountHtml = isFolder ? `<span class="folder-count">${folderCountLabel}</span>` : '';
+  const folderCountTitle = directCount === totalCount
+    ? `${totalCount} child note${totalCount !== 1 ? 's' : ''}`
+    : `${directCount} direct, ${totalCount} total`;
+  const folderCountHtml = isFolder ? `<span class="folder-count" title="${folderCountTitle}">${folderCountLabel}</span>` : '';
   const el = document.createElement('div');
   el.className = 'note-item';
   if (selectedNoteIds.has(note.id)) el.classList.add('selected');
@@ -407,19 +410,19 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     ${showDragHandle ? '<div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>' : ''}
     ${showCheckbox ? `<label class="note-select-wrap" title="Select"><input type="checkbox" class="note-select-cb"${selectedNoteIds.has(note.id) ? ' checked' : ''}></label>` : ''}
     <div class="note-content">
-      <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${titleHtml}${folderCountHtml}${isSimlink ? '<span class="simlink-badge">simlink</span>' : ''}</div>
+      <div class="note-copy-text">${isFolder ? '<span class="folder-icon" title="Contains child notes">&#128193;</span>' : ''}${titleHtml}${folderCountHtml}${isSimlink ? '<span class="simlink-badge" title="Simlink: this note appears here via an additional parent">simlink</span>' : ''}</div>
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${pathHtml}
-      ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
+      ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
     </div>
-    ${note.isFastCopy ? '<span class="copy-icon">&#10697;</span>' : ''}
+    ${note.isFastCopy ? '<span class="copy-icon" title="Fast copy: click copies text directly">&#10697;</span>' : ''}
     <div class="note-menu">
       <button class="btn-menu" title="Actions">&#8943;</button>
       <div class="note-dropdown hidden">
-        <button class="menu-open">&#8594; Open</button>
-        <button class="menu-edit">&#9998; Edit</button>
-        <button class="menu-delete">&#10005; Delete</button>
-        ${withDrag ? '<button class="menu-select">&#9745; Select</button>' : ''}
+        <button class="menu-open" title="Navigate into this note">&#8594; Open</button>
+        <button class="menu-edit" title="Edit note">&#9998; Edit</button>
+        <button class="menu-delete" title="Delete note (and all contents if folder)">&#10005; Delete</button>
+        ${withDrag ? '<button class="menu-select" title="Select for batch action">&#9745; Select</button>' : ''}
       </div>
     </div>
   `;
@@ -644,14 +647,14 @@ function render() {
       metaEl.innerHTML = `
         <div class="folder-meta-title">${escapeHtml(parentNote.copyText)}</div>
         ${parentNote.description ? `<div class="folder-meta-description">${escapeHtml(parentNote.description)}</div>` : ''}
-        ${parentNote.url ? `<button class="btn-url folder-meta-url">${escapeHtml(parentNote.url)}</button>` : ''}
+        ${parentNote.url ? `<button class="btn-url folder-meta-url" title="${escapeHtml(parentNote.url)}">${escapeHtml(parentNote.url)}</button>` : ''}
         <div class="folder-meta-actual">
-          <span class="folder-meta-actual-date">${escapeHtml(dateActualStr)}</span>
-          <button class="folder-meta-actual-btn">update date actual</button>
+          <span class="folder-meta-actual-date" title="Date last marked as relevant">${escapeHtml(dateActualStr)}</span>
+          <button class="folder-meta-actual-btn" title="Mark as relevant now">update date actual</button>
         </div>
         <div class="folder-meta-actions">
-          <button class="folder-meta-edit">&#9998; edit</button>
-          <button class="folder-meta-delete">&#10005; delete</button>
+          <button class="folder-meta-edit" title="Edit this folder">&#9998; edit</button>
+          <button class="folder-meta-delete" title="Delete this folder and all its contents">&#10005; delete</button>
         </div>
       `;
       if (parentNote.url) {

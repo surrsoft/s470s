@@ -8,7 +8,7 @@
   <div class="header">
     <div class="header-title">
       <h1>s470s</h1>
-      <span id="notes-count" class="notes-count"></span>
+      <span id="notes-count" class="notes-count" title="Total notes"></span>
       <span id="sync-indicator" class="sync-indicator" title="Sync status"></span>
       <button id="sync-btn" class="icon-btn" title="Sync now">↻</button>
     </div>
@@ -17,21 +17,21 @@
       <button id="font-dec-btn" class="icon-btn font-btn" title="Decrease font size">A−</button>
       <button id="font-inc-btn" class="icon-btn font-btn" title="Increase font size">A+</button>
       <button id="settings-btn" class="icon-btn" title="Settings">⚙</button>
-      <button id="add-btn" title="Add note">+</button>
+      <button id="add-btn" title="Add note (+)">+</button>
     </div>
   </div>
 
   <div id="search-block" class="search-block">
     <div class="search-input-row">
-      <input type="text" id="search-input" placeholder="Search...">
-      <button id="search-clear" class="search-clear hidden">&#10005;</button>
+      <input type="text" id="search-input" placeholder="Search..." title="Search notes (Esc to clear)">
+      <button id="search-clear" class="search-clear hidden" title="Clear search">&#10005;</button>
     </div>
     <div class="search-options">
-      <label class="search-check"><input type="checkbox" id="search-title" checked> заголовок</label>
-      <label class="search-check"><input type="checkbox" id="search-desc" checked> описание</label>
-      <label class="search-check"><input type="checkbox" id="search-url"> url</label>
-      <label class="search-check"><input type="checkbox" id="search-case"> Aa</label>
-      <select id="search-sort" class="search-sort-select">
+      <label class="search-check" title="Search in note title"><input type="checkbox" id="search-title" checked> заголовок</label>
+      <label class="search-check" title="Search in description"><input type="checkbox" id="search-desc" checked> описание</label>
+      <label class="search-check" title="Search in URL"><input type="checkbox" id="search-url"> url</label>
+      <label class="search-check" title="Case-sensitive search"><input type="checkbox" id="search-case"> Aa</label>
+      <select id="search-sort" class="search-sort-select" title="Sort search results">
         <option value="default">по умолч.</option>
         <option value="date">по дате</option>
       </select>
@@ -42,51 +42,51 @@
     <button id="back-btn" class="nav-back-btn"></button>
     <div id="nav-breadcrumbs" class="nav-breadcrumbs"></div>
     <div id="select-mode-btns" class="select-mode-btns hidden">
-      <button id="reset-selected-btn" class="reset-selected-btn">reset selected</button>
-      <button id="delete-selected-btn" class="delete-selected-btn">delete selected</button>
+      <button id="reset-selected-btn" class="reset-selected-btn" title="Exit select mode, clear selection">reset selected</button>
+      <button id="delete-selected-btn" class="delete-selected-btn" title="Delete all selected notes and their contents">delete selected</button>
     </div>
   </div>
 
   <div id="status-bar" class="status-bar hidden">
     <span id="status-text" class="status-text"></span>
-    <button id="status-close" class="status-close">&#10005;</button>
+    <button id="status-close" class="status-close" title="Dismiss">&#10005;</button>
   </div>
 
   <div id="form-container" class="form-container hidden">
     <div id="form-id-row" class="form-id-row hidden">
       <span class="form-id-label">ID</span>
-      <span id="form-id-value" class="form-id-value"></span>
+      <span id="form-id-value" class="form-id-value" title="Internal note ID"></span>
     </div>
-    <input type="text" id="input-copy" placeholder="Text to copy">
-    <input type="text" id="input-desc" placeholder="Description">
-    <input type="url" id="input-url" placeholder="URL (optional)">
+    <input type="text" id="input-copy" placeholder="Text to copy" title="Text that will be copied to clipboard on click">
+    <input type="text" id="input-desc" placeholder="Description" title="Optional description shown below the title">
+    <input type="url" id="input-url" placeholder="URL (optional)" title="Optional URL — shown as a button on the note">
     <div class="select-with-filter">
-      <input type="text" id="filter-parent" class="select-filter" placeholder="Filter parent...">
-      <select id="input-parent"></select>
+      <input type="text" id="filter-parent" class="select-filter" placeholder="Filter parent..." title="Filter the parent list">
+      <select id="input-parent" title="Select parent note (determines where this note appears)"></select>
     </div>
     <details id="form-advanced" class="form-advanced">
-      <summary class="form-advanced-summary">Advanced</summary>
+      <summary class="form-advanced-summary" title="Additional options: simlinks and fast copy">Advanced</summary>
       <div class="form-symlinks">
-        <label class="form-label-small">Additional parents (simlinks):</label>
+        <label class="form-label-small" title="This note will also appear inside these folders">Additional parents (simlinks):</label>
         <div id="symlinks-list" class="symlinks-list"></div>
         <div class="symlink-add-row">
-          <button id="btn-add-symlink" class="btn-icon" title="Add simlink" type="button">+</button>
+          <button id="btn-add-symlink" class="btn-icon" title="Add another parent folder (simlink)" type="button">+</button>
           <div class="symlink-select-wrap">
-            <input type="text" id="filter-symlink" class="select-filter hidden" placeholder="Filter...">
-            <select id="select-add-symlink" class="hidden">
+            <input type="text" id="filter-symlink" class="select-filter hidden" placeholder="Filter..." title="Filter notes list">
+            <select id="select-add-symlink" class="hidden" title="Select a note to add as additional parent">
               <option value="" disabled selected>Select note...</option>
             </select>
           </div>
         </div>
       </div>
-      <label class="form-check">
+      <label class="form-check" title="When enabled, clicking the note immediately copies text without navigating inside">
         <input type="checkbox" id="input-fast-copy">
         Fast copy (click copies text)
       </label>
     </details>
     <div class="form-actions">
-      <button id="save-btn">Save</button>
-      <button id="cancel-btn" class="secondary">Cancel</button>
+      <button id="save-btn" title="Save note (Enter)">Save</button>
+      <button id="cancel-btn" class="secondary" title="Cancel editing (Escape)">Cancel</button>
     </div>
   </div>
 
