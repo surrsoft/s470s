@@ -218,11 +218,16 @@ function populateParentSelect(excludeId, query = '') {
 function renderSymlinksList() {
   symlinksList.innerHTML = '';
   currentSymlinks.forEach((id) => {
-    const note = notes.find((n) => n.id === id);
-    if (!note) return;
+    let text;
+    if (id === '') {
+      text = '— Root (top level) —';
+    } else {
+      const note = notes.find((n) => n.id === id);
+      if (!note) return;
+      text = note.copyText.length > 50 ? note.copyText.slice(0, 50) + '…' : note.copyText;
+    }
     const el = document.createElement('div');
     el.className = 'symlink-item';
-    const text = note.copyText.length > 50 ? note.copyText.slice(0, 50) + '…' : note.copyText;
     el.innerHTML = `<span>${escapeHtml(text)}</span><button class="symlink-item-remove" type="button" title="Remove">&times;</button>`;
     el.querySelector('.symlink-item-remove').addEventListener('click', () => {
       currentSymlinks = currentSymlinks.filter((s) => s !== id);
@@ -236,7 +241,13 @@ function renderSymlinksList() {
 function populateSelectAddSymlink(excludeId, query = '') {
   const excludeIds = excludeId ? new Set(collectDescendants(excludeId)) : new Set();
   const q = query.toLowerCase();
-  selectAddSymlink.innerHTML = '<option value="" disabled selected>Select note...</option>';
+  selectAddSymlink.innerHTML = '<option value="__placeholder__" disabled selected>Select note...</option>';
+  if (!currentSymlinks.includes('')) {
+    const rootOpt = document.createElement('option');
+    rootOpt.value = '';
+    rootOpt.textContent = '— Root (top level) —';
+    selectAddSymlink.appendChild(rootOpt);
+  }
   notes
     .filter((n) => !excludeIds.has(n.id) && !currentSymlinks.includes(n.id))
     .filter((n) => !q || n.copyText.toLowerCase().includes(q))
@@ -704,7 +715,9 @@ function render() {
   const currentNotes = notes
     .filter((n) => {
       const isPrimary = (n.parentId || null) === parentId;
-      const isSimlink = parentId !== null && ensureArray(n.parentIdsOther).includes(parentId);
+      const isSimlink = parentId === null
+        ? n.parentId !== null && ensureArray(n.parentIdsOther).includes('')
+        : ensureArray(n.parentIdsOther).includes(parentId);
       return isPrimary || isSimlink;
     })
     .sort((a, b) => a.order - b.order);
@@ -718,7 +731,9 @@ function render() {
   }
 
   currentNotes.forEach((note) => {
-    const isSimlink = parentId !== null && ensureArray(note.parentIdsOther).includes(parentId);
+    const isSimlink = parentId === null
+      ? note.parentId !== null && ensureArray(note.parentIdsOther).includes('')
+      : ensureArray(note.parentIdsOther).includes(parentId);
     notesList.appendChild(createNoteEl(note, isSimlink, true));
   });
 
@@ -914,7 +929,7 @@ btnAddSymlink.addEventListener('click', () => {
 filterParent.addEventListener('input', () => {
   const prev = inputParent.value;
   populateParentSelect(editingId, filterParent.value);
-  if (prev) inputParent.value = prev;
+  inputParent.value = prev;
 });
 
 filterSymlink.addEventListener('input', () => {
@@ -923,7 +938,7 @@ filterSymlink.addEventListener('input', () => {
 
 selectAddSymlink.addEventListener('change', (e) => {
   const selectedId = e.target.value;
-  if (!selectedId) return;
+  if (selectedId === '__placeholder__') return;
   if (!currentSymlinks.includes(selectedId)) {
     currentSymlinks.push(selectedId);
     renderSymlinksList();
