@@ -956,6 +956,19 @@ body.dark .form-id-value {
   flex-direction: row;
   gap: 6px;
   align-items: center;
+  background: #fff8e1;
+  border: 1px solid #f0c040;
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin-top: 2px;
+}
+
+.select-mode-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b07800;
+  white-space: nowrap;
+  margin-right: 2px;
 }
 
 /* Select mode (F19F, F20F, F21F) */
@@ -1369,6 +1382,15 @@ body.dark .delete-selected-btn {
 
 body.dark .delete-selected-btn:hover {
   background: #8a2525;
+}
+
+body.dark .select-mode-btns {
+  background: #2a2000;
+  border-color: #6a5000;
+}
+
+body.dark .select-mode-label {
+  color: #c09030;
 }
 
 /* === Notes count in header === */
