@@ -127,24 +127,21 @@ function updateNavBar() {
     rootCrumb.addEventListener('click', () => { navStack = []; updateNavBar(); render(); });
     navBreadcrumbs.appendChild(rootCrumb);
 
-    navStack.forEach((item, index) => {
+    navStack.slice(0, -1).forEach((item, index) => {
       const sep = document.createElement('span');
       sep.className = 'nav-crumb-sep';
       sep.textContent = ' › ';
       navBreadcrumbs.appendChild(sep);
 
       const crumb = document.createElement('span');
-      const isCurrent = index === navStack.length - 1;
-      crumb.className = 'nav-crumb' + (isCurrent ? ' nav-crumb-current' : '');
+      crumb.className = 'nav-crumb';
       crumb.textContent = item.copyText;
-      if (!isCurrent) {
-        const depth = index;
-        crumb.addEventListener('click', () => {
-          navStack = navStack.slice(0, depth + 1);
-          updateNavBar();
-          render();
-        });
-      }
+      const depth = index;
+      crumb.addEventListener('click', () => {
+        navStack = navStack.slice(0, depth + 1);
+        updateNavBar();
+        render();
+      });
       navBreadcrumbs.appendChild(crumb);
     });
   }
