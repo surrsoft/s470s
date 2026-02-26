@@ -479,9 +479,38 @@ body.dark .form-id-value {
 
 .symlink-add-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   margin-top: 8px;
+}
+
+.symlink-select-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.select-filter {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  background: #f9f9f9;
+  color: #1a1a1a;
+  transition: border-color 0.15s;
+}
+
+.select-filter:focus {
+  border-color: #888;
+  background: #fff;
+}
+
+.form-container .select-filter {
+  margin-top: 6px;
 }
 
 .btn-icon {
@@ -1003,6 +1032,17 @@ body.dark .form-container select:focus {
 
 body.dark .form-label-small {
   color: #666;
+}
+
+body.dark .select-filter {
+  background: #2a2a2c;
+  border-color: #3a3a3c;
+  color: #e8e8e8;
+}
+
+body.dark .select-filter:focus {
+  border-color: #666;
+  background: #333;
 }
 
 body.dark .simlink-badge {

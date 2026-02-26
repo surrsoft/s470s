@@ -10,8 +10,10 @@ const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
 const inputParent = document.getElementById('input-parent');
+const filterParent = document.getElementById('filter-parent');
 const symlinksList = document.getElementById('symlinks-list');
 const btnAddSymlink = document.getElementById('btn-add-symlink');
+const filterSymlink = document.getElementById('filter-symlink');
 const selectAddSymlink = document.getElementById('select-add-symlink');
 let currentSymlinks = [];
 const inputFastCopy = document.getElementById('input-fast-copy');
@@ -162,11 +164,13 @@ function collectDescendants(id) {
   return [id, ...children.flatMap((c) => collectDescendants(c.id))];
 }
 
-function populateParentSelect(excludeId) {
+function populateParentSelect(excludeId, query = '') {
   const excludeIds = excludeId ? new Set(collectDescendants(excludeId)) : new Set();
+  const q = query.toLowerCase();
   inputParent.innerHTML = '<option value="">— Root (top level) —</option>';
   notes
     .filter((n) => !excludeIds.has(n.id))
+    .filter((n) => !q || n.copyText.toLowerCase().includes(q))
     .sort((a, b) => a.order - b.order)
     .forEach((n) => {
       const opt = document.createElement('option');
@@ -194,11 +198,13 @@ function renderSymlinksList() {
   });
 }
 
-function populateSelectAddSymlink(excludeId) {
+function populateSelectAddSymlink(excludeId, query = '') {
   const excludeIds = excludeId ? new Set(collectDescendants(excludeId)) : new Set();
+  const q = query.toLowerCase();
   selectAddSymlink.innerHTML = '<option value="" disabled selected>Select note...</option>';
   notes
     .filter((n) => !excludeIds.has(n.id) && !currentSymlinks.includes(n.id))
+    .filter((n) => !q || n.copyText.toLowerCase().includes(q))
     .sort((a, b) => a.order - b.order)
     .forEach((n) => {
       const opt = document.createElement('option');
@@ -658,9 +664,12 @@ function hideForm() {
   inputCopy.value = '';
   inputDesc.value = '';
   inputUrl.value = '';
+  filterParent.value = '';
   inputParent.innerHTML = '';
   currentSymlinks = [];
   symlinksList.innerHTML = '';
+  filterSymlink.value = '';
+  filterSymlink.classList.add('hidden');
   selectAddSymlink.classList.add('hidden');
   inputFastCopy.checked = false;
   formIdRow.classList.add('hidden');
@@ -720,7 +729,24 @@ saveBtn.addEventListener('click', () => {
 });
 
 btnAddSymlink.addEventListener('click', () => {
-  selectAddSymlink.classList.toggle('hidden');
+  const isHidden = selectAddSymlink.classList.contains('hidden');
+  selectAddSymlink.classList.toggle('hidden', !isHidden);
+  filterSymlink.classList.toggle('hidden', !isHidden);
+  if (isHidden) {
+    filterSymlink.value = '';
+    populateSelectAddSymlink(editingId);
+    filterSymlink.focus();
+  }
+});
+
+filterParent.addEventListener('input', () => {
+  const prev = inputParent.value;
+  populateParentSelect(editingId, filterParent.value);
+  if (prev) inputParent.value = prev;
+});
+
+filterSymlink.addEventListener('input', () => {
+  populateSelectAddSymlink(editingId, filterSymlink.value);
 });
 
 selectAddSymlink.addEventListener('change', (e) => {
@@ -732,6 +758,8 @@ selectAddSymlink.addEventListener('change', (e) => {
     populateSelectAddSymlink(editingId);
   }
   selectAddSymlink.classList.add('hidden');
+  filterSymlink.value = '';
+  filterSymlink.classList.add('hidden');
 });
 
 // Save on Enter in last field
