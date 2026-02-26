@@ -332,7 +332,17 @@ function createNoteEl(note, isSimlink, withDrag) {
   }
 
   el.addEventListener('click', () => {
-    if (note.isFastCopy) {
+    if (selectMode) {
+      // In select mode: toggle checkbox
+      if (selectedNoteIds.has(note.id)) {
+        selectedNoteIds.delete(note.id);
+      } else {
+        selectedNoteIds.add(note.id);
+      }
+      el.classList.toggle('selected', selectedNoteIds.has(note.id));
+      const cb = el.querySelector('.note-select-cb');
+      if (cb) cb.checked = selectedNoteIds.has(note.id);
+    } else if (note.isFastCopy) {
       copyToClipboard(note.copyText);
     } else {
       navigateInto(note);
