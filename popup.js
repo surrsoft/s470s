@@ -474,6 +474,13 @@ function render() {
 
   const parentId = getCurrentParentId();
 
+  // F8F: search mode — show global results instead of current level
+  const query = searchInput.value.trim();
+  if (query) {
+    renderSearchResults(query);
+    return;
+  }
+
   // Show current folder's meta at the top
   if (navStack.length > 0) {
     const parentNote = notes.find((n) => n.id === parentId);
@@ -529,13 +536,6 @@ function render() {
       });
       notesList.appendChild(metaEl);
     }
-  }
-
-  // F8F: search mode — show global results instead of current level
-  const query = searchInput.value.trim();
-  if (query) {
-    renderSearchResults(query);
-    return;
   }
 
   const currentNotes = notes
