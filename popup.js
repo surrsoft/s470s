@@ -65,6 +65,8 @@ function exitSelectMode() {
 
 function navigateInto(note) {
   exitSelectMode();
+  searchInput.value = '';
+  searchClear.classList.add('hidden');
   navStack.push({ id: note.id, copyText: note.copyText });
   updateNavBar();
   render();
