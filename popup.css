@@ -263,8 +263,7 @@ body.side-panel {
 .nav-breadcrumbs {
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;
-  overflow: hidden;
+  flex-wrap: wrap;
   gap: 0;
 }
 
@@ -273,10 +272,6 @@ body.side-panel {
   color: #4a90d9;
   cursor: pointer;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-  flex-shrink: 1;
 }
 
 .nav-crumb:hover {
@@ -286,8 +281,6 @@ body.side-panel {
 .nav-crumb-current {
   color: #888;
   cursor: default;
-  flex-shrink: 0;
-  max-width: none;
 }
 
 .nav-crumb-current:hover {
