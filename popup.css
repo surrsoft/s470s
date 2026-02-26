@@ -877,6 +877,14 @@ body.dark .form-id-value {
   }
 }
 
+/* F23F: select-mode buttons block */
+.select-mode-btns {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  align-items: center;
+}
+
 /* Select mode (F19F, F20F, F21F) */
 .note-select-wrap {
   display: flex;

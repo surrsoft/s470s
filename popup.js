@@ -2,6 +2,7 @@ const notesList = document.getElementById('notes-list');
 const navBar = document.getElementById('nav-bar');
 const backBtn = document.getElementById('back-btn');
 const navBreadcrumbs = document.getElementById('nav-breadcrumbs');
+const selectModeBtns = document.getElementById('select-mode-btns');
 const resetSelectedBtn = document.getElementById('reset-selected-btn');
 const deleteSelectedBtn = document.getElementById('delete-selected-btn');
 const formContainer = document.getElementById('form-container');
@@ -124,9 +125,8 @@ function updateNavBar() {
     });
   }
 
-  // F21F/F22F: show select-mode buttons only when in select mode
-  resetSelectedBtn.classList.toggle('hidden', !selectMode);
-  deleteSelectedBtn.classList.toggle('hidden', !selectMode);
+  // F23F: show select-mode buttons block only when in select mode
+  selectModeBtns.classList.toggle('hidden', !selectMode);
 }
 
 function ensureArray(val) {
