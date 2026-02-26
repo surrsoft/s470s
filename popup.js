@@ -63,11 +63,21 @@ function exitSelectMode() {
   selectedNoteIds = new Set();
 }
 
+function buildNavStackFor(note) {
+  const stack = [];
+  let current = note;
+  while (current) {
+    stack.unshift({ id: current.id, copyText: current.copyText });
+    current = current.parentId ? notes.find((n) => n.id === current.parentId) : null;
+  }
+  return stack;
+}
+
 function navigateInto(note) {
   exitSelectMode();
   searchInput.value = '';
   searchClear.classList.add('hidden');
-  navStack.push({ id: note.id, copyText: note.copyText });
+  navStack = buildNavStackFor(note);
   updateNavBar();
   render();
 }
