@@ -491,7 +491,7 @@ body.dark .form-id-value {
   gap: 4px;
 }
 
-.symlink-select-wrap:has(:not(.hidden)) {
+.symlink-select-wrap:has(> :not(.hidden)) {
   border: 1px solid #ccc;
   border-radius: 6px;
   padding: 6px;
@@ -1076,7 +1076,7 @@ body.dark .select-with-filter {
   border-color: #3a3a3c;
 }
 
-body.dark .symlink-select-wrap:has(:not(.hidden)) {
+body.dark .symlink-select-wrap:has(> :not(.hidden)) {
   background: #2a2a2c;
   border-color: #3a3a3c;
 }
