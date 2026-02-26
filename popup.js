@@ -701,6 +701,7 @@ function render() {
         navStack.pop();
         updateNavBar();
         notes = notes.filter((n) => !idsToDelete.has(n.id));
+        removeOrphanedSymlinks(idsToDelete);
         reorderNotes();
         saveNotes().then(() => render());
         const msg = idsToDelete.size > 1
@@ -784,10 +785,20 @@ function updateNote(id, copyText, description, url, parentId, isFastCopy, parent
   }
 }
 
+function removeOrphanedSymlinks(idsToDelete) {
+  notes.forEach((n) => {
+    const others = ensureArray(n.parentIdsOther);
+    if (others.some((pid) => idsToDelete.has(pid))) {
+      n.parentIdsOther = others.filter((pid) => !idsToDelete.has(pid));
+    }
+  });
+}
+
 function deleteNote(id) {
   const idsToDelete = new Set(collectDescendants(id));
   const backup = notes.filter((n) => idsToDelete.has(n.id));
   notes = notes.filter((n) => !idsToDelete.has(n.id));
+  removeOrphanedSymlinks(idsToDelete);
   reorderNotes();
   saveNotes().then(() => render());
   const msg = idsToDelete.size > 1
@@ -1360,6 +1371,7 @@ deleteSelectedBtn.addEventListener('click', () => {
 
   const backup = notes.filter((n) => idsToDelete.has(n.id));
   notes = notes.filter((n) => !idsToDelete.has(n.id));
+  removeOrphanedSymlinks(idsToDelete);
   reorderNotes();
   const syncIds = [...idsToDelete];
   exitSelectMode();
