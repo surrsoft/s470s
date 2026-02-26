@@ -308,7 +308,8 @@ function createNoteEl(note, isSimlink, withDrag) {
   const isFolder = hasChildren(note.id);
   const directCount = isFolder ? notes.filter((n) => n.parentId === note.id).length : 0;
   const totalCount = isFolder ? collectDescendants(note.id).length - 1 : 0;
-  const folderCountHtml = isFolder ? `<span class="folder-count">${directCount}/${totalCount}</span>` : '';
+  const folderCountLabel = directCount === totalCount ? `${totalCount}` : `${directCount}/${totalCount}`;
+  const folderCountHtml = isFolder ? `<span class="folder-count">${folderCountLabel}</span>` : '';
   const el = document.createElement('div');
   el.className = 'note-item';
   if (selectedNoteIds.has(note.id)) el.classList.add('selected');
