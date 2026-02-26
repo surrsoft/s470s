@@ -877,6 +877,48 @@ body.dark .form-id-value {
   }
 }
 
+/* Select mode (F19F, F20F, F21F) */
+.note-select-wrap {
+  display: flex;
+  align-items: center;
+  padding: 0 8px 0 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.note-select-cb {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  margin: 0;
+  accent-color: #1a1a1a;
+}
+
+.note-item.selected {
+  background: #e8f0fe;
+}
+
+.note-item.selected:hover {
+  background: #dce8fd;
+}
+
+.reset-selected-btn {
+  align-self: flex-start;
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
+  background: #fff0f0;
+  color: #c0392b;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.reset-selected-btn:hover {
+  background: #fdd;
+}
+
 /* Dark theme */
 body.dark {
   background: #1c1c1e;
@@ -1177,4 +1219,26 @@ body.dark .search-sort-select {
 
 body.dark .search-no-results {
   color: #666;
+}
+
+body.dark .note-select-cb {
+  accent-color: #e8e8e8;
+}
+
+body.dark .note-item.selected {
+  background: #1a2a3a;
+}
+
+body.dark .note-item.selected:hover {
+  background: #1e3044;
+}
+
+body.dark .reset-selected-btn {
+  background: #2a1515;
+  border-color: #5a2222;
+  color: #ff6b6b;
+}
+
+body.dark .reset-selected-btn:hover {
+  background: #3a1515;
 }

@@ -2,6 +2,7 @@ const notesList = document.getElementById('notes-list');
 const navBar = document.getElementById('nav-bar');
 const backBtn = document.getElementById('back-btn');
 const navBreadcrumbs = document.getElementById('nav-breadcrumbs');
+const resetSelectedBtn = document.getElementById('reset-selected-btn');
 const formContainer = document.getElementById('form-container');
 const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
@@ -48,63 +49,82 @@ let draggedId = null;
 let dropMode = null; // 'before' | 'nest'
 let toastTimeout = null;
 let navStack = []; // [{id: string, copyText: string}]
+let selectMode = false; // F19F/F20F/F21F select mode
+let selectedNoteIds = new Set(); // selected note ids in select mode
 
 function getCurrentParentId() {
   return navStack.length > 0 ? navStack[navStack.length - 1].id : null;
 }
 
+function exitSelectMode() {
+  selectMode = false;
+  selectedNoteIds = new Set();
+}
+
 function navigateInto(note) {
+  exitSelectMode();
   navStack.push({ id: note.id, copyText: note.copyText });
   updateNavBar();
   render();
 }
 
 function navigateBack() {
+  exitSelectMode();
   navStack.pop();
   updateNavBar();
   render();
 }
 
 function updateNavBar() {
-  if (navStack.length === 0) {
+  if (navStack.length === 0 && !selectMode) {
     navBar.classList.add('hidden');
     return;
   }
   navBar.classList.remove('hidden');
 
-  // Back button: show parent name
-  const parentName = navStack.length > 1 ? navStack[navStack.length - 2].copyText : 'Root';
-  backBtn.textContent = '\u2190 ' + parentName;
+  // Back button: only when inside a folder
+  if (navStack.length > 0) {
+    backBtn.classList.remove('hidden');
+    const parentName = navStack.length > 1 ? navStack[navStack.length - 2].copyText : 'Root';
+    backBtn.textContent = '\u2190 ' + parentName;
+  } else {
+    backBtn.classList.add('hidden');
+  }
 
   // Breadcrumbs: Root › Level1 › ... › Current
   navBreadcrumbs.innerHTML = '';
 
-  const rootCrumb = document.createElement('span');
-  rootCrumb.className = 'nav-crumb';
-  rootCrumb.textContent = 'Root';
-  rootCrumb.addEventListener('click', () => { navStack = []; updateNavBar(); render(); });
-  navBreadcrumbs.appendChild(rootCrumb);
+  if (navStack.length > 0) {
+    const rootCrumb = document.createElement('span');
+    rootCrumb.className = 'nav-crumb';
+    rootCrumb.textContent = 'Root';
+    rootCrumb.addEventListener('click', () => { navStack = []; updateNavBar(); render(); });
+    navBreadcrumbs.appendChild(rootCrumb);
 
-  navStack.forEach((item, index) => {
-    const sep = document.createElement('span');
-    sep.className = 'nav-crumb-sep';
-    sep.textContent = ' › ';
-    navBreadcrumbs.appendChild(sep);
+    navStack.forEach((item, index) => {
+      const sep = document.createElement('span');
+      sep.className = 'nav-crumb-sep';
+      sep.textContent = ' › ';
+      navBreadcrumbs.appendChild(sep);
 
-    const crumb = document.createElement('span');
-    const isCurrent = index === navStack.length - 1;
-    crumb.className = 'nav-crumb' + (isCurrent ? ' nav-crumb-current' : '');
-    crumb.textContent = item.copyText;
-    if (!isCurrent) {
-      const depth = index;
-      crumb.addEventListener('click', () => {
-        navStack = navStack.slice(0, depth + 1);
-        updateNavBar();
-        render();
-      });
-    }
-    navBreadcrumbs.appendChild(crumb);
-  });
+      const crumb = document.createElement('span');
+      const isCurrent = index === navStack.length - 1;
+      crumb.className = 'nav-crumb' + (isCurrent ? ' nav-crumb-current' : '');
+      crumb.textContent = item.copyText;
+      if (!isCurrent) {
+        const depth = index;
+        crumb.addEventListener('click', () => {
+          navStack = navStack.slice(0, depth + 1);
+          updateNavBar();
+          render();
+        });
+      }
+      navBreadcrumbs.appendChild(crumb);
+    });
+  }
+
+  // F21F: show reset button only when in select mode
+  resetSelectedBtn.classList.toggle('hidden', !selectMode);
 }
 
 function ensureArray(val) {
@@ -268,11 +288,17 @@ function createNoteEl(note, isSimlink, withDrag) {
   const isFolder = hasChildren(note.id);
   const el = document.createElement('div');
   el.className = 'note-item';
+  if (selectedNoteIds.has(note.id)) el.classList.add('selected');
   el.dataset.id = note.id;
-  if (withDrag) el.draggable = true;
+
+  // In normal mode: show drag handle (reorder); in select mode: show checkbox F20F
+  const showDragHandle = withDrag && !selectMode;
+  const showCheckbox = withDrag && selectMode;
+  if (showDragHandle) el.draggable = true;
 
   el.innerHTML = `
-    ${withDrag ? '<div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>' : ''}
+    ${showDragHandle ? '<div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>' : ''}
+    ${showCheckbox ? `<label class="note-select-wrap" title="Select"><input type="checkbox" class="note-select-cb"${selectedNoteIds.has(note.id) ? ' checked' : ''}></label>` : ''}
     <div class="note-content">
       <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${escapeHtml(note.copyText)}${isSimlink ? '<span class="simlink-badge">simlink</span>' : ''}</div>
       ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
@@ -285,9 +311,25 @@ function createNoteEl(note, isSimlink, withDrag) {
         <button class="menu-open">Open</button>
         <button class="menu-edit">&#9998; Edit</button>
         <button class="menu-delete">&#10005; Delete</button>
+        ${withDrag ? '<button class="menu-select">Select</button>' : ''}
       </div>
     </div>
   `;
+
+  // F20F: checkbox click/change handlers
+  if (showCheckbox) {
+    const cbLabel = el.querySelector('.note-select-wrap');
+    const cb = el.querySelector('.note-select-cb');
+    cbLabel.addEventListener('click', (e) => e.stopPropagation());
+    cb.addEventListener('change', () => {
+      if (cb.checked) {
+        selectedNoteIds.add(note.id);
+      } else {
+        selectedNoteIds.delete(note.id);
+      }
+      el.classList.toggle('selected', selectedNoteIds.has(note.id));
+    });
+  }
 
   el.addEventListener('click', () => {
     if (note.isFastCopy) {
@@ -340,7 +382,24 @@ function createNoteEl(note, isSimlink, withDrag) {
     deleteNote(note.id);
   });
 
+  // F19F: Select menu option
   if (withDrag) {
+    el.querySelector('.menu-select').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.add('hidden');
+      noteMenu.classList.remove('open');
+      if (!selectMode) {
+        // Scenario 1: first selected note → enter select mode
+        selectMode = true;
+      }
+      // Scenario 2 (or after entering): add this note to selection
+      selectedNoteIds.add(note.id);
+      updateNavBar();
+      render();
+    });
+  }
+
+  if (showDragHandle) {
     el.addEventListener('dragstart', handleDragStart);
     el.addEventListener('dragend', handleDragEnd);
     el.addEventListener('dragover', handleDragOver);
@@ -1039,6 +1098,13 @@ searchClear.addEventListener('click', () => {
 });
 
 backBtn.addEventListener('click', navigateBack);
+
+// F21F: exit select mode
+resetSelectedBtn.addEventListener('click', () => {
+  exitSelectMode();
+  updateNavBar();
+  render();
+});
 
 document.addEventListener('click', () => {
   document.querySelectorAll('.note-dropdown').forEach((d) => d.classList.add('hidden'));
