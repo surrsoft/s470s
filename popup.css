@@ -304,6 +304,7 @@ body.side-panel {
 .folder-icon {
   margin-right: 3px;
   font-size: 0.9em;
+  flex-shrink: 0;
 }
 
 .folder-count {
@@ -317,6 +318,7 @@ body.side-panel {
   font-weight: 500;
   white-space: nowrap;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 
 body.dark .folder-count {
@@ -593,6 +595,7 @@ body.dark .form-id-value {
   font-weight: 500;
   white-space: nowrap;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 
 .form-check {
@@ -708,9 +711,17 @@ body.dark .form-id-value {
   font-size: 1em;
   font-weight: 500;
   color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.note-title-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
 }
 
 .folder-meta {

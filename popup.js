@@ -428,7 +428,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     ${showDragHandle ? '<div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>' : ''}
     ${showCheckbox ? `<label class="note-select-wrap" title="Select"><input type="checkbox" class="note-select-cb"${selectedNoteIds.has(note.id) ? ' checked' : ''}></label>` : ''}
     <div class="note-content">
-      <div class="note-copy-text">${isFolder ? '<span class="folder-icon" title="Contains child notes">&#128193;</span>' : ''}${titleHtml}${folderCountHtml}${isSimlink ? '<span class="simlink-badge" title="Simlink: this note appears here via an additional parent">simlink</span>' : ''}</div>
+      <div class="note-copy-text">${isFolder ? '<span class="folder-icon" title="Contains child notes">&#128193;</span>' : ''}<span class="note-title-text">${titleHtml}</span>${folderCountHtml}${isSimlink ? '<span class="simlink-badge" title="Simlink: this note appears here via an additional parent">simlink</span>' : ''}</div>
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${pathHtml}
       ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
