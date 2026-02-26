@@ -328,7 +328,7 @@ body.dark .folder-count {
   flex-shrink: 0;
   margin-left: 6px;
   font-size: 1.1em;
-  color: #bbb;
+  color: #e0a030;
   line-height: 1;
 }
 
@@ -1369,4 +1369,138 @@ body.dark .delete-selected-btn {
 
 body.dark .delete-selected-btn:hover {
   background: #8a2525;
+}
+
+/* === Notes count in header === */
+.notes-count {
+  font-size: 11px;
+  color: #ccc;
+  font-weight: 400;
+}
+
+body.dark .notes-count {
+  color: #555;
+}
+
+/* === Keyboard focus === */
+.note-item.keyboard-focused {
+  background: #efefef;
+  outline: 2px solid #aaa;
+  outline-offset: -2px;
+}
+
+body.dark .note-item.keyboard-focused {
+  background: #2a2a2c;
+  outline-color: #666;
+}
+
+/* === Fast copy visual === */
+.note-item.is-fast-copy {
+  border-left: 3px solid #e0a030;
+}
+
+body.dark .note-item.is-fast-copy {
+  border-left-color: #a07020;
+}
+
+body.dark .copy-icon {
+  color: #a07020;
+}
+
+/* === Search highlight === */
+.search-hl {
+  background: #ffe57e;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+body.dark .search-hl {
+  background: #7a6000;
+  color: #ffe;
+}
+
+/* === Undo toast button === */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast-undo-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.toast-undo-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* === Advanced form section === */
+.form-advanced {
+  margin-top: 8px;
+}
+
+.form-advanced-summary {
+  font-size: 12px;
+  color: #888;
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 0;
+  list-style: none;
+}
+
+.form-advanced-summary::-webkit-details-marker {
+  display: none;
+}
+
+.form-advanced-summary::before {
+  content: '▸ ';
+  font-size: 10px;
+}
+
+.form-advanced[open] .form-advanced-summary::before {
+  content: '▾ ';
+}
+
+.form-advanced-summary:hover {
+  color: #555;
+}
+
+.form-advanced[open] .form-advanced-summary {
+  margin-bottom: 4px;
+}
+
+body.dark .form-advanced-summary {
+  color: #666;
+}
+
+body.dark .form-advanced-summary:hover {
+  color: #999;
+}
+
+/* === Inline rename input === */
+.inline-edit-input {
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid #888;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  min-width: 0;
+}
+
+body.dark .inline-edit-input {
+  border-bottom-color: #666;
 }

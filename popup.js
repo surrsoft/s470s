@@ -17,6 +17,7 @@ const filterSymlink = document.getElementById('filter-symlink');
 const selectAddSymlink = document.getElementById('select-add-symlink');
 let currentSymlinks = [];
 const inputFastCopy = document.getElementById('input-fast-copy');
+const formAdvanced = document.getElementById('form-advanced');
 const formIdRow = document.getElementById('form-id-row');
 const formIdValue = document.getElementById('form-id-value');
 const addBtn = document.getElementById('add-btn');
@@ -24,6 +25,7 @@ const saveBtn = document.getElementById('save-btn');
 const cancelBtn = document.getElementById('cancel-btn');
 const emptyState = document.getElementById('empty-state');
 const toast = document.getElementById('toast');
+const notesCount = document.getElementById('notes-count');
 const syncIndicator = document.getElementById('sync-indicator');
 const syncBtn = document.getElementById('sync-btn');
 const settingsBtn = document.getElementById('settings-btn');
@@ -55,6 +57,13 @@ let toastTimeout = null;
 let navStack = []; // [{id: string, copyText: string}]
 let selectMode = false; // F19F/F20F/F21F select mode
 let selectedNoteIds = new Set(); // selected note ids in select mode
+
+// --- Undo delete state ---
+let deletedSnapshot = null; // { backup: Note[], syncIds: string[] }
+let undoTimeout = null;
+
+// --- Keyboard navigation state ---
+let focusedNoteIndex = -1;
 
 function getCurrentParentId() {
   return navStack.length > 0 ? navStack[navStack.length - 1].id : null;
@@ -309,9 +318,49 @@ function saveNotes() {
   });
 }
 
+// --- Helpers ---
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightText(text, query, caseSensitive) {
+  const escaped = escapeHtml(text);
+  if (!query) return escaped;
+  const flags = caseSensitive ? 'g' : 'gi';
+  const re = new RegExp(escapeRegex(escapeHtml(query)), flags);
+  return escaped.replace(re, (m) => `<mark class="search-hl">${m}</mark>`);
+}
+
+function urlHostname(rawUrl) {
+  try {
+    const full = /^https?:\/\//i.test(rawUrl) ? rawUrl : 'https://' + rawUrl;
+    return new URL(full).hostname;
+  } catch {
+    return 'invalid url';
+  }
+}
+
+// --- Keyboard navigation ---
+
+function setFocusedNote(index) {
+  const items = [...notesList.querySelectorAll('.note-item')];
+  items.forEach((el) => el.classList.remove('keyboard-focused'));
+  if (index >= 0 && index < items.length) {
+    items[index].classList.add('keyboard-focused');
+    items[index].scrollIntoView({ block: 'nearest' });
+  }
+}
+
 // --- Search (F7F) ---
 
-function createNoteEl(note, isSimlink, withDrag) {
+function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
   const isFolder = hasChildren(note.id);
   const directCount = isFolder ? notes.filter((n) => n.parentId === note.id || ensureArray(n.parentIdsOther).includes(note.id)).length : 0;
   const totalCount = isFolder ? collectAllDescendants(note.id).length - 1 : 0;
@@ -320,6 +369,7 @@ function createNoteEl(note, isSimlink, withDrag) {
   const el = document.createElement('div');
   el.className = 'note-item';
   if (selectedNoteIds.has(note.id)) el.classList.add('selected');
+  if (note.isFastCopy) el.classList.add('is-fast-copy');
   el.dataset.id = note.id;
 
   // In normal mode: show drag handle (reorder); in select mode: show checkbox F20F
@@ -327,12 +377,22 @@ function createNoteEl(note, isSimlink, withDrag) {
   const showCheckbox = withDrag && selectMode;
   if (showDragHandle) el.draggable = true;
 
+  // Text rendering: use highlight in search mode, plain escapeHtml otherwise
+  const titleHtml = searchCtx
+    ? highlightText(note.copyText, searchCtx.query, searchCtx.caseSensitive)
+    : escapeHtml(note.copyText);
+  const descHtml = note.description
+    ? (searchCtx
+        ? highlightText(note.description, searchCtx.query, searchCtx.caseSensitive)
+        : escapeHtml(note.description))
+    : '';
+
   el.innerHTML = `
     ${showDragHandle ? '<div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>' : ''}
     ${showCheckbox ? `<label class="note-select-wrap" title="Select"><input type="checkbox" class="note-select-cb"${selectedNoteIds.has(note.id) ? ' checked' : ''}></label>` : ''}
     <div class="note-content">
-      <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${escapeHtml(note.copyText)}${folderCountHtml}${isSimlink ? '<span class="simlink-badge">simlink</span>' : ''}</div>
-      ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
+      <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${titleHtml}${folderCountHtml}${isSimlink ? '<span class="simlink-badge">simlink</span>' : ''}</div>
+      ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
     </div>
     ${note.isFastCopy ? '<span class="copy-icon">&#10697;</span>' : ''}
@@ -378,6 +438,14 @@ function createNoteEl(note, isSimlink, withDrag) {
     } else {
       navigateInto(note);
     }
+  });
+
+  // Inline rename on double-click
+  el.addEventListener('dblclick', (e) => {
+    if (selectMode) return;
+    if (e.target.closest('.note-menu, .btn-url')) return;
+    e.stopPropagation();
+    startInlineEdit(el, note);
   });
 
   if (note.url) {
@@ -452,6 +520,42 @@ function createNoteEl(note, isSimlink, withDrag) {
   return el;
 }
 
+// --- Inline rename ---
+
+function startInlineEdit(el, note) {
+  const textEl = el.querySelector('.note-copy-text');
+  const original = note.copyText;
+  const input = document.createElement('input');
+  input.className = 'inline-edit-input';
+  input.value = original;
+  textEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  let committed = false;
+  function commit() {
+    if (committed) return;
+    committed = true;
+    const val = input.value.trim();
+    if (val && val !== original) {
+      updateNote(note.id, val, note.description, note.url, note.parentId, note.isFastCopy, note.parentIdsOther);
+    } else {
+      render();
+    }
+  }
+  function cancel() {
+    if (committed) return;
+    committed = true;
+    render();
+  }
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', commit);
+}
+
 function renderSearchResults(query) {
   const caseSensitive = searchCaseCb.checked;
   const q = caseSensitive ? query : query.toLowerCase();
@@ -483,19 +587,21 @@ function renderSearchResults(query) {
   if (matched.length === 0) {
     const noResults = document.createElement('div');
     noResults.className = 'search-no-results';
-    noResults.textContent = 'Ничего не найдено';
+    noResults.textContent = `Ничего не найдено по запросу "${query}"`;
     notesList.appendChild(noResults);
     return;
   }
 
+  const searchCtx = { query: q, caseSensitive };
   matched.forEach((note) => {
-    notesList.appendChild(createNoteEl(note, false, false));
+    notesList.appendChild(createNoteEl(note, false, false, searchCtx));
   });
 }
 
 // --- Render ---
 
 function render() {
+  focusedNoteIndex = -1;
   notesList.innerHTML = '';
   emptyState.classList.add('hidden');
 
@@ -505,6 +611,7 @@ function render() {
   const query = searchInput.value.trim();
   if (query) {
     renderSearchResults(query);
+    notesCount.textContent = notes.length || '';
     return;
   }
 
@@ -550,16 +657,16 @@ function render() {
       // F3F: delete current folder and navigate to parent
       metaEl.querySelector('.folder-meta-delete').addEventListener('click', () => {
         const idsToDelete = new Set(collectDescendants(parentNote.id));
-        const msg = idsToDelete.size > 1 ? 'Delete this folder and all its contents?' : 'Delete this note?';
-        if (!confirm(msg)) return;
+        const backup = notes.filter((n) => idsToDelete.has(n.id));
         navStack.pop();
         updateNavBar();
         notes = notes.filter((n) => !idsToDelete.has(n.id));
         reorderNotes();
-        saveNotes().then(() => {
-          render();
-          for (const delId of idsToDelete) scheduleSync({ id: delId }, 'delete');
-        });
+        saveNotes().then(() => render());
+        const msg = idsToDelete.size > 1
+          ? `Удалено ${idsToDelete.size} заметок`
+          : 'Заметка удалена';
+        showUndoToast(msg, backup, [...idsToDelete]);
       });
       notesList.appendChild(metaEl);
     }
@@ -574,7 +681,10 @@ function render() {
     .sort((a, b) => a.order - b.order);
 
   if (currentNotes.length === 0) {
+    emptyState.querySelector('p:first-child').textContent =
+      navStack.length > 0 ? 'Папка пуста' : 'Заметок нет';
     emptyState.classList.remove('hidden');
+    notesCount.textContent = notes.length || '';
     return;
   }
 
@@ -582,21 +692,8 @@ function render() {
     const isSimlink = parentId !== null && ensureArray(note.parentIdsOther).includes(parentId);
     notesList.appendChild(createNoteEl(note, isSimlink, true));
   });
-}
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function urlHostname(rawUrl) {
-  try {
-    const full = /^https?:\/\//i.test(rawUrl) ? rawUrl : 'https://' + rawUrl;
-    return new URL(full).hostname;
-  } catch {
-    return 'invalid url';
-  }
+  notesCount.textContent = notes.length || '';
 }
 
 // --- CRUD ---
@@ -645,20 +742,53 @@ function updateNote(id, copyText, description, url, parentId, isFastCopy, parent
 
 function deleteNote(id) {
   const idsToDelete = new Set(collectDescendants(id));
-  const msg = idsToDelete.size > 1 ? 'Delete this folder and all its contents?' : 'Delete this note?';
-  if (!confirm(msg)) return;
+  const backup = notes.filter((n) => idsToDelete.has(n.id));
   notes = notes.filter((n) => !idsToDelete.has(n.id));
   reorderNotes();
-  saveNotes().then(() => {
-    render();
-    for (const delId of idsToDelete) scheduleSync({ id: delId }, 'delete');
-  });
+  saveNotes().then(() => render());
+  const msg = idsToDelete.size > 1
+    ? `Удалено ${idsToDelete.size} заметок`
+    : 'Заметка удалена';
+  showUndoToast(msg, backup, [...idsToDelete]);
 }
 
 function reorderNotes() {
   notes.forEach((note, i) => {
     note.order = i;
   });
+}
+
+// --- Undo delete ---
+
+function showUndoToast(msg, backup, syncIds) {
+  // Commit any previous pending delete before showing new undo
+  if (undoTimeout) { clearTimeout(undoTimeout); commitPendingDelete(); }
+  deletedSnapshot = { backup, syncIds };
+  toast.innerHTML = `${escapeHtml(msg)} <button class="toast-undo-btn">Undo</button>`;
+  toast.classList.remove('hidden');
+  toast.querySelector('.toast-undo-btn').addEventListener('click', undoDelete);
+  undoTimeout = setTimeout(() => {
+    commitPendingDelete();
+    toast.classList.add('hidden');
+  }, 5000);
+}
+
+function undoDelete() {
+  if (!deletedSnapshot) return;
+  clearTimeout(undoTimeout);
+  undoTimeout = null;
+  notes.push(...deletedSnapshot.backup);
+  reorderNotes();
+  saveNotes().then(() => render());
+  deletedSnapshot = null;
+  toast.classList.add('hidden');
+}
+
+function commitPendingDelete() {
+  if (!deletedSnapshot) return;
+  for (const id of deletedSnapshot.syncIds) scheduleSync({ id }, 'delete');
+  deletedSnapshot = null;
+  undoTimeout = null;
 }
 
 // --- Form ---
@@ -671,6 +801,7 @@ function showForm() {
 
 function hideForm() {
   formContainer.classList.add('hidden');
+  formAdvanced.open = false;
   updateNavBar();
   inputCopy.value = '';
   inputDesc.value = '';
@@ -699,6 +830,7 @@ function startEdit(note) {
   renderSymlinksList();
   populateSelectAddSymlink(note.id);
   inputFastCopy.checked = !!note.isFastCopy;
+  formAdvanced.open = !!(currentSymlinks.length || note.isFastCopy);
   formIdValue.textContent = note.id;
   formIdRow.classList.remove('hidden');
   showForm();
@@ -795,6 +927,8 @@ function copyToClipboard(text) {
 }
 
 function showToast(message) {
+  // Commit any pending undo before showing a plain toast
+  if (undoTimeout) { clearTimeout(undoTimeout); commitPendingDelete(); }
   toast.textContent = message;
   toast.classList.remove('hidden');
   if (toastTimeout) clearTimeout(toastTimeout);
@@ -1180,26 +1314,67 @@ deleteSelectedBtn.addEventListener('click', () => {
     }
   }
 
-  const totalCount = idsToDelete.size;
-  const msg = totalCount === 1
-    ? 'Delete 1 selected note?'
-    : `Delete ${selectedNoteIds.size} selected note(s) and their contents (${totalCount} total)?`;
-  if (!confirm(msg)) return;
-
+  const backup = notes.filter((n) => idsToDelete.has(n.id));
   notes = notes.filter((n) => !idsToDelete.has(n.id));
   reorderNotes();
-  const deletedIds = [...idsToDelete];
+  const syncIds = [...idsToDelete];
   exitSelectMode();
   saveNotes().then(() => {
     updateNavBar();
     render();
-    for (const delId of deletedIds) scheduleSync({ id: delId }, 'delete');
   });
+
+  const msg = syncIds.length === 1
+    ? 'Заметка удалена'
+    : `Удалено ${selectedNoteIds.size} заметок`;
+  showUndoToast(msg, backup, syncIds);
 });
 
 document.addEventListener('click', () => {
   document.querySelectorAll('.note-dropdown').forEach((d) => d.classList.add('hidden'));
   document.querySelectorAll('.note-menu').forEach((m) => m.classList.remove('open'));
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  const formVisible = !formContainer.classList.contains('hidden');
+
+  if (e.key === 'Escape') {
+    if (formVisible) {
+      hideForm();
+    } else if (searchInput.value) {
+      searchInput.value = '';
+      searchClear.classList.add('hidden');
+      render();
+      searchInput.focus();
+    } else if (navStack.length > 0) {
+      navigateBack();
+    }
+    return;
+  }
+
+  // Don't intercept keys when typing in inputs
+  const tag = document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (formVisible) return;
+
+  const items = [...notesList.querySelectorAll('.note-item')];
+  if (items.length === 0) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    focusedNoteIndex = Math.min(focusedNoteIndex + 1, items.length - 1);
+    setFocusedNote(focusedNoteIndex);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    focusedNoteIndex = Math.max(focusedNoteIndex - 1, 0);
+    setFocusedNote(focusedNoteIndex);
+  } else if (e.key === 'Enter') {
+    if (focusedNoteIndex >= 0 && focusedNoteIndex < items.length) {
+      e.preventDefault();
+      items[focusedNoteIndex].click();
+    }
+  }
 });
 
 // Listen for SYNC_NOW message from settings page
