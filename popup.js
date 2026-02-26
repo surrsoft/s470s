@@ -310,10 +310,10 @@ function createNoteEl(note, isSimlink, withDrag) {
     <div class="note-menu">
       <button class="btn-menu" title="Actions">&#8943;</button>
       <div class="note-dropdown hidden">
-        <button class="menu-open">Open</button>
+        <button class="menu-open">&#8594; Open</button>
         <button class="menu-edit">&#9998; Edit</button>
         <button class="menu-delete">&#10005; Delete</button>
-        ${withDrag ? '<button class="menu-select">Select</button>' : ''}
+        ${withDrag ? '<button class="menu-select">&#9745; Select</button>' : ''}
       </div>
     </div>
   `;
