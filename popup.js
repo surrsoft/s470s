@@ -180,6 +180,18 @@ function collectAllDescendants(id, visited = new Set()) {
   return [id, ...children.flatMap((c) => collectAllDescendants(c.id, visited))];
 }
 
+function getNotePath(note) {
+  const path = [];
+  let currentId = note.parentId;
+  while (currentId) {
+    const parent = notes.find((n) => n.id === currentId);
+    if (!parent) break;
+    path.unshift(parent.copyText);
+    currentId = parent.parentId;
+  }
+  return path;
+}
+
 function populateParentSelect(excludeId, query = '') {
   const excludeIds = excludeId ? new Set(collectDescendants(excludeId)) : new Set();
   const q = query.toLowerCase();
@@ -386,6 +398,10 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
         ? highlightText(note.description, searchCtx.query, searchCtx.caseSensitive)
         : escapeHtml(note.description))
     : '';
+  const path = searchCtx ? getNotePath(note) : [];
+  const pathHtml = path.length > 0
+    ? `<div class="note-path">Root › ${path.map(escapeHtml).join(' › ')}</div>`
+    : '';
 
   el.innerHTML = `
     ${showDragHandle ? '<div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>' : ''}
@@ -393,6 +409,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     <div class="note-content">
       <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${titleHtml}${folderCountHtml}${isSimlink ? '<span class="simlink-badge">simlink</span>' : ''}</div>
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
+      ${pathHtml}
       ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
     </div>
     ${note.isFastCopy ? '<span class="copy-icon">&#10697;</span>' : ''}

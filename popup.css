@@ -1486,6 +1486,20 @@ body.dark .form-advanced-summary:hover {
   color: #999;
 }
 
+/* === Note path in search results === */
+.note-path {
+  font-size: 0.72em;
+  color: #aaa;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.dark .note-path {
+  color: #555;
+}
+
 /* === Inline rename input === */
 .inline-edit-input {
   font-size: 1em;
