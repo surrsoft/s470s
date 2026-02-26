@@ -306,6 +306,9 @@ function saveNotes() {
 
 function createNoteEl(note, isSimlink, withDrag) {
   const isFolder = hasChildren(note.id);
+  const directCount = isFolder ? notes.filter((n) => n.parentId === note.id).length : 0;
+  const totalCount = isFolder ? collectDescendants(note.id).length - 1 : 0;
+  const folderCountHtml = isFolder ? `<span class="folder-count">${directCount}/${totalCount}</span>` : '';
   const el = document.createElement('div');
   el.className = 'note-item';
   if (selectedNoteIds.has(note.id)) el.classList.add('selected');
@@ -320,7 +323,7 @@ function createNoteEl(note, isSimlink, withDrag) {
     ${showDragHandle ? '<div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>' : ''}
     ${showCheckbox ? `<label class="note-select-wrap" title="Select"><input type="checkbox" class="note-select-cb"${selectedNoteIds.has(note.id) ? ' checked' : ''}></label>` : ''}
     <div class="note-content">
-      <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${escapeHtml(note.copyText)}${isSimlink ? '<span class="simlink-badge">simlink</span>' : ''}</div>
+      <div class="note-copy-text">${isFolder ? '<span class="folder-icon">&#128193;</span>' : ''}${escapeHtml(note.copyText)}${folderCountHtml}${isSimlink ? '<span class="simlink-badge">simlink</span>' : ''}</div>
       ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
       ${note.url ? `<button class="btn-url">${escapeHtml(urlHostname(note.url))}</button>` : ''}
     </div>

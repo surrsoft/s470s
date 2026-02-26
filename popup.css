@@ -306,6 +306,17 @@ body.side-panel {
   font-size: 0.9em;
 }
 
+.folder-count {
+  font-size: 0.72em;
+  color: #999;
+  margin-left: 5px;
+  font-weight: 500;
+}
+
+body.dark .folder-count {
+  color: #666;
+}
+
 .copy-icon {
   flex-shrink: 0;
   margin-left: 6px;
