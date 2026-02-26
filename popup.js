@@ -3,6 +3,7 @@ const navBar = document.getElementById('nav-bar');
 const backBtn = document.getElementById('back-btn');
 const navBreadcrumbs = document.getElementById('nav-breadcrumbs');
 const selectModeBtns = document.getElementById('select-mode-btns');
+const selectModeLabel = selectModeBtns.querySelector('.select-mode-label');
 const resetSelectedBtn = document.getElementById('reset-selected-btn');
 const deleteSelectedBtn = document.getElementById('delete-selected-btn');
 const formContainer = document.getElementById('form-container');
@@ -150,6 +151,12 @@ function updateNavBar() {
 
   // F23F: show select-mode buttons block only when in select mode
   selectModeBtns.classList.toggle('hidden', !selectMode);
+  updateSelectCount();
+}
+
+function updateSelectCount() {
+  const n = selectedNoteIds.size;
+  selectModeLabel.textContent = n > 0 ? `☑ Select mode (${n})` : '☑ Select mode';
 }
 
 function ensureArray(val) {
@@ -439,6 +446,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
         selectedNoteIds.delete(note.id);
       }
       el.classList.toggle('selected', selectedNoteIds.has(note.id));
+      updateSelectCount();
     });
   }
 
@@ -453,6 +461,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
       el.classList.toggle('selected', selectedNoteIds.has(note.id));
       const cb = el.querySelector('.note-select-cb');
       if (cb) cb.checked = selectedNoteIds.has(note.id);
+      updateSelectCount();
     } else if (note.isFastCopy) {
       copyToClipboard(note.copyText);
     } else {
