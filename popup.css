@@ -712,14 +712,15 @@ body.dark .form-id-value {
   font-weight: 500;
   color: #1a1a1a;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   overflow: hidden;
 }
 
 .note-title-text {
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   min-width: 0;
   flex: 1;
 }
