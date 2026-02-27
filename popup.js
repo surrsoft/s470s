@@ -161,9 +161,10 @@ function executeMove(targetParentId) {
     }
   });
 
+  const pastedIds = sources.map(([id]) => id);
   clearClipboard();
   reorderNotes();
-  saveNotes().then(() => { updateNavBar(); render(); });
+  saveNotes().then(() => { updateNavBar(); render(); flashPastedNotes(pastedIds); });
   sources.forEach(([id]) => {
     const note = notes.find((n) => n.id === id);
     if (note) scheduleSync(note, 'upsert');
@@ -233,8 +234,9 @@ function executePasteAsSymlink(targetParentId) {
 
   if (affected.length === 0) return;
 
+  const pastedIds = affected.map((n) => n.id);
   clearClipboard();
-  saveNotes().then(() => render());
+  saveNotes().then(() => { render(); flashPastedNotes(pastedIds); });
   affected.forEach((note) => scheduleSync(note, 'upsert'));
 
   const destName = targetParentId === null
@@ -266,6 +268,15 @@ function showSymlinkUndoToast(msg, backup) {
     moveUndoSnapshot = null;
     toast.classList.add('hidden');
   }, 5000);
+}
+
+function flashPastedNotes(ids) {
+  ids.forEach((id) => {
+    const el = notesList.querySelector(`.note-item[data-id="${id}"]`);
+    if (!el) return;
+    el.classList.add('paste-flash');
+    setTimeout(() => el.classList.remove('paste-flash'), 1000);
+  });
 }
 
 function buildNavStackFor(note) {

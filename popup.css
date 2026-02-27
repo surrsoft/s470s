@@ -1256,6 +1256,25 @@ body.dark .note-item.keyboard-focused {
   outline-color: #666;
 }
 
+/* === Paste flash === */
+@keyframes paste-flash {
+  0%, 30% { background: #c8f0c8; }
+  100% { background: transparent; }
+}
+
+.note-item.paste-flash {
+  animation: paste-flash 1s ease-out;
+}
+
+body.dark .note-item.paste-flash {
+  animation-name: paste-flash-dark;
+}
+
+@keyframes paste-flash-dark {
+  0%, 30% { background: #1a3a1a; }
+  100% { background: transparent; }
+}
+
 /* === Fast copy visual === */
 .note-item.is-fast-copy {
   border-left: 3px solid #e0a030;
