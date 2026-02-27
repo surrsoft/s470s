@@ -587,7 +587,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
         <button class="menu-open" title="Navigate into this note">&#8594; Open</button>
         <button class="menu-edit" title="Edit note">&#9998; Edit</button>
         <button class="menu-cut" title="Cut note to clipboard">&#9986; Cut</button>
-        <button class="menu-delete" title="Delete note (and all contents if folder)">&#10005; Delete</button>
+        <button class="menu-delete" title="${isSimlink ? 'Remove symlink from this location' : 'Delete note (and all contents if folder)'}">${isSimlink ? '&#10005; Unlink' : '&#10005; Delete'}</button>
         ${withDrag ? '<button class="menu-select" title="Select for batch action">&#9745; Select</button>' : ''}
       </div>
     </div>
@@ -676,11 +676,19 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     e.stopPropagation();
     dropdown.classList.add('hidden');
     noteMenu.classList.remove('open');
-    const childCount = collectDescendants(note.id).filter(id => { const n = notes.find(x => x.id === id); return n && !n.deletedAt; }).length - 1;
-    const msg = childCount > 0
-      ? `Удалить «${note.copyText}» и ${childCount} вложенных заметок?`
-      : `Удалить «${note.copyText}»?`;
-    showConfirmDelete(msg, () => deleteNote(note.id));
+    if (isSimlink) {
+      const parentKey = getCurrentParentId() ?? '';
+      note.parentIdsOther = ensureArray(note.parentIdsOther).filter(p => p !== parentKey);
+      note.updatedAt = Date.now();
+      saveNotes().then(() => render());
+      scheduleSync(note, 'upsert');
+    } else {
+      const childCount = collectDescendants(note.id).filter(id => { const n = notes.find(x => x.id === id); return n && !n.deletedAt; }).length - 1;
+      const msg = childCount > 0
+        ? `Удалить «${note.copyText}» и ${childCount} вложенных заметок?`
+        : `Удалить «${note.copyText}»?`;
+      showConfirmDelete(msg, () => deleteNote(note.id));
+    }
   });
 
   el.querySelector('.menu-cut').addEventListener('click', (e) => {
@@ -1678,16 +1686,51 @@ resetSelectedBtn.addEventListener('click', () => {
   render();
 });
 
-// F22F: delete selected notes (with all descendants)
+// F22F: delete selected notes (with all descendants); symlinks are unlinked
 deleteSelectedBtn.addEventListener('click', () => {
   if (selectedNoteIds.size === 0) return;
-  const count = selectedNoteIds.size;
+
+  const currentParentId = getCurrentParentId();
+  const parentKey = currentParentId ?? '';
+
+  const symlinkIds = new Set();
+  const primaryIds = new Set();
+  for (const id of selectedNoteIds) {
+    const n = notes.find(x => x.id === id);
+    if (!n) continue;
+    const isSym = currentParentId === null
+      ? n.parentId !== null && ensureArray(n.parentIdsOther).includes('')
+      : ensureArray(n.parentIdsOther).includes(currentParentId);
+    if (isSym) symlinkIds.add(id); else primaryIds.add(id);
+  }
+
+  function unlinkSymlinks() {
+    const now = Date.now();
+    symlinkIds.forEach(id => {
+      const n = notes.find(x => x.id === id);
+      if (!n) return;
+      n.parentIdsOther = ensureArray(n.parentIdsOther).filter(p => p !== parentKey);
+      n.updatedAt = now;
+      scheduleSync(n, 'upsert');
+    });
+  }
+
+  if (primaryIds.size === 0) {
+    unlinkSymlinks();
+    exitSelectMode();
+    saveNotes().then(() => { updateNavBar(); render(); });
+    return;
+  }
+
+  const count = primaryIds.size;
   const confirmMsg = count === 1
     ? 'Удалить выбранную заметку?'
     : `Удалить ${count} выбранных заметок?`;
   showConfirmDelete(confirmMsg, () => {
+    unlinkSymlinks();
+
     const idsToDelete = new Set();
-    for (const id of selectedNoteIds) {
+    for (const id of primaryIds) {
       for (const descendant of collectDescendants(id)) {
         idsToDelete.add(descendant);
       }
@@ -1704,10 +1747,7 @@ deleteSelectedBtn.addEventListener('click', () => {
     });
     reorderNotes();
     exitSelectMode();
-    saveNotes().then(() => {
-      updateNavBar();
-      render();
-    });
+    saveNotes().then(() => { updateNavBar(); render(); });
 
     const msg = count === 1
       ? 'Заметка удалена'
