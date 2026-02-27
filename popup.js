@@ -225,7 +225,7 @@ function executePasteAsSymlink(targetParentId) {
     const others = ensureArray(note.parentIdsOther);
     if (others.includes(targetKey)) continue;
     // Skip: circular reference (target is a descendant of note)
-    if (targetParentId !== null && collectDescendants(note.id).has(targetParentId)) continue;
+    if (targetParentId !== null && collectDescendants(note.id).includes(targetParentId)) continue;
 
     backup.push({ id, parentIdsOther: [...others] });
     note.parentIdsOther = [...others, targetKey];
