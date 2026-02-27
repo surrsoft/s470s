@@ -850,6 +850,16 @@ body.dark .form-id-value {
   background: #dce8fd;
 }
 
+.note-item.cut {
+  background: #fff0f0;
+  outline: 1px dashed #e08080;
+  outline-offset: -2px;
+}
+
+.note-item.cut:hover {
+  background: #ffe4e4;
+}
+
 .reset-selected-btn {
   align-self: flex-start;
   font-size: 11px;
@@ -1184,6 +1194,15 @@ body.dark .note-item.selected {
 
 body.dark .note-item.selected:hover {
   background: #1e3044;
+}
+
+body.dark .note-item.cut {
+  background: #2a1515;
+  outline-color: #7a3030;
+}
+
+body.dark .note-item.cut:hover {
+  background: #331818;
 }
 
 body.dark .reset-selected-btn {

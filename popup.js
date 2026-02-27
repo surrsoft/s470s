@@ -532,6 +532,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
   el.className = 'note-item';
   if (selectedNoteIds.has(note.id)) el.classList.add('selected');
   if (note.isFastCopy) el.classList.add('is-fast-copy');
+  if (clipboard && clipboard.sources.has(note.id)) el.classList.add('cut');
   el.dataset.id = note.id;
 
   // In normal mode: show drag handle (reorder); in select mode: show checkbox F20F
