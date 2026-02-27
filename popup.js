@@ -666,7 +666,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     e.stopPropagation();
     dropdown.classList.add('hidden');
     noteMenu.classList.remove('open');
-    cutToClipboard([{ id: note.id, isSymlink }], getCurrentParentId());
+    cutToClipboard([{ id: note.id, isSymlink: isSimlink }], getCurrentParentId());
   });
 
   // F19F: Select menu option
