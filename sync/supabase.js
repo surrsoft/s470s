@@ -92,6 +92,7 @@ async function upsertNote(note) {
     created_at: note.createdAt,
     updated_at: note.updatedAt || note.createdAt,
     date_actual: new Date(note.dateActual || note.createdAt).toISOString(),
+    deleted_at: note.deletedAt ? new Date(note.deletedAt).toISOString() : null,
   };
   const { error } = await client
     .from('notes')
@@ -115,6 +116,7 @@ async function upsertNotesBatch(notes) {
     created_at: note.createdAt,
     updated_at: note.updatedAt || note.createdAt,
     date_actual: new Date(note.dateActual || note.createdAt).toISOString(),
+    deleted_at: note.deletedAt ? new Date(note.deletedAt).toISOString() : null,
   }));
   const { error } = await client
     .from('notes')

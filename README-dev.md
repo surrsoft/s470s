@@ -73,6 +73,7 @@ create table notes (
   "order"      integer not null default 0,
   created_at   bigint not null,
   updated_at   bigint not null,
+  deleted_at   timestamp,                 -- soft-delete: when moved to trash (null = active)
   unique(user_id, local_id)
 );
 

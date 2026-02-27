@@ -65,8 +65,10 @@ let navStack = []; // [{id: string, copyText: string}]
 let selectMode = false; // F19F/F20F/F21F select mode
 let selectedNoteIds = new Set(); // selected note ids in select mode
 
+const TRASH_ID = '__trash__';
+
 // --- Undo delete state ---
-let deletedSnapshot = null; // { backup: Note[], syncIds: string[] }
+let deletedSnapshot = null; // { affectedIds: string[], syncIds: string[] }
 let undoTimeout = null;
 
 // --- Clipboard (cut/paste) state ---
@@ -377,7 +379,7 @@ function ensureArray(val) {
 }
 
 function hasChildren(noteId) {
-  return notes.some((n) => n.parentId === noteId || ensureArray(n.parentIdsOther).includes(noteId));
+  return notes.some((n) => !n.deletedAt && (n.parentId === noteId || ensureArray(n.parentIdsOther).includes(noteId)));
 }
 
 function collectDescendants(id) {
@@ -388,7 +390,7 @@ function collectDescendants(id) {
 function collectAllDescendants(id, visited = new Set()) {
   if (visited.has(id)) return [];
   visited.add(id);
-  const children = notes.filter((n) => n.parentId === id || ensureArray(n.parentIdsOther).includes(id));
+  const children = notes.filter((n) => !n.deletedAt && (n.parentId === id || ensureArray(n.parentIdsOther).includes(id)));
   return [id, ...children.flatMap((c) => collectAllDescendants(c.id, visited))];
 }
 
@@ -536,7 +538,7 @@ function setFocusedNote(index) {
 
 function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
   const isFolder = hasChildren(note.id);
-  const directCount = isFolder ? notes.filter((n) => n.parentId === note.id || ensureArray(n.parentIdsOther).includes(note.id)).length : 0;
+  const directCount = isFolder ? notes.filter((n) => !n.deletedAt && (n.parentId === note.id || ensureArray(n.parentIdsOther).includes(note.id))).length : 0;
   const totalCount = isFolder ? collectAllDescendants(note.id).length - 1 : 0;
   const folderCountLabel = directCount === totalCount ? `${totalCount}` : `${directCount}/${totalCount}`;
   const folderCountTitle = directCount === totalCount
@@ -674,7 +676,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     e.stopPropagation();
     dropdown.classList.add('hidden');
     noteMenu.classList.remove('open');
-    const childCount = collectDescendants(note.id).length - 1;
+    const childCount = collectDescendants(note.id).filter(id => { const n = notes.find(x => x.id === id); return n && !n.deletedAt; }).length - 1;
     const msg = childCount > 0
       ? `Удалить «${note.copyText}» и ${childCount} вложенных заметок?`
       : `Удалить «${note.copyText}»?`;
@@ -754,11 +756,27 @@ function startInlineEdit(el, note) {
   input.addEventListener('blur', commit);
 }
 
+function createTrashNoteEl(note) {
+  const path = getNotePath(note);
+  const pathStr = path.length > 0 ? 'Root › ' + path.join(' › ') : 'Root';
+  const el = document.createElement('div');
+  el.className = 'note-item trash-note-item';
+  el.innerHTML = `
+    <div class="note-content">
+      <div class="note-copy-text"><span class="note-title-text">${escapeHtml(note.copyText)}</span></div>
+      ${note.description ? `<div class="note-description">${escapeHtml(note.description)}</div>` : ''}
+      <div class="note-path">${escapeHtml(pathStr)}</div>
+    </div>
+  `;
+  return el;
+}
+
 function renderSearchResults(query) {
   const caseSensitive = searchCaseCb.checked;
   const q = caseSensitive ? query : query.toLowerCase();
 
   const matched = notes.filter((note) => {
+    if (note.deletedAt) return false;
     const fields = [];
     if (searchTitleCb.checked) fields.push(caseSensitive ? note.copyText : note.copyText.toLowerCase());
     if (searchDescCb.checked && note.description) fields.push(caseSensitive ? note.description : note.description.toLowerCase());
@@ -805,11 +823,45 @@ function render() {
 
   const parentId = getCurrentParentId();
 
+  // Hide add button in trash view
+  addBtn.classList.toggle('hidden', parentId === TRASH_ID);
+
   // F8F: search mode — show global results instead of current level
   const query = searchInput.value.trim();
   if (query) {
     renderSearchResults(query);
-    notesCount.textContent = notes.length || '';
+    notesCount.textContent = notes.filter(n => !n.deletedAt).length || '';
+    return;
+  }
+
+  // Trash view
+  if (parentId === TRASH_ID) {
+    const trashNotes = notes.filter(n => !!n.deletedAt).sort((a, b) => (b.deletedAt || 0) - (a.deletedAt || 0));
+    const metaEl = document.createElement('div');
+    metaEl.className = 'folder-meta';
+    metaEl.innerHTML = `
+      <div class="folder-meta-title">\u{1F5D1}\uFE0F Корзина</div>
+      <div class="folder-meta-actions">
+        <button class="trash-empty-btn" title="Навсегда удалить все заметки из корзины">\u{1F5D1}\uFE0F Очистить корзину</button>
+      </div>
+    `;
+    metaEl.querySelector('.trash-empty-btn').addEventListener('click', () => {
+      const count = trashNotes.length;
+      const msg = `Навсегда удалить ${count} ${count === 1 ? 'заметку' : 'заметок'} из корзины?`;
+      showConfirmDelete(msg, emptyTrash);
+    });
+    notesList.appendChild(metaEl);
+
+    if (trashNotes.length === 0) {
+      emptyState.querySelector('p:first-child').textContent = 'Корзина пуста';
+      emptyState.classList.remove('hidden');
+    }
+
+    trashNotes.forEach(note => {
+      notesList.appendChild(createTrashNoteEl(note));
+    });
+
+    notesCount.textContent = notes.filter(n => !n.deletedAt).length || '';
     return;
   }
 
@@ -852,25 +904,33 @@ function render() {
       metaEl.querySelector('.folder-meta-edit').addEventListener('click', () => {
         startEdit(parentNote);
       });
-      // F3F: delete current folder and navigate to parent
+      // F3F: delete current folder and navigate to parent (soft delete)
       metaEl.querySelector('.folder-meta-delete').addEventListener('click', () => {
-        const childCount = collectDescendants(parentNote.id).length - 1;
+        const allDesc = collectDescendants(parentNote.id);
+        const activeCount = allDesc.filter(id => { const n = notes.find(x => x.id === id); return n && !n.deletedAt; }).length;
+        const childCount = activeCount - 1;
         const confirmMsg = childCount > 0
           ? `Удалить папку «${parentNote.copyText}» и ${childCount} вложенных заметок?`
           : `Удалить папку «${parentNote.copyText}»?`;
         showConfirmDelete(confirmMsg, () => {
-          const idsToDelete = new Set(collectDescendants(parentNote.id));
-          const backup = notes.filter((n) => idsToDelete.has(n.id));
+          const idsToDelete = new Set(allDesc);
+          const now = Date.now();
+          const affectedIds = [];
+          notes.forEach(n => {
+            if (idsToDelete.has(n.id) && !n.deletedAt) {
+              n.deletedAt = now;
+              n.updatedAt = now;
+              affectedIds.push(n.id);
+            }
+          });
           navStack.pop();
           updateNavBar();
-          notes = notes.filter((n) => !idsToDelete.has(n.id));
-          removeOrphanedSymlinks(idsToDelete);
           reorderNotes();
           saveNotes().then(() => render());
-          const msg = idsToDelete.size > 1
-            ? `Удалено ${idsToDelete.size} заметок`
+          const msg = affectedIds.length > 1
+            ? `Удалено ${affectedIds.length} заметок`
             : 'Заметка удалена';
-          showUndoToast(msg, backup, [...idsToDelete]);
+          showUndoToast(msg, affectedIds, affectedIds);
         });
       });
       notesList.appendChild(metaEl);
@@ -879,6 +939,7 @@ function render() {
 
   const currentNotes = notes
     .filter((n) => {
+      if (n.deletedAt) return false;
       const isPrimary = (n.parentId || null) === parentId;
       const isSimlink = parentId === null
         ? n.parentId !== null && ensureArray(n.parentIdsOther).includes('')
@@ -888,9 +949,39 @@ function render() {
     .sort((a, b) => a.order - b.order);
 
   if (currentNotes.length === 0) {
-    emptyState.querySelector('p:first-child').textContent =
-      navStack.length > 0 ? 'Папка пуста' : 'Заметок нет';
-    emptyState.classList.remove('hidden');
+    const hasTrash = parentId === null && notes.some(n => !!n.deletedAt);
+    if (!hasTrash) {
+      emptyState.querySelector('p:first-child').textContent =
+        navStack.length > 0 ? 'Папка пуста' : 'Заметок нет';
+      emptyState.classList.remove('hidden');
+    }
+  }
+
+  // Trash entry at root level (at the top)
+  if (parentId === null) {
+    const trashCount = notes.filter(n => !!n.deletedAt).length;
+    if (trashCount > 0) {
+      const trashEl = document.createElement('div');
+      trashEl.className = 'note-item trash-entry';
+      trashEl.innerHTML = `
+        <div class="note-content">
+          <div class="note-copy-text">
+            <span class="folder-icon">\u{1F5D1}\uFE0F</span>
+            <span class="note-title-text">Корзина</span>
+            <span class="folder-count" title="${trashCount} удалённых заметок">${trashCount}</span>
+          </div>
+        </div>
+      `;
+      trashEl.addEventListener('click', () => {
+        exitSelectMode();
+        searchInput.value = '';
+        searchClear.classList.add('hidden');
+        navStack = [{ id: TRASH_ID, copyText: '\u{1F5D1}\uFE0F Корзина' }];
+        updateNavBar();
+        render();
+      });
+      notesList.appendChild(trashEl);
+    }
   }
 
   currentNotes.forEach((note) => {
@@ -904,7 +995,12 @@ function render() {
   if (navStack.length > 0) {
     const parentNote = notes.find((n) => n.id === parentId);
     if (parentNote) {
-      const others = ensureArray(parentNote.parentIdsOther).filter((id) => id !== undefined && id !== null);
+      const others = ensureArray(parentNote.parentIdsOther).filter((pid) => {
+        if (pid === undefined || pid === null) return false;
+        if (pid === '') return true;
+        const pn = notes.find(n => n.id === pid);
+        return pn && !pn.deletedAt;
+      });
       if (others.length > 0) {
         const simlinBlock = document.createElement('div');
         simlinBlock.className = 'simlins-block';
@@ -978,7 +1074,7 @@ function render() {
     }
   }
 
-  notesCount.textContent = notes.length || '';
+  notesCount.textContent = notes.filter(n => !n.deletedAt).length || '';
 }
 
 // --- CRUD ---
@@ -1034,15 +1130,21 @@ function removeOrphanedSymlinks(idsToDelete) {
 
 function deleteNote(id) {
   const idsToDelete = new Set(collectDescendants(id));
-  const backup = notes.filter((n) => idsToDelete.has(n.id));
-  notes = notes.filter((n) => !idsToDelete.has(n.id));
-  removeOrphanedSymlinks(idsToDelete);
+  const now = Date.now();
+  const affectedIds = [];
+  notes.forEach(n => {
+    if (idsToDelete.has(n.id) && !n.deletedAt) {
+      n.deletedAt = now;
+      n.updatedAt = now;
+      affectedIds.push(n.id);
+    }
+  });
   reorderNotes();
   saveNotes().then(() => render());
-  const msg = idsToDelete.size > 1
-    ? `Удалено ${idsToDelete.size} заметок`
+  const msg = affectedIds.length > 1
+    ? `Удалено ${affectedIds.length} заметок`
     : 'Заметка удалена';
-  showUndoToast(msg, backup, [...idsToDelete]);
+  showUndoToast(msg, affectedIds, affectedIds);
 }
 
 function reorderNotes() {
@@ -1067,10 +1169,9 @@ function showConfirmDelete(message, onConfirm) {
 
 // --- Undo delete ---
 
-function showUndoToast(msg, backup, syncIds) {
-  // Commit any previous pending delete before showing new undo
+function showUndoToast(msg, affectedIds, syncIds) {
   if (undoTimeout) { clearTimeout(undoTimeout); commitPendingDelete(); }
-  deletedSnapshot = { backup, syncIds };
+  deletedSnapshot = { affectedIds, syncIds };
   toast.innerHTML = `${escapeHtml(msg)} <button class="toast-undo-btn">Undo</button>`;
   toast.classList.remove('hidden');
   toast.querySelector('.toast-undo-btn').addEventListener('click', undoDelete);
@@ -1084,7 +1185,10 @@ function undoDelete() {
   if (!deletedSnapshot) return;
   clearTimeout(undoTimeout);
   undoTimeout = null;
-  notes.push(...deletedSnapshot.backup);
+  deletedSnapshot.affectedIds.forEach(id => {
+    const note = notes.find(n => n.id === id);
+    if (note) delete note.deletedAt;
+  });
   reorderNotes();
   saveNotes().then(() => render());
   deletedSnapshot = null;
@@ -1093,9 +1197,27 @@ function undoDelete() {
 
 function commitPendingDelete() {
   if (!deletedSnapshot) return;
-  for (const id of deletedSnapshot.syncIds) scheduleSync({ id }, 'delete');
+  deletedSnapshot.affectedIds.forEach(id => {
+    const note = notes.find(n => n.id === id);
+    if (note) scheduleSync(note, 'upsert');
+  });
   deletedSnapshot = null;
   undoTimeout = null;
+}
+
+function emptyTrash() {
+  const trashNotes = notes.filter(n => !!n.deletedAt);
+  const trashIds = trashNotes.map(n => n.id);
+  const idsToRemove = new Set(trashIds);
+  notes = notes.filter(n => !n.deletedAt);
+  removeOrphanedSymlinks(idsToRemove);
+  reorderNotes();
+  if (getCurrentParentId() === TRASH_ID) {
+    navStack = [];
+    updateNavBar();
+  }
+  saveNotes().then(() => render());
+  trashIds.forEach(id => scheduleSync({ id }, 'delete'));
 }
 
 // --- Form ---
@@ -1291,6 +1413,7 @@ function serverRowToNote(row) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     dateActual: row.date_actual ? new Date(row.date_actual).getTime() : (row.created_at || Date.now()),
+    deletedAt: row.deleted_at ? new Date(row.deleted_at).getTime() : null,
   };
 }
 
@@ -1352,7 +1475,7 @@ function scheduleSync(noteOrId, op) {
 function scheduleBatchSync() {
   if (!_syncSession) return;
   clearTimeout(_batchSyncTimer);
-  _batchSyncTimer = setTimeout(() => upsertNotesBatch(notes), 1500);
+  _batchSyncTimer = setTimeout(() => upsertNotesBatch(notes.filter(n => !n.deletedAt)), 1500);
 }
 
 async function flushPendingChanges() {
@@ -1409,11 +1532,9 @@ async function runFullSync() {
     for (const row of serverNotes) {
       const local = localMap.get(row.local_id);
       if (!local) {
-        // New from server
         notes.push(serverRowToNote(row));
         changed = true;
       } else if (row.updated_at > (local.updatedAt || local.createdAt)) {
-        // Server is newer — overwrite local
         Object.assign(local, serverRowToNote(row));
         changed = true;
       }
@@ -1432,7 +1553,7 @@ async function runFullSync() {
       notes = notes.filter((note) => {
         if (!serverMap.has(note.id) && (note.updatedAt || note.createdAt) < lastSync) {
           changed = true;
-          return false; // deleted on server
+          return false;
         }
         return true;
       });
@@ -1572,11 +1693,16 @@ deleteSelectedBtn.addEventListener('click', () => {
       }
     }
 
-    const backup = notes.filter((n) => idsToDelete.has(n.id));
-    notes = notes.filter((n) => !idsToDelete.has(n.id));
-    removeOrphanedSymlinks(idsToDelete);
+    const now = Date.now();
+    const affectedIds = [];
+    notes.forEach(n => {
+      if (idsToDelete.has(n.id) && !n.deletedAt) {
+        n.deletedAt = now;
+        n.updatedAt = now;
+        affectedIds.push(n.id);
+      }
+    });
     reorderNotes();
-    const syncIds = [...idsToDelete];
     exitSelectMode();
     saveNotes().then(() => {
       updateNavBar();
@@ -1586,7 +1712,7 @@ deleteSelectedBtn.addEventListener('click', () => {
     const msg = count === 1
       ? 'Заметка удалена'
       : `Удалено ${count} заметок`;
-    showUndoToast(msg, backup, syncIds);
+    showUndoToast(msg, affectedIds, affectedIds);
   });
 });
 

@@ -1675,6 +1675,59 @@ body.dark .clipboard-symlink-btn:hover {
   background: #3a2e18;
 }
 
+/* === Trash === */
+.trash-entry {
+  opacity: 0.7;
+  border-top: 1px dashed #d0d0d0;
+  margin-top: 4px;
+}
+
+.trash-entry:hover {
+  opacity: 1;
+}
+
+body.dark .trash-entry {
+  border-top-color: #333;
+}
+
+.trash-note-item {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.trash-note-item:hover {
+  background: transparent;
+}
+
+body.dark .trash-note-item:hover {
+  background: transparent;
+}
+
+.trash-empty-btn {
+  font-size: 0.769em;
+  padding: 4px 12px;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
+  background: #e74c3c;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.trash-empty-btn:hover {
+  background: #c0392b;
+}
+
+body.dark .trash-empty-btn {
+  background: #7a2020;
+  border-color: #9a2828;
+}
+
+body.dark .trash-empty-btn:hover {
+  background: #8a2525;
+}
+
 /* === Simlins === */
 .simlins-block {
   border-top: 1px dashed #d0d0d0;
