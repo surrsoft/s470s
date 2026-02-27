@@ -667,6 +667,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     dropdown.classList.add('hidden');
     noteMenu.classList.remove('open');
     cutToClipboard([{ id: note.id, isSymlink: isSimlink }], getCurrentParentId());
+    render();
   });
 
   // F19F: Select menu option
@@ -1496,6 +1497,7 @@ clipboardSymlinkBtn.addEventListener('click', () => {
 
 clipboardClearBtn.addEventListener('click', () => {
   clearClipboard();
+  render();
 });
 
 clipboardViewBtn.addEventListener('click', () => {
