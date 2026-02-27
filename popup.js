@@ -28,6 +28,10 @@ const saveBtn = document.getElementById('save-btn');
 const cancelBtn = document.getElementById('cancel-btn');
 const emptyState = document.getElementById('empty-state');
 const toast = document.getElementById('toast');
+const confirmModal = document.getElementById('confirm-modal');
+const confirmMessage = document.getElementById('confirm-message');
+const confirmOkBtn = document.getElementById('confirm-ok-btn');
+const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
 const notesCount = document.getElementById('notes-count');
 const syncIndicator = document.getElementById('sync-indicator');
 const syncBtn = document.getElementById('sync-btn');
@@ -670,7 +674,11 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     e.stopPropagation();
     dropdown.classList.add('hidden');
     noteMenu.classList.remove('open');
-    deleteNote(note.id);
+    const childCount = collectDescendants(note.id).length - 1;
+    const msg = childCount > 0
+      ? `Удалить «${note.copyText}» и ${childCount} вложенных заметок?`
+      : `Удалить «${note.copyText}»?`;
+    showConfirmDelete(msg, () => deleteNote(note.id));
   });
 
   el.querySelector('.menu-cut').addEventListener('click', (e) => {
@@ -846,18 +854,24 @@ function render() {
       });
       // F3F: delete current folder and navigate to parent
       metaEl.querySelector('.folder-meta-delete').addEventListener('click', () => {
-        const idsToDelete = new Set(collectDescendants(parentNote.id));
-        const backup = notes.filter((n) => idsToDelete.has(n.id));
-        navStack.pop();
-        updateNavBar();
-        notes = notes.filter((n) => !idsToDelete.has(n.id));
-        removeOrphanedSymlinks(idsToDelete);
-        reorderNotes();
-        saveNotes().then(() => render());
-        const msg = idsToDelete.size > 1
-          ? `Удалено ${idsToDelete.size} заметок`
-          : 'Заметка удалена';
-        showUndoToast(msg, backup, [...idsToDelete]);
+        const childCount = collectDescendants(parentNote.id).length - 1;
+        const confirmMsg = childCount > 0
+          ? `Удалить папку «${parentNote.copyText}» и ${childCount} вложенных заметок?`
+          : `Удалить папку «${parentNote.copyText}»?`;
+        showConfirmDelete(confirmMsg, () => {
+          const idsToDelete = new Set(collectDescendants(parentNote.id));
+          const backup = notes.filter((n) => idsToDelete.has(n.id));
+          navStack.pop();
+          updateNavBar();
+          notes = notes.filter((n) => !idsToDelete.has(n.id));
+          removeOrphanedSymlinks(idsToDelete);
+          reorderNotes();
+          saveNotes().then(() => render());
+          const msg = idsToDelete.size > 1
+            ? `Удалено ${idsToDelete.size} заметок`
+            : 'Заметка удалена';
+          showUndoToast(msg, backup, [...idsToDelete]);
+        });
       });
       notesList.appendChild(metaEl);
     }
@@ -1035,6 +1049,20 @@ function reorderNotes() {
   notes.forEach((note, i) => {
     note.order = i;
   });
+}
+
+// --- Confirm modal ---
+
+function showConfirmDelete(message, onConfirm) {
+  confirmMessage.textContent = message;
+  confirmModal.classList.remove('hidden');
+  confirmOkBtn.onclick = () => {
+    confirmModal.classList.add('hidden');
+    onConfirm();
+  };
+  confirmCancelBtn.onclick = () => {
+    confirmModal.classList.add('hidden');
+  };
 }
 
 // --- Undo delete ---
@@ -1532,29 +1560,34 @@ resetSelectedBtn.addEventListener('click', () => {
 // F22F: delete selected notes (with all descendants)
 deleteSelectedBtn.addEventListener('click', () => {
   if (selectedNoteIds.size === 0) return;
-
-  const idsToDelete = new Set();
-  for (const id of selectedNoteIds) {
-    for (const descendant of collectDescendants(id)) {
-      idsToDelete.add(descendant);
+  const count = selectedNoteIds.size;
+  const confirmMsg = count === 1
+    ? 'Удалить выбранную заметку?'
+    : `Удалить ${count} выбранных заметок?`;
+  showConfirmDelete(confirmMsg, () => {
+    const idsToDelete = new Set();
+    for (const id of selectedNoteIds) {
+      for (const descendant of collectDescendants(id)) {
+        idsToDelete.add(descendant);
+      }
     }
-  }
 
-  const backup = notes.filter((n) => idsToDelete.has(n.id));
-  notes = notes.filter((n) => !idsToDelete.has(n.id));
-  removeOrphanedSymlinks(idsToDelete);
-  reorderNotes();
-  const syncIds = [...idsToDelete];
-  exitSelectMode();
-  saveNotes().then(() => {
-    updateNavBar();
-    render();
+    const backup = notes.filter((n) => idsToDelete.has(n.id));
+    notes = notes.filter((n) => !idsToDelete.has(n.id));
+    removeOrphanedSymlinks(idsToDelete);
+    reorderNotes();
+    const syncIds = [...idsToDelete];
+    exitSelectMode();
+    saveNotes().then(() => {
+      updateNavBar();
+      render();
+    });
+
+    const msg = count === 1
+      ? 'Заметка удалена'
+      : `Удалено ${count} заметок`;
+    showUndoToast(msg, backup, syncIds);
   });
-
-  const msg = syncIds.length === 1
-    ? 'Заметка удалена'
-    : `Удалено ${selectedNoteIds.size} заметок`;
-  showUndoToast(msg, backup, syncIds);
 });
 
 // Move selected
