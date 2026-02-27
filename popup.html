@@ -45,7 +45,20 @@
       <span class="select-mode-label">☑ Select mode</span>
       <button id="reset-selected-btn" class="reset-selected-btn" title="Exit select mode, clear selection">reset</button>
       <button id="delete-selected-btn" class="delete-selected-btn" title="Delete all selected notes and their contents">delete selected</button>
-      <button id="move-selected-btn" class="move-selected-btn" title="Move selected notes to another location">move to...</button>
+      <button id="cut-selected-btn" class="cut-selected-btn" title="Cut selected notes to clipboard">cut</button>
+    </div>
+  </div>
+
+  <div id="clipboard-bar" class="clipboard-bar hidden">
+    <div class="clipboard-bar-row">
+      <span class="clipboard-icon">✂</span>
+      <span id="clipboard-label" class="clipboard-label"></span>
+      <button id="clipboard-view-btn" class="clipboard-view-btn" title="View clipboard contents">view</button>
+      <button id="clipboard-paste-btn" class="clipboard-paste-btn" title="Paste notes here">paste here</button>
+      <button id="clipboard-clear-btn" class="clipboard-clear-btn" title="Clear clipboard">&#10005;</button>
+    </div>
+    <div id="clipboard-preview" class="clipboard-preview hidden">
+      <div id="clipboard-preview-list" class="clipboard-preview-list"></div>
     </div>
   </div>
 
@@ -90,15 +103,6 @@
       <button id="save-btn" title="Save note (Enter)">Save</button>
       <button id="cancel-btn" class="secondary" title="Cancel editing (Escape)">Cancel</button>
     </div>
-  </div>
-
-  <div id="move-picker" class="move-picker hidden">
-    <div class="move-picker-header">
-      <span id="move-picker-label" class="move-picker-label"></span>
-      <button id="move-cancel-btn" class="move-cancel-btn" title="Cancel move">Cancel</button>
-    </div>
-    <input type="text" id="move-filter" class="move-filter" placeholder="Filter...">
-    <div id="move-list" class="move-list"></div>
   </div>
 
   <div id="notes-list" class="notes-list"></div>

@@ -6,12 +6,14 @@ const selectModeBtns = document.getElementById('select-mode-btns');
 const selectModeLabel = selectModeBtns.querySelector('.select-mode-label');
 const resetSelectedBtn = document.getElementById('reset-selected-btn');
 const deleteSelectedBtn = document.getElementById('delete-selected-btn');
-const moveSelectedBtn = document.getElementById('move-selected-btn');
-const movePicker = document.getElementById('move-picker');
-const movePickerLabel = document.getElementById('move-picker-label');
-const moveCancelBtn = document.getElementById('move-cancel-btn');
-const moveFilterInput = document.getElementById('move-filter');
-const moveListEl = document.getElementById('move-list');
+const cutSelectedBtn = document.getElementById('cut-selected-btn');
+const clipboardBar = document.getElementById('clipboard-bar');
+const clipboardLabel = document.getElementById('clipboard-label');
+const clipboardViewBtn = document.getElementById('clipboard-view-btn');
+const clipboardPasteBtn = document.getElementById('clipboard-paste-btn');
+const clipboardClearBtn = document.getElementById('clipboard-clear-btn');
+const clipboardPreview = document.getElementById('clipboard-preview');
+const clipboardPreviewList = document.getElementById('clipboard-preview-list');
 const formContainer = document.getElementById('form-container');
 const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
@@ -69,8 +71,8 @@ let selectedNoteIds = new Set(); // selected note ids in select mode
 let deletedSnapshot = null; // { backup: Note[], syncIds: string[] }
 let undoTimeout = null;
 
-// --- Move state ---
-let moveSourceIds = null; // Map<id, isSymlink> when move mode active, null otherwise
+// --- Clipboard (cut/paste) state ---
+let clipboard = null; // { sources: Map<id, isSymlink>, originParentId } | null
 let moveUndoSnapshot = null; // [{ id, parentId, parentIdsOther, order }]
 let moveUndoTimeout = null;
 
@@ -86,70 +88,56 @@ function exitSelectMode() {
   selectedNoteIds = new Set();
 }
 
-// --- Move mode ---
+// --- Clipboard (cut/paste) ---
 
-function startMoveMode(sources) {
+function cutToClipboard(sources, originParentId) {
   // sources: [{ id, isSymlink }]
-  if (undoTimeout) { clearTimeout(undoTimeout); commitPendingDelete(); }
-  if (moveUndoTimeout) { clearTimeout(moveUndoTimeout); moveUndoSnapshot = null; moveUndoTimeout = null; }
-  moveSourceIds = new Map(sources.map(({ id, isSymlink }) => [id, isSymlink]));
-  const count = moveSourceIds.size;
-  movePickerLabel.textContent = `Moving ${count} note${count > 1 ? 's' : ''}…`;
-  moveFilterInput.value = '';
-  renderMovePicker('');
-  notesList.classList.add('hidden');
-  emptyState.classList.add('hidden');
-  movePicker.classList.remove('hidden');
+  clipboard = {
+    sources: new Map(sources.map(({ id, isSymlink }) => [id, isSymlink])),
+    originParentId,
+  };
+  updateClipboardBar();
 }
 
-function exitMoveMode() {
-  moveSourceIds = null;
-  movePicker.classList.add('hidden');
-  notesList.classList.remove('hidden');
+function clearClipboard() {
+  clipboard = null;
+  updateClipboardBar();
 }
 
-function renderMovePicker(filter) {
-  const excludeIds = new Set();
-  for (const id of moveSourceIds.keys()) {
-    for (const desc of collectDescendants(id)) excludeIds.add(desc);
+function updateClipboardBar() {
+  if (!clipboard || clipboard.sources.size === 0) {
+    clipboardBar.classList.add('hidden');
+    return;
   }
-  moveListEl.innerHTML = '';
-  const filterLower = filter.toLowerCase();
+  const count = clipboard.sources.size;
+  clipboardLabel.textContent = `${count} note${count > 1 ? 's' : ''} cut`;
+  clipboardBar.classList.remove('hidden');
+  if (!clipboardPreview.classList.contains('hidden')) {
+    renderClipboardPreview();
+  }
+}
 
-  if (!filterLower || 'root'.includes(filterLower)) {
+function renderClipboardPreview() {
+  clipboardPreviewList.innerHTML = '';
+  for (const id of clipboard.sources.keys()) {
+    const note = notes.find((n) => n.id === id);
     const item = document.createElement('div');
-    item.className = 'move-dest-item move-dest-root';
-    item.textContent = '— Root (top level) —';
-    item.addEventListener('click', () => executeMove(null));
-    moveListEl.appendChild(item);
-  }
-
-  function addLevel(parentId, depth) {
-    notes
-      .filter((n) => n.parentId === parentId && !excludeIds.has(n.id))
-      .sort((a, b) => a.order - b.order)
-      .forEach((note) => {
-        if (!filterLower || note.copyText.toLowerCase().includes(filterLower)) {
-          const item = document.createElement('div');
-          item.className = 'move-dest-item';
-          item.style.paddingLeft = `${16 + depth * 14}px`;
-          item.textContent = note.copyText;
-          item.addEventListener('click', () => executeMove(note.id));
-          moveListEl.appendChild(item);
-        }
-        addLevel(note.id, depth + 1);
-      });
-  }
-  addLevel(null, 0);
-
-  if (moveListEl.children.length === 0) {
-    moveListEl.innerHTML = '<div class="move-dest-empty">No destinations found</div>';
+    item.className = 'clipboard-preview-item';
+    item.textContent = note ? note.copyText : `(id: ${id})`;
+    clipboardPreviewList.appendChild(item);
   }
 }
 
 function executeMove(targetParentId) {
-  const currentParentId = getCurrentParentId();
-  const sources = [...moveSourceIds.entries()];
+  if (!clipboard) return;
+  const excludeIds = new Set();
+  for (const id of clipboard.sources.keys()) {
+    for (const desc of collectDescendants(id)) excludeIds.add(desc);
+  }
+  if (targetParentId !== null && excludeIds.has(targetParentId)) return;
+
+  const originParentId = clipboard.originParentId;
+  const sources = [...clipboard.sources.entries()];
 
   const backup = sources.map(([id]) => {
     const n = notes.find((n) => n.id === id);
@@ -166,8 +154,8 @@ function executeMove(targetParentId) {
     const note = notes.find((n) => n.id === id);
     if (!note) return;
     if (isSymlink) {
-      const currentKey = currentParentId ?? '';
-      const others = ensureArray(note.parentIdsOther).filter((p) => p !== currentKey);
+      const originKey = originParentId ?? '';
+      const others = ensureArray(note.parentIdsOther).filter((p) => p !== originKey);
       const targetKey = targetParentId ?? '';
       if (targetParentId !== note.parentId && !others.includes(targetKey)) {
         others.push(targetKey);
@@ -179,8 +167,7 @@ function executeMove(targetParentId) {
     }
   });
 
-  exitMoveMode();
-  if (selectMode) exitSelectMode();
+  clearClipboard();
   reorderNotes();
   saveNotes().then(() => { updateNavBar(); render(); });
   sources.forEach(([id]) => {
@@ -238,7 +225,6 @@ function buildNavStackFor(note) {
 
 function navigateInto(note) {
   exitSelectMode();
-  if (moveSourceIds) exitMoveMode();
   searchInput.value = '';
   searchClear.classList.add('hidden');
   navStack = buildNavStackFor(note);
@@ -248,7 +234,6 @@ function navigateInto(note) {
 
 function navigateBack() {
   exitSelectMode();
-  if (moveSourceIds) exitMoveMode();
   navStack.pop();
   updateNavBar();
   render();
@@ -589,7 +574,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
       <div class="note-dropdown hidden">
         <button class="menu-open" title="Navigate into this note">&#8594; Open</button>
         <button class="menu-edit" title="Edit note">&#9998; Edit</button>
-        <button class="menu-move" title="Move this note to another location">&#8594; Move to...</button>
+        <button class="menu-cut" title="Cut note to clipboard">&#9986; Cut</button>
         <button class="menu-delete" title="Delete note (and all contents if folder)">&#10005; Delete</button>
         ${withDrag ? '<button class="menu-select" title="Select for batch action">&#9745; Select</button>' : ''}
       </div>
@@ -682,11 +667,11 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     deleteNote(note.id);
   });
 
-  el.querySelector('.menu-move').addEventListener('click', (e) => {
+  el.querySelector('.menu-cut').addEventListener('click', (e) => {
     e.stopPropagation();
     dropdown.classList.add('hidden');
     noteMenu.classList.remove('open');
-    startMoveMode([{ id: note.id, isSymlink }]);
+    cutToClipboard([{ id: note.id, isSymlink }], getCurrentParentId());
   });
 
   // F19F: Select menu option
@@ -1545,7 +1530,7 @@ deleteSelectedBtn.addEventListener('click', () => {
 });
 
 // Move selected
-moveSelectedBtn.addEventListener('click', () => {
+cutSelectedBtn.addEventListener('click', () => {
   if (selectedNoteIds.size === 0) return;
   const currentParentId = getCurrentParentId();
   const sources = [...selectedNoteIds].map((id) => {
@@ -1555,16 +1540,30 @@ moveSelectedBtn.addEventListener('click', () => {
       : ensureArray(n.parentIdsOther).includes(currentParentId);
     return { id, isSymlink };
   });
-  startMoveMode(sources);
-});
-
-moveCancelBtn.addEventListener('click', () => {
-  exitMoveMode();
+  cutToClipboard(sources, currentParentId);
+  exitSelectMode();
+  updateNavBar();
   render();
 });
 
-moveFilterInput.addEventListener('input', () => {
-  renderMovePicker(moveFilterInput.value);
+clipboardPasteBtn.addEventListener('click', () => {
+  executeMove(getCurrentParentId());
+});
+
+clipboardClearBtn.addEventListener('click', () => {
+  clearClipboard();
+});
+
+clipboardViewBtn.addEventListener('click', () => {
+  const isHidden = clipboardPreview.classList.contains('hidden');
+  if (isHidden) {
+    renderClipboardPreview();
+    clipboardPreview.classList.remove('hidden');
+    clipboardViewBtn.textContent = 'hide';
+  } else {
+    clipboardPreview.classList.add('hidden');
+    clipboardViewBtn.textContent = 'view';
+  }
 });
 
 document.addEventListener('click', () => {
@@ -1579,9 +1578,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (formVisible) {
       hideForm();
-    } else if (moveSourceIds) {
-      exitMoveMode();
-      render();
     } else if (searchInput.value) {
       searchInput.value = '';
       searchClear.classList.add('hidden');

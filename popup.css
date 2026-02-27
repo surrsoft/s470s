@@ -1546,30 +1546,100 @@ body.dark .inline-edit-input {
   border-bottom-color: #666;
 }
 
-/* === Move picker === */
-.move-picker {
+/* === Clipboard bar === */
+.clipboard-bar {
   border-bottom: 1px solid #e5e5e5;
-  background: #fafafa;
+  background: #fffbf0;
 }
 
-.move-picker-header {
+.clipboard-bar-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px 6px;
-  gap: 8px;
+  gap: 6px;
+  padding: 6px 12px;
 }
 
-.move-picker-label {
-  font-size: 12px;
+.clipboard-icon {
+  font-size: 13px;
+  flex-shrink: 0;
   color: #888;
-  flex: 1;
 }
 
-.move-cancel-btn {
+.clipboard-label {
+  font-size: 12px;
+  color: #666;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.clipboard-view-btn,
+.clipboard-paste-btn,
+.clipboard-clear-btn {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+
+.clipboard-view-btn {
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  color: #555;
+}
+
+.clipboard-view-btn:hover {
+  background: #e8e8e8;
+}
+
+.clipboard-paste-btn {
+  border: 1px solid #4a90d9;
+  background: #eef4fc;
+  color: #4a90d9;
+  font-weight: 500;
+}
+
+.clipboard-paste-btn:hover {
+  background: #ddeefa;
+}
+
+.clipboard-clear-btn {
+  border: none;
+  background: transparent;
+  color: #aaa;
+  font-size: 13px;
+  padding: 2px 4px;
+}
+
+.clipboard-clear-btn:hover {
+  color: #c0392b;
+  background: #fee;
+  border-radius: 4px;
+}
+
+.clipboard-preview {
+  border-top: 1px solid #f0e8c0;
+  padding: 4px 12px 6px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.clipboard-preview-item {
+  font-size: 12px;
+  color: #555;
+  padding: 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cut-selected-btn {
+  align-self: flex-start;
   font-size: 11px;
   padding: 2px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #888;
   border-radius: 4px;
   background: #f5f5f5;
   color: #555;
@@ -1578,132 +1648,66 @@ body.dark .inline-edit-input {
   transition: background 0.1s;
 }
 
-.move-cancel-btn:hover {
+.cut-selected-btn:hover {
   background: #e8e8e8;
 }
 
-.move-filter {
-  display: block;
-  width: calc(100% - 32px);
-  margin: 0 16px 6px;
-  padding: 5px 8px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 12px;
-  font-family: inherit;
-  outline: none;
-  background: #f9f9f9;
-  color: #1a1a1a;
-  transition: border-color 0.15s;
-}
-
-.move-filter:focus {
-  border-color: #888;
-  background: #fff;
-}
-
-.move-list {
-  max-height: 260px;
-  overflow-y: auto;
-  padding: 0 0 6px;
-}
-
-.move-dest-item {
-  padding: 7px 16px;
-  font-size: 13px;
-  color: #1a1a1a;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: background 0.1s;
-}
-
-.move-dest-item:hover {
-  background: #f0f0f0;
-}
-
-.move-dest-root {
-  color: #888;
-  font-style: italic;
-}
-
-.move-dest-empty {
-  padding: 12px 16px;
-  font-size: 12px;
-  color: #aaa;
-  text-align: center;
-}
-
-.move-selected-btn {
-  align-self: flex-start;
-  font-size: 11px;
-  padding: 2px 8px;
-  border: 1px solid #4a90d9;
-  border-radius: 4px;
-  background: #eef4fc;
-  color: #4a90d9;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.1s;
-}
-
-.move-selected-btn:hover {
-  background: #ddeefa;
-}
-
-body.dark .move-picker {
-  background: #252527;
+body.dark .clipboard-bar {
+  background: #1a1800;
   border-color: #2d2d2f;
 }
 
-body.dark .move-picker-label {
+body.dark .clipboard-icon {
   color: #666;
 }
 
-body.dark .move-cancel-btn {
+body.dark .clipboard-label {
+  color: #888;
+}
+
+body.dark .clipboard-view-btn {
   background: #2a2a2c;
   border-color: #3a3a3c;
   color: #aaa;
 }
 
-body.dark .move-cancel-btn:hover {
+body.dark .clipboard-view-btn:hover {
   background: #333;
 }
 
-body.dark .move-filter {
-  background: #2a2a2c;
-  border-color: #3a3a3c;
-  color: #e8e8e8;
-}
-
-body.dark .move-filter:focus {
-  border-color: #666;
-  background: #333;
-}
-
-body.dark .move-dest-item {
-  color: #e8e8e8;
-}
-
-body.dark .move-dest-item:hover {
-  background: #2a2a2c;
-}
-
-body.dark .move-dest-root {
-  color: #666;
-}
-
-body.dark .move-dest-empty {
-  color: #555;
-}
-
-body.dark .move-selected-btn {
+body.dark .clipboard-paste-btn {
   background: #1e2e3e;
   border-color: #2a4a6a;
   color: #7ab8f5;
 }
 
-body.dark .move-selected-btn:hover {
+body.dark .clipboard-paste-btn:hover {
   background: #253d55;
+}
+
+body.dark .clipboard-clear-btn {
+  color: #555;
+}
+
+body.dark .clipboard-clear-btn:hover {
+  color: #ff6b6b;
+  background: #3a1515;
+}
+
+body.dark .clipboard-preview {
+  border-color: #333;
+}
+
+body.dark .clipboard-preview-item {
+  color: #888;
+}
+
+body.dark .cut-selected-btn {
+  background: #2a2a2c;
+  border-color: #3a3a3c;
+  color: #aaa;
+}
+
+body.dark .cut-selected-btn:hover {
+  background: #333;
 }
