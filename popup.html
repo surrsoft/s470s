@@ -55,6 +55,7 @@
       <span id="clipboard-label" class="clipboard-label"></span>
       <button id="clipboard-view-btn" class="clipboard-view-btn" title="View clipboard contents">view</button>
       <button id="clipboard-paste-btn" class="clipboard-paste-btn" title="Paste notes here">paste here</button>
+      <button id="clipboard-symlink-btn" class="clipboard-symlink-btn" title="Paste notes as symlinks here">paste as symlink</button>
       <button id="clipboard-clear-btn" class="clipboard-clear-btn" title="Clear clipboard">&#10005;</button>
     </div>
     <div id="clipboard-preview" class="clipboard-preview hidden">
@@ -75,25 +76,8 @@
     <input type="text" id="input-copy" placeholder="Text to copy" title="Text that will be copied to clipboard on click">
     <input type="text" id="input-desc" placeholder="Description" title="Optional description shown below the title">
     <input type="url" id="input-url" placeholder="URL (optional)" title="Optional URL — shown as a button on the note">
-    <div class="select-with-filter">
-      <input type="text" id="filter-parent" class="select-filter" placeholder="Filter parent..." title="Filter the parent list">
-      <select id="input-parent" title="Select parent note (determines where this note appears)"></select>
-    </div>
     <details id="form-advanced" class="form-advanced">
-      <summary class="form-advanced-summary" title="Additional options: simlinks and fast copy">Advanced</summary>
-      <div class="form-symlinks">
-        <label class="form-label-small" title="This note will also appear inside these folders">Additional parents (simlinks):</label>
-        <div id="symlinks-list" class="symlinks-list"></div>
-        <div class="symlink-add-row">
-          <button id="btn-add-symlink" class="btn-icon" title="Add another parent folder (simlink)" type="button">+</button>
-          <div class="symlink-select-wrap">
-            <input type="text" id="filter-symlink" class="select-filter hidden" placeholder="Filter..." title="Filter notes list">
-            <select id="select-add-symlink" class="hidden" title="Select a note to add as additional parent">
-              <option value="" disabled selected>Select note...</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <summary class="form-advanced-summary" title="Additional options: fast copy">Advanced</summary>
       <label class="form-check" title="When enabled, clicking the note immediately copies text without navigating inside">
         <input type="checkbox" id="input-fast-copy">
         Fast copy (click copies text)

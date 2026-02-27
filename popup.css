@@ -425,157 +425,6 @@ body.dark .form-id-value {
   margin-top: 8px;
 }
 
-.form-container select {
-  width: 100%;
-  margin-top: 8px;
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  background: #fff;
-  color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-
-.form-container select:focus {
-  border-color: #888;
-}
-
-.form-label-small {
-  display: block;
-  font-size: 11px;
-  color: #888;
-  margin-top: 8px;
-  margin-bottom: 2px;
-}
-
-.form-symlinks {
-  margin-top: 8px;
-}
-
-.symlinks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.symlink-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #f0f6fc;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 13px;
-  color: #1a1a1a;
-  border: 1px solid #c0d8f0;
-}
-
-.symlink-item-remove {
-  cursor: pointer;
-  color: #c0392b;
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  padding: 0 4px;
-  display: flex;
-  align-items: center;
-}
-
-.symlink-item-remove:hover {
-  color: #a02820;
-}
-
-.symlink-add-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.symlink-select-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.symlink-select-wrap:has(> :not(.hidden)) {
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 6px;
-  background: #f5f5f5;
-}
-
-.select-filter {
-  width: 100%;
-  padding: 5px 8px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 12px;
-  font-family: inherit;
-  outline: none;
-  background: #f9f9f9;
-  color: #1a1a1a;
-  transition: border-color 0.15s;
-}
-
-.select-filter:focus {
-  border-color: #888;
-  background: #fff;
-}
-
-.form-container .select-filter {
-  margin-top: 6px;
-}
-
-.select-with-filter {
-  margin-top: 6px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 6px;
-  background: #f5f5f5;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.select-with-filter .select-filter {
-  margin-top: 0;
-}
-
-.select-with-filter select {
-  margin-top: 0;
-}
-
-.btn-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background: #fff;
-  cursor: pointer;
-  color: #555;
-  font-size: 16px;
-  line-height: 1;
-  padding: 0;
-}
-
-.btn-icon:hover {
-  background: #f0f0f0;
-}
-
-#select-add-symlink {
-  flex: 1;
-  margin: 0;
-}
 
 .simlink-badge {
   display: inline-block;
@@ -1082,40 +931,7 @@ body.dark .form-container input:focus {
   border-color: #666;
 }
 
-body.dark .form-container select {
-  background: #2a2a2c;
-  border-color: #3a3a3c;
-  color: #e8e8e8;
-}
 
-body.dark .form-container select:focus {
-  border-color: #666;
-}
-
-body.dark .form-label-small {
-  color: #666;
-}
-
-body.dark .select-filter {
-  background: #2a2a2c;
-  border-color: #3a3a3c;
-  color: #e8e8e8;
-}
-
-body.dark .select-filter:focus {
-  border-color: #666;
-  background: #333;
-}
-
-body.dark .select-with-filter {
-  background: #2a2a2c;
-  border-color: #3a3a3c;
-}
-
-body.dark .symlink-select-wrap:has(> :not(.hidden)) {
-  background: #2a2a2c;
-  border-color: #3a3a3c;
-}
 
 body.dark .simlink-badge {
   background: #2a1f40;
@@ -1605,6 +1421,23 @@ body.dark .inline-edit-input {
   background: #ddeefa;
 }
 
+.clipboard-symlink-btn {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+  flex-shrink: 0;
+  border: 1px solid #8a6a3a;
+  background: #fdf5e6;
+  color: #8a6a3a;
+}
+
+.clipboard-symlink-btn:hover {
+  background: #f5e8cc;
+}
+
 .clipboard-clear-btn {
   border: none;
   background: transparent;
@@ -1710,4 +1543,14 @@ body.dark .cut-selected-btn {
 
 body.dark .cut-selected-btn:hover {
   background: #333;
+}
+
+body.dark .clipboard-symlink-btn {
+  background: #2a2010;
+  border-color: #5a4a2a;
+  color: #c8a060;
+}
+
+body.dark .clipboard-symlink-btn:hover {
+  background: #3a2e18;
 }

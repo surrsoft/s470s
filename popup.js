@@ -14,17 +14,11 @@ const clipboardPasteBtn = document.getElementById('clipboard-paste-btn');
 const clipboardClearBtn = document.getElementById('clipboard-clear-btn');
 const clipboardPreview = document.getElementById('clipboard-preview');
 const clipboardPreviewList = document.getElementById('clipboard-preview-list');
+const clipboardSymlinkBtn = document.getElementById('clipboard-symlink-btn');
 const formContainer = document.getElementById('form-container');
 const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
-const inputParent = document.getElementById('input-parent');
-const filterParent = document.getElementById('filter-parent');
-const symlinksList = document.getElementById('symlinks-list');
-const btnAddSymlink = document.getElementById('btn-add-symlink');
-const filterSymlink = document.getElementById('filter-symlink');
-const selectAddSymlink = document.getElementById('select-add-symlink');
-let currentSymlinks = [];
 const inputFastCopy = document.getElementById('input-fast-copy');
 const formAdvanced = document.getElementById('form-advanced');
 const formIdRow = document.getElementById('form-id-row');
@@ -213,6 +207,67 @@ function showMoveUndoToast(msg, backup) {
   }, 5000);
 }
 
+function executePasteAsSymlink(targetParentId) {
+  if (!clipboard) return;
+  const targetKey = targetParentId ?? '';
+  const backup = [];
+  const affected = [];
+
+  for (const id of clipboard.sources.keys()) {
+    const note = notes.find((n) => n.id === id);
+    if (!note) continue;
+    // Skip: target is the note itself
+    if (targetParentId === note.id) continue;
+    // Skip: target is already primary parent
+    if ((targetParentId ?? null) === (note.parentId ?? null)) continue;
+    // Skip: symlink already exists at target
+    const others = ensureArray(note.parentIdsOther);
+    if (others.includes(targetKey)) continue;
+    // Skip: circular reference (target is a descendant of note)
+    if (targetParentId !== null && collectDescendants(note.id).has(targetParentId)) continue;
+
+    backup.push({ id, parentIdsOther: [...others] });
+    note.parentIdsOther = [...others, targetKey];
+    affected.push(note);
+  }
+
+  if (affected.length === 0) return;
+
+  clearClipboard();
+  saveNotes().then(() => render());
+  affected.forEach((note) => scheduleSync(note, 'upsert'));
+
+  const destName = targetParentId === null
+    ? 'Root'
+    : (notes.find((n) => n.id === targetParentId)?.copyText || '');
+  const count = affected.length;
+  const msg = `Симлинк: ${count > 1 ? count + ' заметок' : '1 заметка'} → ${destName}`;
+  showSymlinkUndoToast(msg, backup);
+}
+
+function showSymlinkUndoToast(msg, backup) {
+  if (moveUndoTimeout) clearTimeout(moveUndoTimeout);
+  moveUndoSnapshot = backup;
+  toast.innerHTML = `${escapeHtml(msg)} <button class="toast-undo-btn">Undo</button>`;
+  toast.classList.remove('hidden');
+  toast.querySelector('.toast-undo-btn').addEventListener('click', () => {
+    if (!moveUndoSnapshot) return;
+    clearTimeout(moveUndoTimeout);
+    moveUndoTimeout = null;
+    moveUndoSnapshot.forEach(({ id, parentIdsOther }) => {
+      const note = notes.find((n) => n.id === id);
+      if (note) { note.parentIdsOther = parentIdsOther; scheduleSync(note, 'upsert'); }
+    });
+    moveUndoSnapshot = null;
+    saveNotes().then(() => render());
+    toast.classList.add('hidden');
+  });
+  moveUndoTimeout = setTimeout(() => {
+    moveUndoSnapshot = null;
+    toast.classList.add('hidden');
+  }, 5000);
+}
+
 function buildNavStackFor(note) {
   const stack = [];
   let current = note;
@@ -332,67 +387,6 @@ function getNotePath(note) {
     currentId = parent.parentId;
   }
   return path;
-}
-
-function populateParentSelect(excludeId, query = '') {
-  const excludeIds = excludeId ? new Set(collectDescendants(excludeId)) : new Set();
-  const q = query.toLowerCase();
-  inputParent.innerHTML = '<option value="">— Root (top level) —</option>';
-  notes
-    .filter((n) => !excludeIds.has(n.id))
-    .filter((n) => !q || n.copyText.toLowerCase().includes(q))
-    .sort((a, b) => a.order - b.order)
-    .forEach((n) => {
-      const opt = document.createElement('option');
-      opt.value = n.id;
-      opt.textContent = n.copyText.length > 50 ? n.copyText.slice(0, 50) + '…' : n.copyText;
-      inputParent.appendChild(opt);
-    });
-}
-
-function renderSymlinksList() {
-  symlinksList.innerHTML = '';
-  currentSymlinks.forEach((id) => {
-    let text;
-    if (id === '') {
-      text = '— Root (top level) —';
-    } else {
-      const note = notes.find((n) => n.id === id);
-      if (!note) return;
-      text = note.copyText.length > 50 ? note.copyText.slice(0, 50) + '…' : note.copyText;
-    }
-    const el = document.createElement('div');
-    el.className = 'symlink-item';
-    el.innerHTML = `<span>${escapeHtml(text)}</span><button class="symlink-item-remove" type="button" title="Remove">&times;</button>`;
-    el.querySelector('.symlink-item-remove').addEventListener('click', () => {
-      currentSymlinks = currentSymlinks.filter((s) => s !== id);
-      renderSymlinksList();
-      populateSelectAddSymlink(editingId);
-    });
-    symlinksList.appendChild(el);
-  });
-}
-
-function populateSelectAddSymlink(excludeId, query = '') {
-  const excludeIds = excludeId ? new Set(collectDescendants(excludeId)) : new Set();
-  const q = query.toLowerCase();
-  selectAddSymlink.innerHTML = '<option value="__placeholder__" disabled selected>Select note...</option>';
-  if (!currentSymlinks.includes('')) {
-    const rootOpt = document.createElement('option');
-    rootOpt.value = '';
-    rootOpt.textContent = '— Root (top level) —';
-    selectAddSymlink.appendChild(rootOpt);
-  }
-  notes
-    .filter((n) => !excludeIds.has(n.id) && !currentSymlinks.includes(n.id))
-    .filter((n) => !q || n.copyText.toLowerCase().includes(q))
-    .sort((a, b) => a.order - b.order)
-    .forEach((n) => {
-      const opt = document.createElement('option');
-      opt.value = n.id;
-      opt.textContent = n.copyText.length > 50 ? n.copyText.slice(0, 50) + '…' : n.copyText;
-      selectAddSymlink.appendChild(opt);
-    });
 }
 
 // --- Font size ---
@@ -886,15 +880,15 @@ function render() {
 
 // --- CRUD ---
 
-function addNote(copyText, description, url, parentId, isFastCopy, parentIdsOther) {
+function addNote(copyText, description, url, isFastCopy) {
   const now = Date.now();
   const note = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     copyText,
     description,
     url,
-    parentId: parentId !== undefined ? parentId : getCurrentParentId(),
-    parentIdsOther: parentIdsOther || [],
+    parentId: getCurrentParentId(),
+    parentIdsOther: [],
     isFastCopy: !!isFastCopy,
     order: 0,
     createdAt: now,
@@ -909,14 +903,12 @@ function addNote(copyText, description, url, parentId, isFastCopy, parentIdsOthe
   });
 }
 
-function updateNote(id, copyText, description, url, parentId, isFastCopy, parentIdsOther) {
+function updateNote(id, copyText, description, url, isFastCopy) {
   const note = notes.find((n) => n.id === id);
   if (note) {
     note.copyText = copyText;
     note.description = description;
     note.url = url;
-    note.parentId = parentId;
-    note.parentIdsOther = parentIdsOther || [];
     note.isFastCopy = !!isFastCopy;
     note.updatedAt = Date.now();
     const navItem = navStack.find((item) => item.id === id);
@@ -1004,13 +996,6 @@ function hideForm() {
   inputCopy.value = '';
   inputDesc.value = '';
   inputUrl.value = '';
-  filterParent.value = '';
-  inputParent.innerHTML = '';
-  currentSymlinks = [];
-  symlinksList.innerHTML = '';
-  filterSymlink.value = '';
-  filterSymlink.classList.add('hidden');
-  selectAddSymlink.classList.add('hidden');
   inputFastCopy.checked = false;
   formIdRow.classList.add('hidden');
   formIdValue.textContent = '';
@@ -1022,13 +1007,8 @@ function startEdit(note) {
   inputCopy.value = note.copyText;
   inputDesc.value = note.description;
   inputUrl.value = note.url || '';
-  populateParentSelect(note.id);
-  inputParent.value = note.parentId || '';
-  currentSymlinks = [...ensureArray(note.parentIdsOther)];
-  renderSymlinksList();
-  populateSelectAddSymlink(note.id);
   inputFastCopy.checked = !!note.isFastCopy;
-  formAdvanced.open = !!(currentSymlinks.length || note.isFastCopy);
+  formAdvanced.open = !!note.isFastCopy;
   formIdValue.textContent = note.id;
   formIdRow.classList.remove('hidden');
   showForm();
@@ -1039,11 +1019,6 @@ addBtn.addEventListener('click', () => {
   inputCopy.value = '';
   inputDesc.value = '';
   inputUrl.value = '';
-  populateParentSelect(null);
-  inputParent.value = getCurrentParentId() || '';
-  currentSymlinks = [];
-  renderSymlinksList();
-  populateSelectAddSymlink(null);
   showForm();
 });
 
@@ -1057,50 +1032,14 @@ saveBtn.addEventListener('click', () => {
   }
   const description = inputDesc.value.trim();
   const url = inputUrl.value.trim();
-  const parentId = inputParent.value || null;
   const isFastCopy = inputFastCopy.checked;
-  const parentIdsOther = [...currentSymlinks];
 
   if (editingId) {
-    updateNote(editingId, copyText, description, url, parentId, isFastCopy, parentIdsOther);
+    updateNote(editingId, copyText, description, url, isFastCopy);
   } else {
-    addNote(copyText, description, url, parentId, isFastCopy, parentIdsOther);
+    addNote(copyText, description, url, isFastCopy);
   }
   hideForm();
-});
-
-btnAddSymlink.addEventListener('click', () => {
-  const isHidden = selectAddSymlink.classList.contains('hidden');
-  selectAddSymlink.classList.toggle('hidden', !isHidden);
-  filterSymlink.classList.toggle('hidden', !isHidden);
-  if (isHidden) {
-    filterSymlink.value = '';
-    populateSelectAddSymlink(editingId);
-    filterSymlink.focus();
-  }
-});
-
-filterParent.addEventListener('input', () => {
-  const prev = inputParent.value;
-  populateParentSelect(editingId, filterParent.value);
-  inputParent.value = prev;
-});
-
-filterSymlink.addEventListener('input', () => {
-  populateSelectAddSymlink(editingId, filterSymlink.value);
-});
-
-selectAddSymlink.addEventListener('change', (e) => {
-  const selectedId = e.target.value;
-  if (selectedId === '__placeholder__') return;
-  if (!currentSymlinks.includes(selectedId)) {
-    currentSymlinks.push(selectedId);
-    renderSymlinksList();
-    populateSelectAddSymlink(editingId);
-  }
-  selectAddSymlink.classList.add('hidden');
-  filterSymlink.value = '';
-  filterSymlink.classList.add('hidden');
 });
 
 // Save on Enter in last field
@@ -1548,6 +1487,10 @@ cutSelectedBtn.addEventListener('click', () => {
 
 clipboardPasteBtn.addEventListener('click', () => {
   executeMove(getCurrentParentId());
+});
+
+clipboardSymlinkBtn.addEventListener('click', () => {
+  executePasteAsSymlink(getCurrentParentId());
 });
 
 clipboardClearBtn.addEventListener('click', () => {
