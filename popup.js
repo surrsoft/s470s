@@ -877,8 +877,6 @@ function render() {
     emptyState.querySelector('p:first-child').textContent =
       navStack.length > 0 ? 'Папка пуста' : 'Заметок нет';
     emptyState.classList.remove('hidden');
-    notesCount.textContent = notes.length || '';
-    return;
   }
 
   currentNotes.forEach((note) => {
@@ -887,6 +885,84 @@ function render() {
       : ensureArray(note.parentIdsOther).includes(parentId);
     notesList.appendChild(createNoteEl(note, isSimlink, true));
   });
+
+  // Simlins: show other parent locations of the current folder note
+  if (navStack.length > 0) {
+    const parentNote = notes.find((n) => n.id === parentId);
+    if (parentNote) {
+      const others = ensureArray(parentNote.parentIdsOther).filter((id) => id !== undefined && id !== null);
+      if (others.length > 0) {
+        const simlinBlock = document.createElement('div');
+        simlinBlock.className = 'simlins-block';
+        const titleEl = document.createElement('div');
+        titleEl.className = 'simlins-title';
+        titleEl.textContent = 'simlins';
+        simlinBlock.appendChild(titleEl);
+
+        others.forEach((otherId) => {
+          const isRoot = otherId === '';
+          const otherNote = isRoot ? null : notes.find((n) => n.id === otherId);
+          if (!isRoot && !otherNote) return; // orphaned ref
+
+          // altNavStack: the navStack that would exist if navigated via this simlink path
+          const altNavStack = isRoot ? [] : buildNavStackFor(otherNote);
+
+          const rowEl = document.createElement('div');
+          rowEl.className = 'simlin-row';
+
+          // Back button — mirrors .nav-back-btn
+          const backLabel = altNavStack.length > 0
+            ? altNavStack[altNavStack.length - 1].copyText
+            : 'Root';
+          const backEl = document.createElement('button');
+          backEl.className = 'nav-back-btn simlin-back-btn';
+          backEl.textContent = '\u2190 ' + backLabel;
+          backEl.addEventListener('click', () => {
+            if (isRoot) {
+              navStack = [];
+              updateNavBar();
+              render();
+            } else {
+              navigateInto(otherNote);
+            }
+          });
+          rowEl.appendChild(backEl);
+
+          // Breadcrumbs — mirrors .nav-breadcrumbs
+          const crumbsEl = document.createElement('div');
+          crumbsEl.className = 'nav-breadcrumbs';
+
+          const rootCrumb = document.createElement('span');
+          rootCrumb.className = 'nav-crumb';
+          rootCrumb.textContent = 'Root';
+          rootCrumb.addEventListener('click', () => { navStack = []; updateNavBar(); render(); });
+          crumbsEl.appendChild(rootCrumb);
+
+          altNavStack.forEach((item, index) => {
+            const sep = document.createElement('span');
+            sep.className = 'nav-crumb-sep';
+            sep.textContent = ' › ';
+            crumbsEl.appendChild(sep);
+
+            const crumb = document.createElement('span');
+            crumb.className = 'nav-crumb';
+            crumb.textContent = item.copyText;
+            crumb.addEventListener('click', () => {
+              navStack = altNavStack.slice(0, index + 1);
+              updateNavBar();
+              render();
+            });
+            crumbsEl.appendChild(crumb);
+          });
+
+          rowEl.appendChild(crumbsEl);
+          simlinBlock.appendChild(rowEl);
+        });
+
+        notesList.appendChild(simlinBlock);
+      }
+    }
+  }
 
   notesCount.textContent = notes.length || '';
 }
