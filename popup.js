@@ -6,6 +6,12 @@ const selectModeBtns = document.getElementById('select-mode-btns');
 const selectModeLabel = selectModeBtns.querySelector('.select-mode-label');
 const resetSelectedBtn = document.getElementById('reset-selected-btn');
 const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+const moveSelectedBtn = document.getElementById('move-selected-btn');
+const movePicker = document.getElementById('move-picker');
+const movePickerLabel = document.getElementById('move-picker-label');
+const moveCancelBtn = document.getElementById('move-cancel-btn');
+const moveFilterInput = document.getElementById('move-filter');
+const moveListEl = document.getElementById('move-list');
 const formContainer = document.getElementById('form-container');
 const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
@@ -63,6 +69,11 @@ let selectedNoteIds = new Set(); // selected note ids in select mode
 let deletedSnapshot = null; // { backup: Note[], syncIds: string[] }
 let undoTimeout = null;
 
+// --- Move state ---
+let moveSourceIds = null; // Map<id, isSymlink> when move mode active, null otherwise
+let moveUndoSnapshot = null; // [{ id, parentId, parentIdsOther, order }]
+let moveUndoTimeout = null;
+
 // --- Keyboard navigation state ---
 let focusedNoteIndex = -1;
 
@@ -73,6 +84,146 @@ function getCurrentParentId() {
 function exitSelectMode() {
   selectMode = false;
   selectedNoteIds = new Set();
+}
+
+// --- Move mode ---
+
+function startMoveMode(sources) {
+  // sources: [{ id, isSymlink }]
+  if (undoTimeout) { clearTimeout(undoTimeout); commitPendingDelete(); }
+  if (moveUndoTimeout) { clearTimeout(moveUndoTimeout); moveUndoSnapshot = null; moveUndoTimeout = null; }
+  moveSourceIds = new Map(sources.map(({ id, isSymlink }) => [id, isSymlink]));
+  const count = moveSourceIds.size;
+  movePickerLabel.textContent = `Moving ${count} note${count > 1 ? 's' : ''}…`;
+  moveFilterInput.value = '';
+  renderMovePicker('');
+  notesList.classList.add('hidden');
+  emptyState.classList.add('hidden');
+  movePicker.classList.remove('hidden');
+}
+
+function exitMoveMode() {
+  moveSourceIds = null;
+  movePicker.classList.add('hidden');
+  notesList.classList.remove('hidden');
+}
+
+function renderMovePicker(filter) {
+  const excludeIds = new Set();
+  for (const id of moveSourceIds.keys()) {
+    for (const desc of collectDescendants(id)) excludeIds.add(desc);
+  }
+  moveListEl.innerHTML = '';
+  const filterLower = filter.toLowerCase();
+
+  if (!filterLower || 'root'.includes(filterLower)) {
+    const item = document.createElement('div');
+    item.className = 'move-dest-item move-dest-root';
+    item.textContent = '— Root (top level) —';
+    item.addEventListener('click', () => executeMove(null));
+    moveListEl.appendChild(item);
+  }
+
+  function addLevel(parentId, depth) {
+    notes
+      .filter((n) => n.parentId === parentId && !excludeIds.has(n.id))
+      .sort((a, b) => a.order - b.order)
+      .forEach((note) => {
+        if (!filterLower || note.copyText.toLowerCase().includes(filterLower)) {
+          const item = document.createElement('div');
+          item.className = 'move-dest-item';
+          item.style.paddingLeft = `${16 + depth * 14}px`;
+          item.textContent = note.copyText;
+          item.addEventListener('click', () => executeMove(note.id));
+          moveListEl.appendChild(item);
+        }
+        addLevel(note.id, depth + 1);
+      });
+  }
+  addLevel(null, 0);
+
+  if (moveListEl.children.length === 0) {
+    moveListEl.innerHTML = '<div class="move-dest-empty">No destinations found</div>';
+  }
+}
+
+function executeMove(targetParentId) {
+  const currentParentId = getCurrentParentId();
+  const sources = [...moveSourceIds.entries()];
+
+  const backup = sources.map(([id]) => {
+    const n = notes.find((n) => n.id === id);
+    return { id, parentId: n.parentId, parentIdsOther: [...ensureArray(n.parentIdsOther)], order: n.order };
+  });
+
+  const sourceIdSet = new Set(sources.map(([id]) => id));
+  const maxOrder = notes
+    .filter((n) => n.parentId === targetParentId && !sourceIdSet.has(n.id))
+    .reduce((max, n) => Math.max(max, n.order), -1);
+
+  let orderOffset = 0;
+  sources.forEach(([id, isSymlink]) => {
+    const note = notes.find((n) => n.id === id);
+    if (!note) return;
+    if (isSymlink) {
+      const currentKey = currentParentId ?? '';
+      const others = ensureArray(note.parentIdsOther).filter((p) => p !== currentKey);
+      const targetKey = targetParentId ?? '';
+      if (targetParentId !== note.parentId && !others.includes(targetKey)) {
+        others.push(targetKey);
+      }
+      note.parentIdsOther = others;
+    } else {
+      note.parentId = targetParentId;
+      note.order = maxOrder + 1 + orderOffset++;
+    }
+  });
+
+  exitMoveMode();
+  if (selectMode) exitSelectMode();
+  reorderNotes();
+  saveNotes().then(() => { updateNavBar(); render(); });
+  sources.forEach(([id]) => {
+    const note = notes.find((n) => n.id === id);
+    if (note) scheduleSync(note, 'upsert');
+  });
+
+  const destName = targetParentId === null
+    ? 'Root'
+    : (notes.find((n) => n.id === targetParentId)?.copyText || '');
+  const count = sources.length;
+  const msg = `Перемещено ${count > 1 ? count + ' заметок' : '1 заметка'} → ${destName}`;
+  showMoveUndoToast(msg, backup);
+}
+
+function showMoveUndoToast(msg, backup) {
+  if (moveUndoTimeout) clearTimeout(moveUndoTimeout);
+  moveUndoSnapshot = backup;
+  toast.innerHTML = `${escapeHtml(msg)} <button class="toast-undo-btn">Undo</button>`;
+  toast.classList.remove('hidden');
+  toast.querySelector('.toast-undo-btn').addEventListener('click', () => {
+    if (!moveUndoSnapshot) return;
+    clearTimeout(moveUndoTimeout);
+    moveUndoTimeout = null;
+    const snap = moveUndoSnapshot;
+    moveUndoSnapshot = null;
+    snap.forEach(({ id, parentId, parentIdsOther, order }) => {
+      const note = notes.find((n) => n.id === id);
+      if (note) { note.parentId = parentId; note.parentIdsOther = parentIdsOther; note.order = order; }
+    });
+    reorderNotes();
+    saveNotes().then(() => render());
+    snap.forEach(({ id }) => {
+      const note = notes.find((n) => n.id === id);
+      if (note) scheduleSync(note, 'upsert');
+    });
+    toast.classList.add('hidden');
+  });
+  moveUndoTimeout = setTimeout(() => {
+    toast.classList.add('hidden');
+    moveUndoSnapshot = null;
+    moveUndoTimeout = null;
+  }, 5000);
 }
 
 function buildNavStackFor(note) {
@@ -87,6 +238,7 @@ function buildNavStackFor(note) {
 
 function navigateInto(note) {
   exitSelectMode();
+  if (moveSourceIds) exitMoveMode();
   searchInput.value = '';
   searchClear.classList.add('hidden');
   navStack = buildNavStackFor(note);
@@ -96,6 +248,7 @@ function navigateInto(note) {
 
 function navigateBack() {
   exitSelectMode();
+  if (moveSourceIds) exitMoveMode();
   navStack.pop();
   updateNavBar();
   render();
@@ -436,6 +589,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
       <div class="note-dropdown hidden">
         <button class="menu-open" title="Navigate into this note">&#8594; Open</button>
         <button class="menu-edit" title="Edit note">&#9998; Edit</button>
+        <button class="menu-move" title="Move this note to another location">&#8594; Move to...</button>
         <button class="menu-delete" title="Delete note (and all contents if folder)">&#10005; Delete</button>
         ${withDrag ? '<button class="menu-select" title="Select for batch action">&#9745; Select</button>' : ''}
       </div>
@@ -526,6 +680,13 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     dropdown.classList.add('hidden');
     noteMenu.classList.remove('open');
     deleteNote(note.id);
+  });
+
+  el.querySelector('.menu-move').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.add('hidden');
+    noteMenu.classList.remove('open');
+    startMoveMode([{ id: note.id, isSymlink }]);
   });
 
   // F19F: Select menu option
@@ -1383,6 +1544,29 @@ deleteSelectedBtn.addEventListener('click', () => {
   showUndoToast(msg, backup, syncIds);
 });
 
+// Move selected
+moveSelectedBtn.addEventListener('click', () => {
+  if (selectedNoteIds.size === 0) return;
+  const currentParentId = getCurrentParentId();
+  const sources = [...selectedNoteIds].map((id) => {
+    const n = notes.find((n) => n.id === id);
+    const isSymlink = currentParentId === null
+      ? n.parentId !== null && ensureArray(n.parentIdsOther).includes('')
+      : ensureArray(n.parentIdsOther).includes(currentParentId);
+    return { id, isSymlink };
+  });
+  startMoveMode(sources);
+});
+
+moveCancelBtn.addEventListener('click', () => {
+  exitMoveMode();
+  render();
+});
+
+moveFilterInput.addEventListener('input', () => {
+  renderMovePicker(moveFilterInput.value);
+});
+
 document.addEventListener('click', () => {
   document.querySelectorAll('.note-dropdown').forEach((d) => d.classList.add('hidden'));
   document.querySelectorAll('.note-menu').forEach((m) => m.classList.remove('open'));
@@ -1395,6 +1579,9 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (formVisible) {
       hideForm();
+    } else if (moveSourceIds) {
+      exitMoveMode();
+      render();
     } else if (searchInput.value) {
       searchInput.value = '';
       searchClear.classList.add('hidden');

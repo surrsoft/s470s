@@ -45,6 +45,7 @@
       <span class="select-mode-label">☑ Select mode</span>
       <button id="reset-selected-btn" class="reset-selected-btn" title="Exit select mode, clear selection">reset</button>
       <button id="delete-selected-btn" class="delete-selected-btn" title="Delete all selected notes and their contents">delete selected</button>
+      <button id="move-selected-btn" class="move-selected-btn" title="Move selected notes to another location">move to...</button>
     </div>
   </div>
 
@@ -89,6 +90,15 @@
       <button id="save-btn" title="Save note (Enter)">Save</button>
       <button id="cancel-btn" class="secondary" title="Cancel editing (Escape)">Cancel</button>
     </div>
+  </div>
+
+  <div id="move-picker" class="move-picker hidden">
+    <div class="move-picker-header">
+      <span id="move-picker-label" class="move-picker-label"></span>
+      <button id="move-cancel-btn" class="move-cancel-btn" title="Cancel move">Cancel</button>
+    </div>
+    <input type="text" id="move-filter" class="move-filter" placeholder="Filter...">
+    <div id="move-list" class="move-list"></div>
   </div>
 
   <div id="notes-list" class="notes-list"></div>

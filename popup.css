@@ -1545,3 +1545,165 @@ body.dark .note-path {
 body.dark .inline-edit-input {
   border-bottom-color: #666;
 }
+
+/* === Move picker === */
+.move-picker {
+  border-bottom: 1px solid #e5e5e5;
+  background: #fafafa;
+}
+
+.move-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 6px;
+  gap: 8px;
+}
+
+.move-picker-label {
+  font-size: 12px;
+  color: #888;
+  flex: 1;
+}
+
+.move-cancel-btn {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f5f5f5;
+  color: #555;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.move-cancel-btn:hover {
+  background: #e8e8e8;
+}
+
+.move-filter {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 0 16px 6px;
+  padding: 5px 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  background: #f9f9f9;
+  color: #1a1a1a;
+  transition: border-color 0.15s;
+}
+
+.move-filter:focus {
+  border-color: #888;
+  background: #fff;
+}
+
+.move-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 0 0 6px;
+}
+
+.move-dest-item {
+  padding: 7px 16px;
+  font-size: 13px;
+  color: #1a1a1a;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.1s;
+}
+
+.move-dest-item:hover {
+  background: #f0f0f0;
+}
+
+.move-dest-root {
+  color: #888;
+  font-style: italic;
+}
+
+.move-dest-empty {
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #aaa;
+  text-align: center;
+}
+
+.move-selected-btn {
+  align-self: flex-start;
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid #4a90d9;
+  border-radius: 4px;
+  background: #eef4fc;
+  color: #4a90d9;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.move-selected-btn:hover {
+  background: #ddeefa;
+}
+
+body.dark .move-picker {
+  background: #252527;
+  border-color: #2d2d2f;
+}
+
+body.dark .move-picker-label {
+  color: #666;
+}
+
+body.dark .move-cancel-btn {
+  background: #2a2a2c;
+  border-color: #3a3a3c;
+  color: #aaa;
+}
+
+body.dark .move-cancel-btn:hover {
+  background: #333;
+}
+
+body.dark .move-filter {
+  background: #2a2a2c;
+  border-color: #3a3a3c;
+  color: #e8e8e8;
+}
+
+body.dark .move-filter:focus {
+  border-color: #666;
+  background: #333;
+}
+
+body.dark .move-dest-item {
+  color: #e8e8e8;
+}
+
+body.dark .move-dest-item:hover {
+  background: #2a2a2c;
+}
+
+body.dark .move-dest-root {
+  color: #666;
+}
+
+body.dark .move-dest-empty {
+  color: #555;
+}
+
+body.dark .move-selected-btn {
+  background: #1e2e3e;
+  border-color: #2a4a6a;
+  color: #7ab8f5;
+}
+
+body.dark .move-selected-btn:hover {
+  background: #253d55;
+}
