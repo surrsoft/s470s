@@ -896,7 +896,7 @@ function render() {
         simlinBlock.className = 'simlins-block';
         const titleEl = document.createElement('div');
         titleEl.className = 'simlins-title';
-        titleEl.textContent = 'simlins';
+        titleEl.textContent = 'as simlink paths';
         simlinBlock.appendChild(titleEl);
 
         others.forEach((otherId) => {
