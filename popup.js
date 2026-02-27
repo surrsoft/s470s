@@ -892,6 +892,7 @@ function render() {
         </div>
         <div class="folder-meta-actions">
           <button class="folder-meta-edit" title="Edit this folder">&#9998; edit</button>
+          <button class="folder-meta-cut" title="Cut this folder to clipboard">&#9986; cut</button>
           <button class="folder-meta-delete" title="Delete this folder and all its contents">&#10005; delete</button>
         </div>
       `;
@@ -911,6 +912,14 @@ function render() {
       // F2F: edit current folder
       metaEl.querySelector('.folder-meta-edit').addEventListener('click', () => {
         startEdit(parentNote);
+      });
+      // cut current folder and navigate to parent so it's visible as cut
+      metaEl.querySelector('.folder-meta-cut').addEventListener('click', () => {
+        const originParentId = navStack.length > 1 ? navStack[navStack.length - 2].id : null;
+        cutToClipboard([{ id: parentNote.id, isSymlink: false }], originParentId);
+        navStack.pop();
+        updateNavBar();
+        render();
       });
       // F3F: delete current folder and navigate to parent (soft delete)
       metaEl.querySelector('.folder-meta-delete').addEventListener('click', () => {
