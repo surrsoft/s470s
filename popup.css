@@ -1483,8 +1483,10 @@ body.dark .search-hl {
 }
 
 .form-advanced-summary::before {
-  content: '▸ ';
-  font-size: 10px;
+  content: '▸';
+  font-size: 22px;
+  display: inline-block;
+  margin-right: 4px;
 }
 
 .form-advanced[open] .form-advanced-summary::before {
