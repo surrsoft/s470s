@@ -953,6 +953,16 @@ body.dark .confirm-cancel-btn:hover {
   background: #ffe4e4;
 }
 
+.note-item.copying {
+  background: #f0f5ff;
+  outline: 1px dashed #7090d0;
+  outline-offset: -2px;
+}
+
+.note-item.copying:hover {
+  background: #e4ecff;
+}
+
 .reset-selected-btn {
   align-self: flex-start;
   font-size: 11px;
@@ -1298,6 +1308,15 @@ body.dark .note-item.cut {
 
 body.dark .note-item.cut:hover {
   background: #331818;
+}
+
+body.dark .note-item.copying {
+  background: #151a2a;
+  outline-color: #304070;
+}
+
+body.dark .note-item.copying:hover {
+  background: #182033;
 }
 
 body.dark .reset-selected-btn {

@@ -72,7 +72,7 @@ let deletedSnapshot = null; // { affectedIds: string[], syncIds: string[] }
 let undoTimeout = null;
 
 // --- Clipboard (cut/paste) state ---
-let clipboard = null; // { sources: Map<id, isSymlink>, originParentId } | null
+let clipboard = null; // { sources: Map<id, isSymlink>, originParentId, mode: 'cut'|'copy-shallow'|'copy-deep' } | null
 let moveUndoSnapshot = null; // [{ id, parentId, parentIdsOther, order }]
 let moveUndoTimeout = null;
 
@@ -81,6 +81,10 @@ let focusedNoteIndex = -1;
 
 function getCurrentParentId() {
   return navStack.length > 0 ? navStack[navStack.length - 1].id : null;
+}
+
+function makeId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
 function exitSelectMode() {
@@ -95,6 +99,17 @@ function cutToClipboard(sources, originParentId) {
   clipboard = {
     sources: new Map(sources.map(({ id, isSymlink }) => [id, isSymlink])),
     originParentId,
+    mode: 'cut',
+  };
+  updateClipboardBar();
+}
+
+function markForCopy(noteId, mode) {
+  // mode: 'copy-shallow' | 'copy-deep'
+  clipboard = {
+    sources: new Map([[noteId, false]]),
+    originParentId: getCurrentParentId(),
+    mode,
   };
   updateClipboardBar();
 }
@@ -110,7 +125,12 @@ function updateClipboardBar() {
     return;
   }
   const count = clipboard.sources.size;
-  clipboardLabel.textContent = `${count} note${count > 1 ? 's' : ''} cut`;
+  const isCopy = clipboard.mode !== 'cut';
+  clipboardLabel.textContent = isCopy
+    ? `${count} note${count > 1 ? 's' : ''} to copy`
+    : `${count} note${count > 1 ? 's' : ''} cut`;
+  clipboardBar.querySelector('.clipboard-icon').textContent = isCopy ? '⧉' : '✂';
+  clipboardSymlinkBtn.classList.toggle('hidden', isCopy);
   clipboardBar.classList.remove('hidden');
   if (!clipboardPreview.classList.contains('hidden')) {
     renderClipboardPreview();
@@ -182,6 +202,46 @@ function executeMove(targetParentId) {
   const count = sources.length;
   const msg = `Перемещено ${count > 1 ? count + ' заметок' : '1 заметка'} → ${destName}`;
   showMoveUndoToast(msg, backup);
+}
+
+function copyNoteDeep(note, newParentId) {
+  const newId = makeId();
+  const now = Date.now();
+  const newNote = { ...note, id: newId, parentId: newParentId, parentIdsOther: [], order: 0, createdAt: now, updatedAt: now };
+  notes.push(newNote);
+  const addedIds = [newId];
+  notes
+    .filter((n) => n.parentId === note.id && !n.deletedAt)
+    .forEach((child) => addedIds.push(...copyNoteDeep(child, newId)));
+  return addedIds;
+}
+
+function executeCopy(targetParentId) {
+  if (!clipboard || clipboard.mode === 'cut') return;
+  const isDeep = clipboard.mode === 'copy-deep';
+  const newIds = [];
+  const now = Date.now();
+
+  for (const [id] of clipboard.sources) {
+    const note = notes.find((n) => n.id === id);
+    if (!note) continue;
+    if (isDeep) {
+      newIds.push(...copyNoteDeep(note, targetParentId));
+    } else {
+      const newNote = { ...note, id: makeId(), parentId: targetParentId, parentIdsOther: [], order: 0, createdAt: now, updatedAt: now };
+      notes.push(newNote);
+      newIds.push(newNote.id);
+    }
+  }
+
+  if (newIds.length === 0) return;
+  clearClipboard();
+  reorderNotes();
+  saveNotes().then(() => { updateNavBar(); render(); flashPastedNotes(newIds); });
+  newIds.forEach((id) => {
+    const note = notes.find((n) => n.id === id);
+    if (note) scheduleSync(note, 'upsert');
+  });
 }
 
 function showMoveUndoToast(msg, backup) {
@@ -549,7 +609,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
   el.className = 'note-item';
   if (selectedNoteIds.has(note.id)) el.classList.add('selected');
   if (note.isFastCopy) el.classList.add('is-fast-copy');
-  if (clipboard && clipboard.sources.has(note.id)) el.classList.add('cut');
+  if (clipboard && clipboard.sources.has(note.id)) el.classList.add(clipboard.mode === 'cut' ? 'cut' : 'copying');
   el.dataset.id = note.id;
 
   // In normal mode: show drag handle (reorder); in select mode: show checkbox F20F
@@ -587,6 +647,8 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
         <button class="menu-open" title="Navigate into this note">&#8594; Open</button>
         <button class="menu-edit" title="Edit note">&#9998; Edit</button>
         <button class="menu-cut" title="Cut note to clipboard">&#9986; Cut</button>
+        <button class="menu-copy" title="Copy note (without children)">&#10697; Copy</button>
+        <button class="menu-copy-deep" title="Copy note with all children">&#10697; Copy with children</button>
         <button class="menu-delete" title="${isSimlink ? 'Remove symlink from this location' : 'Delete note (and all contents if folder)'}">${isSimlink ? '&#10005; Unlink' : '&#10005; Delete'}</button>
         ${withDrag ? '<button class="menu-select" title="Select for batch action">&#9745; Select</button>' : ''}
       </div>
@@ -696,6 +758,22 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     dropdown.classList.add('hidden');
     noteMenu.classList.remove('open');
     cutToClipboard([{ id: note.id, isSymlink: isSimlink }], getCurrentParentId());
+    render();
+  });
+
+  el.querySelector('.menu-copy').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.add('hidden');
+    noteMenu.classList.remove('open');
+    markForCopy(note.id, 'copy-shallow');
+    render();
+  });
+
+  el.querySelector('.menu-copy-deep').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.add('hidden');
+    noteMenu.classList.remove('open');
+    markForCopy(note.id, 'copy-deep');
     render();
   });
 
@@ -1099,7 +1177,7 @@ function render() {
 function addNote(copyText, description, url, isFastCopy) {
   const now = Date.now();
   const note = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    id: makeId(),
     copyText,
     description,
     url,
@@ -1783,7 +1861,8 @@ cutSelectedBtn.addEventListener('click', () => {
 });
 
 clipboardPasteBtn.addEventListener('click', () => {
-  executeMove(getCurrentParentId());
+  if (clipboard?.mode === 'cut') executeMove(getCurrentParentId());
+  else executeCopy(getCurrentParentId());
 });
 
 clipboardSymlinkBtn.addEventListener('click', () => {
