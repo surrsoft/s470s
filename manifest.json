@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Quick copy notes — click to copy, organize your snippets",
   "permissions": ["storage", "clipboardWrite", "sidePanel"],
-  "host_permissions": ["https://*.supabase.co/*"],
+  "host_permissions": ["https://*.supabase.co/*", "https://geocoding-api.open-meteo.com/*", "https://api.open-meteo.com/*"],
   "options_ui": {
     "page": "settings.html",
     "open_in_tab": true

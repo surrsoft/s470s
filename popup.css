@@ -449,6 +449,37 @@ body.dark .folder-count {
   font-size: 0.85em;
 }
 
+.note-weather {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.weather-temp {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.weather-city {
+  font-size: 0.75em;
+  color: #888;
+  font-weight: 400;
+}
+
+.folder-meta-weather {
+  margin: 8px 0;
+}
+
+.folder-meta-weather .weather-temp {
+  font-size: 1.5em;
+}
+
+.folder-meta-weather .weather-city {
+  font-size: 0.85em;
+}
+
 .btn-img {
   display: inline-block;
   margin-top: 5px;
@@ -1504,6 +1535,14 @@ body.dark .clock-time {
 }
 
 body.dark .clock-tz {
+  color: #666;
+}
+
+body.dark .weather-temp {
+  color: #e8e8e8;
+}
+
+body.dark .weather-city {
   color: #666;
 }
 

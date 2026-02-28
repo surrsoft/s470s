@@ -107,6 +107,13 @@
         <input type="text" id="input-timezone" list="timezone-list" placeholder="e.g. Europe/Moscow" title="IANA timezone name">
         <datalist id="timezone-list"></datalist>
       </div>
+      <label class="form-check" title="Show today's minimum temperature for a city">
+        <input type="checkbox" id="input-show-weather">
+        Min temperature today
+      </label>
+      <div id="show-weather-options" class="form-sub-options hidden">
+        <input type="text" id="input-weather-city" placeholder="e.g. Moscow" title="City name for weather forecast">
+      </div>
     </details>
     <div class="form-actions">
       <button id="save-btn" title="Save note (Enter)">Save</button>
