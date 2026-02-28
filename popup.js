@@ -713,6 +713,8 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
     const isOpen = !dropdown.classList.contains('hidden');
     document.querySelectorAll('.note-dropdown').forEach((d) => d.classList.add('hidden'));
     document.querySelectorAll('.note-menu').forEach((m) => m.classList.remove('open'));
+    document.querySelectorAll('.folder-meta-dropdown').forEach(d => d.classList.add('hidden'));
+    document.querySelectorAll('.folder-meta-menu').forEach(m => m.classList.remove('open'));
     if (!isOpen) {
       dropdown.classList.remove('hidden');
       noteMenu.classList.add('open');
@@ -960,21 +962,42 @@ function render() {
         ? new Date(parentNote.dateActual).toLocaleString()
         : new Date(parentNote.createdAt).toLocaleString();
       metaEl.innerHTML = `
-        <div class="folder-meta-title">${escapeHtml(parentNote.copyText)}</div>
+        <div class="folder-meta-top">
+          <div class="folder-meta-title">${escapeHtml(parentNote.copyText)}</div>
+          <div class="folder-meta-menu">
+            <button class="folder-meta-btn-menu" title="Actions">&#8943;</button>
+            <div class="folder-meta-dropdown hidden">
+              <button class="folder-meta-edit">&#9998; Edit</button>
+              <button class="folder-meta-cut">&#9986; Cut</button>
+              <button class="folder-meta-copy">&#10697; Copy</button>
+              <button class="folder-meta-copy-deep">&#10697; Copy with children</button>
+              <button class="folder-meta-delete">&#10005; Delete</button>
+            </div>
+          </div>
+        </div>
         ${parentNote.description ? `<div class="folder-meta-description">${escapeHtml(parentNote.description)}</div>` : ''}
         ${parentNote.url ? `<button class="btn-url folder-meta-url" title="${escapeHtml(parentNote.url)}">${escapeHtml(parentNote.url)}</button>` : ''}
         <div class="folder-meta-actual">
           <span class="folder-meta-actual-date" title="Date last marked as relevant">${escapeHtml(dateActualStr)}</span>
           <button class="folder-meta-actual-btn" title="Mark as relevant now">update date actual</button>
         </div>
-        <div class="folder-meta-actions">
-          <button class="folder-meta-edit" title="Edit this folder">&#9998; edit</button>
-          <button class="folder-meta-cut" title="Cut this folder to clipboard">&#9986; cut</button>
-          <button class="folder-meta-copy" title="Copy this folder (without children)">&#10697; copy</button>
-          <button class="folder-meta-copy-deep" title="Copy this folder with all children">&#10697; copy with children</button>
-          <button class="folder-meta-delete" title="Delete this folder and all its contents">&#10005; delete</button>
-        </div>
       `;
+      const folderMenuBtn = metaEl.querySelector('.folder-meta-btn-menu');
+      const folderDropdown = metaEl.querySelector('.folder-meta-dropdown');
+      const folderMenu = metaEl.querySelector('.folder-meta-menu');
+      folderMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !folderDropdown.classList.contains('hidden');
+        document.querySelectorAll('.note-dropdown').forEach(d => d.classList.add('hidden'));
+        document.querySelectorAll('.note-menu').forEach(m => m.classList.remove('open'));
+        if (isOpen) {
+          folderDropdown.classList.add('hidden');
+          folderMenu.classList.remove('open');
+        } else {
+          folderDropdown.classList.remove('hidden');
+          folderMenu.classList.add('open');
+        }
+      });
       if (parentNote.url) {
         metaEl.querySelector('.folder-meta-url').addEventListener('click', () => {
           const url = /^https?:\/\//i.test(parentNote.url) ? parentNote.url : 'https://' + parentNote.url;
@@ -1898,6 +1921,8 @@ clipboardViewBtn.addEventListener('click', () => {
 document.addEventListener('click', () => {
   document.querySelectorAll('.note-dropdown').forEach((d) => d.classList.add('hidden'));
   document.querySelectorAll('.note-menu').forEach((m) => m.classList.remove('open'));
+  document.querySelectorAll('.folder-meta-dropdown').forEach(d => d.classList.add('hidden'));
+  document.querySelectorAll('.folder-meta-menu').forEach(m => m.classList.remove('open'));
 });
 
 // Keyboard navigation
