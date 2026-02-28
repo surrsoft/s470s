@@ -1660,6 +1660,7 @@ async function runFullSync() {
     const serverNotes = await fetchNotes();
     if (serverNotes === null) {
       setSyncIndicator('error');
+      setStatusMessage('Sync error: not authenticated');
       return;
     }
 
@@ -1742,12 +1743,16 @@ async function initSync() {
     const session = await getSession();
     if (!session) {
       await chrome.storage.local.remove('supabaseSession');
+      setSyncIndicator('error');
+      setStatusMessage('Sync: session expired, please sign in again');
       return;
     }
     // Persist refreshed tokens (access token may have been renewed)
     await chrome.storage.local.set({ supabaseSession: session });
     _syncSession = session;
-  } catch {
+  } catch (err) {
+    setSyncIndicator('error');
+    setStatusMessage('Sync error: ' + (err.message || String(err)));
     return;
   }
 
