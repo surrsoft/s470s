@@ -426,7 +426,7 @@ body.dark .form-id-value {
 }
 
 
-.simlink-badge {
+.symlink-badge {
   display: inline-block;
   font-size: 0.72em;
   padding: 1px 5px;
@@ -1046,7 +1046,7 @@ body.dark .form-container input:focus {
 
 
 
-body.dark .simlink-badge {
+body.dark .symlink-badge {
   background: #2a1f40;
   color: #b39ddb;
 }
@@ -1760,13 +1760,13 @@ body.dark .trash-empty-btn:hover {
   background: #8a2525;
 }
 
-/* === Simlins === */
-.simlins-block {
+/* === Symlinks === */
+.symlinks-block {
   border-top: 1px dashed #d0d0d0;
   padding: 4px 0 2px;
 }
 
-.simlins-title {
+.symlinks-title {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -1774,7 +1774,7 @@ body.dark .trash-empty-btn:hover {
   padding: 4px 16px 2px;
 }
 
-.simlin-row {
+.symlink-row {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -1782,22 +1782,22 @@ body.dark .trash-empty-btn:hover {
   border-bottom: 1px solid #ebebeb;
 }
 
-.simlin-row:last-child {
+.symlink-row:last-child {
   border-bottom: none;
 }
 
-.simlin-back-btn {
+.symlink-back-btn {
   align-self: flex-start;
 }
 
-body.dark .simlins-block {
+body.dark .symlinks-block {
   border-top-color: #333;
 }
 
-body.dark .simlins-title {
+body.dark .symlinks-title {
   color: #555;
 }
 
-body.dark .simlin-row {
+body.dark .symlink-row {
   border-bottom-color: #2a2a2a;
 }

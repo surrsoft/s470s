@@ -595,7 +595,7 @@ function setFocusedNote(index) {
 
 // --- Search (F7F) ---
 
-function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
+function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
   const isFolder = hasChildren(note.id);
   const directCount = isFolder ? notes.filter((n) => !n.deletedAt && (n.parentId === note.id || ensureArray(n.parentIdsOther).includes(note.id))).length : 0;
   const totalCount = isFolder ? collectAllDescendants(note.id).length - 1 : 0;
@@ -634,7 +634,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     ${showDragHandle ? '<div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>' : ''}
     ${showCheckbox ? `<label class="note-select-wrap" title="Select"><input type="checkbox" class="note-select-cb"${selectedNoteIds.has(note.id) ? ' checked' : ''}></label>` : ''}
     <div class="note-content">
-      <div class="note-copy-text">${isFolder ? '<span class="folder-icon" title="Contains child notes">&#128193;</span>' : ''}<span class="note-title-text">${titleHtml}</span>${folderCountHtml}${isSimlink ? '<span class="simlink-badge" title="Simlink: this note appears here via an additional parent">simlink</span>' : ''}</div>
+      <div class="note-copy-text">${isFolder ? '<span class="folder-icon" title="Contains child notes">&#128193;</span>' : ''}<span class="note-title-text">${titleHtml}</span>${folderCountHtml}${isSymlink ? '<span class="symlink-badge" title="Symlink: this note appears here via an additional parent">symlink</span>' : ''}</div>
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${pathHtml}
       ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
@@ -648,7 +648,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
         <button class="menu-cut" title="Cut note to clipboard">&#9986; Cut</button>
         <button class="menu-copy" title="Copy note (without children)">&#10697; Copy</button>
         <button class="menu-copy-deep" title="Copy note with all children">&#10697; Copy with children</button>
-        <button class="menu-delete" title="${isSimlink ? 'Remove symlink from this location' : 'Delete note (and all contents if folder)'}">${isSimlink ? '&#10005; Unlink' : '&#10005; Delete'}</button>
+        <button class="menu-delete" title="${isSymlink ? 'Remove symlink from this location' : 'Delete note (and all contents if folder)'}">${isSymlink ? '&#10005; Unlink' : '&#10005; Delete'}</button>
         ${withDrag ? '<button class="menu-select" title="Select for batch action">&#9745; Select</button>' : ''}
       </div>
     </div>
@@ -737,7 +737,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     e.stopPropagation();
     dropdown.classList.add('hidden');
     noteMenu.classList.remove('open');
-    if (isSimlink) {
+    if (isSymlink) {
       const parentKey = getCurrentParentId() ?? '';
       note.parentIdsOther = ensureArray(note.parentIdsOther).filter(p => p !== parentKey);
       note.updatedAt = Date.now();
@@ -756,7 +756,7 @@ function createNoteEl(note, isSimlink, withDrag, searchCtx = null) {
     e.stopPropagation();
     dropdown.classList.add('hidden');
     noteMenu.classList.remove('open');
-    cutToClipboard([{ id: note.id, isSymlink: isSimlink }], getCurrentParentId());
+    cutToClipboard([{ id: note.id, isSymlink: isSymlink }], getCurrentParentId());
     render();
   });
 
@@ -1035,10 +1035,10 @@ function render() {
     .filter((n) => {
       if (n.deletedAt) return false;
       const isPrimary = (n.parentId || null) === parentId;
-      const isSimlink = parentId === null
+      const isSymlink = parentId === null
         ? n.parentId !== null && ensureArray(n.parentIdsOther).includes('')
         : ensureArray(n.parentIdsOther).includes(parentId);
-      return isPrimary || isSimlink;
+      return isPrimary || isSymlink;
     })
     .sort((a, b) => a.order - b.order);
 
@@ -1079,13 +1079,13 @@ function render() {
   }
 
   currentNotes.forEach((note) => {
-    const isSimlink = parentId === null
+    const isSymlink = parentId === null
       ? note.parentId !== null && ensureArray(note.parentIdsOther).includes('')
       : ensureArray(note.parentIdsOther).includes(parentId);
-    notesList.appendChild(createNoteEl(note, isSimlink, true));
+    notesList.appendChild(createNoteEl(note, isSymlink, true));
   });
 
-  // Simlins: show other parent locations of the current folder note
+  // Symlinks: show other parent locations of the current folder note
   if (navStack.length > 0) {
     const parentNote = notes.find((n) => n.id === parentId);
     if (parentNote) {
@@ -1097,10 +1097,10 @@ function render() {
       });
       if (others.length > 0) {
         const simlinBlock = document.createElement('div');
-        simlinBlock.className = 'simlins-block';
+        simlinBlock.className = 'symlinks-block';
         const titleEl = document.createElement('div');
-        titleEl.className = 'simlins-title';
-        titleEl.textContent = 'as simlink paths';
+        titleEl.className = 'symlinks-title';
+        titleEl.textContent = 'as symlink paths';
         simlinBlock.appendChild(titleEl);
 
         others.forEach((otherId) => {
@@ -1108,18 +1108,18 @@ function render() {
           const otherNote = isRoot ? null : notes.find((n) => n.id === otherId);
           if (!isRoot && !otherNote) return; // orphaned ref
 
-          // altNavStack: the navStack that would exist if navigated via this simlink path
+          // altNavStack: the navStack that would exist if navigated via this symlink path
           const altNavStack = isRoot ? [] : buildNavStackFor(otherNote);
 
           const rowEl = document.createElement('div');
-          rowEl.className = 'simlin-row';
+          rowEl.className = 'symlink-row';
 
           // Back button — mirrors .nav-back-btn
           const backLabel = altNavStack.length > 0
             ? altNavStack[altNavStack.length - 1].copyText
             : 'Root';
           const backEl = document.createElement('button');
-          backEl.className = 'nav-back-btn simlin-back-btn';
+          backEl.className = 'nav-back-btn symlink-back-btn';
           backEl.textContent = '\u2190 ' + backLabel;
           backEl.addEventListener('click', () => {
             if (isRoot) {
