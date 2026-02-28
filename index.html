@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>s470s</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body class="web-app">
+  <div class="header">
+    <div class="header-title">
+      <h1>s470s</h1>
+      <span id="notes-count" class="notes-count" title="Total notes"></span>
+      <span id="sync-indicator" class="sync-indicator" title="Sync status"></span>
+      <button id="sync-btn" class="icon-btn" title="Sync now">↻</button>
+    </div>
+    <div class="header-actions">
+      <button id="theme-btn" class="icon-btn" title="Switch to dark theme">&#9790;</button>
+      <button id="font-dec-btn" class="icon-btn font-btn" title="Decrease font size">A−</button>
+      <button id="font-inc-btn" class="icon-btn font-btn" title="Increase font size">A+</button>
+      <button id="thumbs-btn" class="icon-btn" title="Show image thumbnails">&#128444;</button>
+      <button id="settings-btn" class="icon-btn" title="Settings">⚙</button>
+      <button id="add-btn" title="Add note (+)">+</button>
+    </div>
+  </div>
+
+  <div id="search-block" class="search-block">
+    <div class="search-input-row">
+      <input type="text" id="search-input" placeholder="Search..." title="Search notes (Esc to clear)">
+      <button id="search-clear" class="search-clear hidden" title="Clear search">&#10005;</button>
+    </div>
+    <div class="search-options">
+      <label class="search-check" title="Search in note title"><input type="checkbox" id="search-title" checked> заголовок</label>
+      <label class="search-check" title="Search in description"><input type="checkbox" id="search-desc" checked> описание</label>
+      <label class="search-check" title="Search in URL"><input type="checkbox" id="search-url"> url</label>
+      <label class="search-check" title="Case-sensitive search"><input type="checkbox" id="search-case"> Aa</label>
+      <select id="search-sort" class="search-sort-select" title="Sort search results">
+        <option value="default">по умолч.</option>
+        <option value="date">по дате</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="nav-bar" class="nav-bar hidden">
+    <button id="back-btn" class="nav-back-btn"></button>
+    <div id="nav-breadcrumbs" class="nav-breadcrumbs"></div>
+    <div id="select-mode-btns" class="select-mode-btns hidden">
+      <span class="select-mode-label">☑ Select mode</span>
+      <button id="reset-selected-btn" class="reset-selected-btn" title="Exit select mode, clear selection">reset</button>
+      <button id="delete-selected-btn" class="delete-selected-btn" title="Delete all selected notes and their contents">delete selected</button>
+      <button id="cut-selected-btn" class="cut-selected-btn" title="Cut selected notes to clipboard">cut</button>
+    </div>
+  </div>
+
+  <div id="clipboard-bar" class="clipboard-bar hidden">
+    <div class="clipboard-bar-row">
+      <span class="clipboard-icon">✂</span>
+      <span id="clipboard-label" class="clipboard-label"></span>
+      <button id="clipboard-view-btn" class="clipboard-view-btn" title="View clipboard contents">view</button>
+      <button id="clipboard-paste-btn" class="clipboard-paste-btn" title="Paste notes here">paste here</button>
+      <button id="clipboard-symlink-btn" class="clipboard-symlink-btn" title="Paste notes as symlinks here">paste as symlink</button>
+      <button id="clipboard-clear-btn" class="clipboard-clear-btn" title="Clear clipboard">&#10005;</button>
+    </div>
+    <div id="clipboard-preview" class="clipboard-preview hidden">
+      <div id="clipboard-preview-list" class="clipboard-preview-list"></div>
+    </div>
+  </div>
+
+  <div id="status-bar" class="status-bar hidden">
+    <span id="status-text" class="status-text"></span>
+    <button id="status-close" class="status-close" title="Dismiss">&#10005;</button>
+  </div>
+
+  <div id="form-container" class="form-container hidden">
+    <div id="form-id-row" class="form-id-row hidden">
+      <span class="form-id-label">ID</span>
+      <span id="form-id-value" class="form-id-value" title="Internal note ID"></span>
+    </div>
+    <input type="text" id="input-copy" placeholder="Text to copy" title="Text that will be copied to clipboard on click">
+    <input type="text" id="input-desc" placeholder="Description" title="Optional description shown below the title">
+    <input type="url" id="input-url" placeholder="URL (optional)" title="Optional URL — shown as a button on the note">
+    <input type="url" id="input-img" placeholder="Image URL (optional)" title="Optional image URL — shown at the top when inside the note">
+    <details id="form-advanced" class="form-advanced">
+      <summary class="form-advanced-summary" title="Additional options: fast copy">Advanced</summary>
+      <label class="form-check" title="When enabled, clicking the note immediately copies text without navigating inside">
+        <input type="checkbox" id="input-fast-copy">
+        Fast copy (click copies text)
+      </label>
+    </details>
+    <div class="form-actions">
+      <button id="save-btn" title="Save note (Enter)">Save</button>
+      <button id="cancel-btn" class="secondary" title="Cancel editing (Escape)">Cancel</button>
+    </div>
+  </div>
+
+  <div id="notes-list" class="notes-list"></div>
+
+  <div id="empty-state" class="empty-state hidden">
+    <p>Заметок нет</p>
+    <p class="hint">Нажмите + чтобы создать</p>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <div id="confirm-modal" class="confirm-modal hidden">
+    <div class="confirm-dialog">
+      <p id="confirm-message" class="confirm-message"></p>
+      <div class="confirm-btns">
+        <button id="confirm-cancel-btn" class="confirm-cancel-btn">Отмена</button>
+        <button id="confirm-ok-btn" class="confirm-ok-btn">Удалить</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="lib/supabase.min.js"></script>
+  <script src="chrome-polyfill.js"></script>
+  <script src="sync/supabase.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
