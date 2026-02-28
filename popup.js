@@ -667,7 +667,7 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
       ${pathHtml}
       ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       ${note.img ? '<span class="btn-img" title="Has image">img</span>' : ''}
-      ${note.img ? `<img class="note-thumb" src="${escapeHtml(note.img)}" alt="" loading="lazy">` : ''}
+      ${note.img ? `<div class="note-thumb-wrap img-loading"><img class="note-thumb" src="${escapeHtml(note.img)}" alt="" loading="lazy"></div>` : ''}
     </div>
     ${note.isFastCopy ? '<span class="copy-icon" title="Fast copy: click copies text directly">&#10697;</span>' : ''}
     <div class="note-menu">
@@ -683,6 +683,18 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
       </div>
     </div>
   `;
+
+  // Image loader for note thumbnail
+  if (note.img) {
+    const thumb = el.querySelector('.note-thumb');
+    const thumbWrap = el.querySelector('.note-thumb-wrap');
+    const doneThumb = () => thumbWrap.classList.remove('img-loading');
+    if (thumb.complete) doneThumb();
+    else {
+      thumb.addEventListener('load', doneThumb);
+      thumb.addEventListener('error', doneThumb);
+    }
+  }
 
   // F20F: checkbox click/change handlers
   if (showCheckbox) {
@@ -1011,11 +1023,17 @@ function render() {
           <span class="folder-meta-actual-date" title="Date last marked as relevant">${escapeHtml(dateActualStr)}</span>
           <button class="folder-meta-actual-btn" title="Mark as relevant now">update date actual</button>
         </div>
-        ${parentNote.img ? `<img class="folder-meta-img" src="${escapeHtml(parentNote.img)}" alt="" loading="lazy"><span class="folder-meta-img-error hidden">Не удалось загрузить изображение</span>` : ''}
+        ${parentNote.img ? `<div class="folder-meta-img-wrap img-loading"><img class="folder-meta-img" src="${escapeHtml(parentNote.img)}" alt="" loading="lazy"></div><span class="folder-meta-img-error hidden">Не удалось загрузить изображение</span>` : ''}
       `;
       if (parentNote.img) {
-        metaEl.querySelector('.folder-meta-img').addEventListener('error', () => {
-          metaEl.querySelector('.folder-meta-img').classList.add('hidden');
+        const metaImg = metaEl.querySelector('.folder-meta-img');
+        const metaWrap = metaEl.querySelector('.folder-meta-img-wrap');
+        const removeLoader = () => metaWrap.classList.remove('img-loading');
+        if (metaImg.complete) removeLoader();
+        else metaImg.addEventListener('load', removeLoader);
+        metaImg.addEventListener('error', () => {
+          removeLoader();
+          metaImg.classList.add('hidden');
           metaEl.querySelector('.folder-meta-img-error').classList.remove('hidden');
         });
       }

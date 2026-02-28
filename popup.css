@@ -344,17 +344,20 @@ body.dark .folder-count {
   color: #a08000;
 }
 
-.note-thumb {
+.note-thumb-wrap {
   display: none;
+  margin-top: 6px;
+}
+
+body.show-thumbs .note-thumb-wrap {
+  display: block;
+}
+
+.note-thumb {
   max-width: 100%;
   max-height: 120px;
   border-radius: 4px;
-  margin-top: 6px;
   object-fit: cover;
-}
-
-body.show-thumbs .note-thumb {
-  display: block;
 }
 
 .copy-icon {
@@ -363,6 +366,32 @@ body.show-thumbs .note-thumb {
   font-size: 1.1em;
   color: #e0a030;
   line-height: 1;
+}
+
+/* Image loading state */
+.img-loading {
+  position: relative;
+  background: #efefef;
+  border-radius: 4px;
+  min-height: 40px;
+}
+
+.img-loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 2px solid #ddd;
+  border-top-color: #888;
+  border-radius: 50%;
+  animation: img-spin 0.8s linear infinite;
+}
+
+@keyframes img-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Status bar */
@@ -663,12 +692,15 @@ body.dark .form-id-value {
   background: #e8e8e8;
 }
 
+.folder-meta-img-wrap {
+  margin-top: 8px;
+}
+
 .folder-meta-img {
   display: block;
   max-width: 100%;
   max-height: 280px;
   border-radius: 6px;
-  margin-top: 8px;
   object-fit: contain;
 }
 
@@ -1338,6 +1370,15 @@ body.dark .btn-img {
   background: #2a2200;
   border-color: #5a4800;
   color: #c8a800;
+}
+
+body.dark .img-loading {
+  background: #2a2a2a;
+}
+
+body.dark .img-loading::after {
+  border-color: #444;
+  border-top-color: #aaa;
 }
 
 body.dark .btn-url:hover {
