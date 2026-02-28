@@ -1081,7 +1081,7 @@ function render() {
     const hasTrash = parentId === null && notes.some(n => !!n.deletedAt);
     if (!hasTrash) {
       emptyState.querySelector('p:first-child').textContent =
-        navStack.length > 0 ? 'Папка пуста' : 'Заметок нет';
+        navStack.length > 0 ? 'Нет дочерних элементов' : 'Заметок нет';
       emptyState.classList.remove('hidden');
     }
   }
