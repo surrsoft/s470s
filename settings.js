@@ -44,7 +44,7 @@ async function init() {
 
   // Check session
   if (stored.supabaseConfig && stored.supabaseSession) {
-    setSession(stored.supabaseSession);
+    await setSession(stored.supabaseSession);
     const session = await getSession();
     if (session) {
       // Persist refreshed tokens (access token may have been renewed)

@@ -1789,7 +1789,7 @@ async function initSync() {
   setConfig(stored.supabaseConfig);
 
   if (!stored.supabaseSession) return; // Not authenticated
-  setSession(stored.supabaseSession);
+  await setSession(stored.supabaseSession);
 
   // Validate session is still alive
   try {

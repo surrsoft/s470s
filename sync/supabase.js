@@ -21,12 +21,16 @@ function setConfig(config) {
   _client = null; // Reset client when config changes
 }
 
-function setSession(session) {
+async function setSession(session) {
   _session = session;
-  // Inject session into client so it uses the stored auth token
+  // Inject session into client so it uses the stored auth token.
+  // setSession() is async: if the access token is expired it refreshes via refresh_token.
   const client = getClient();
   if (client && session) {
-    client.auth.setSession(session);
+    const { data } = await client.auth.setSession(session);
+    if (data?.session) {
+      _session = data.session;
+    }
   }
 }
 
