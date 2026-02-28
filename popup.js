@@ -77,7 +77,11 @@ const TRASH_ID = '__trash__';
 // --- Sort picker ---
 let currentSort = 'default';
 let sortReversed = false;
-const SORT_LABELS = { default: 'по умолчанию', date: 'по дате актуальности', created: 'по дате создания', updated: 'по дате изменения' };
+const SORT_LABELS = { default: 'по умолчанию', date: 'по дате актуальности', created: 'по дате создания', updated: 'по дате изменения', children: 'по кол-ву дочерних' };
+
+function countAllChildren(noteId) {
+  return collectAllDescendants(noteId).length - 1;
+}
 
 sortPickerHeader.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -961,6 +965,8 @@ function renderSearchResults(query) {
     matched.sort((a, b) => dir * (b.createdAt - a.createdAt));
   } else if (currentSort === 'updated') {
     matched.sort((a, b) => dir * ((b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt)));
+  } else if (currentSort === 'children') {
+    matched.sort((a, b) => dir * (countAllChildren(b.id) - countAllChildren(a.id)));
   } else {
     // F15F: title matches first
     matched.sort((a, b) => {
@@ -1177,6 +1183,7 @@ function render() {
       }
       if (currentSort === 'created') return dir * (b.createdAt - a.createdAt);
       if (currentSort === 'updated') return dir * ((b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
+      if (currentSort === 'children') return dir * (countAllChildren(b.id) - countAllChildren(a.id));
       return dir * (a.order - b.order);
     });
 
