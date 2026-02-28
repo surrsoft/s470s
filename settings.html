@@ -9,6 +9,7 @@
 <body>
   <div class="page">
     <header class="page-header">
+      <a id="back-to-main" href="index.html" class="back-to-main hidden">← Main</a>
       <h1>s470s Settings</h1>
     </header>
 
@@ -115,6 +116,7 @@ create policy "Users manage own notes" on notes
 
   <script src="lib/supabase.min.js"></script>
   <script src="chrome-polyfill.js"></script>
+  <script>if (window._s470sWebApp) document.getElementById('back-to-main').classList.remove('hidden');</script>
   <script src="sync/supabase.js"></script>
   <script src="settings.js"></script>
 </body>

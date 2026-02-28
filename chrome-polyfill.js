@@ -5,6 +5,8 @@
 (function () {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) return;
 
+  window._s470sWebApp = true;
+
   const PREFIX = 's470s.';
 
   function storageGet(keys, callback) {
