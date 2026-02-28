@@ -21,6 +21,9 @@ const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
 const inputImg = document.getElementById('input-img');
 const inputFastCopy = document.getElementById('input-fast-copy');
+const inputShowTime = document.getElementById('input-show-time');
+const showTimeOptions = document.getElementById('show-time-options');
+const inputTimezone = document.getElementById('input-timezone');
 const formAdvanced = document.getElementById('form-advanced');
 const formIdRow = document.getElementById('form-id-row');
 const formIdValue = document.getElementById('form-id-value');
@@ -709,6 +712,7 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
       <div class="note-copy-text">${isFolder ? '<span class="folder-icon" title="Contains child notes">&#128193;</span>' : ''}<span class="note-title-text">${titleHtml}</span>${folderCountHtml}${isSymlink ? '<span class="symlink-badge" title="Symlink: this note appears here via an additional parent">symlink</span>' : ''}</div>
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${pathHtml}
+      ${note.showTime ? `<span class="note-clock" data-tz="${escapeHtml(note.timezone || '')}"></span>` : ''}
       ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       ${note.img ? '<span class="btn-img" title="Has image">img</span>' : ''}
       ${note.img ? `<div class="note-thumb-wrap img-loading"><img class="note-thumb" src="${escapeHtml(note.img)}" alt="" loading="lazy"></div>` : ''}
@@ -911,7 +915,7 @@ function startInlineEdit(el, note) {
     committed = true;
     const val = input.value.trim();
     if (val && val !== original) {
-      updateNote(note.id, val, note.description, note.url, note.parentId, note.isFastCopy, note.parentIdsOther);
+      updateNote(note.id, val, note.description, note.url, note.img, note.isFastCopy, note.showTime, note.timezone);
     } else {
       render();
     }
@@ -1070,6 +1074,7 @@ function render() {
           <span class="folder-meta-actual-date" title="Date last marked as relevant">${escapeHtml(dateActualStr)}</span>
           <button class="folder-meta-actual-btn" title="Mark as relevant now">update date actual</button>
         </div>
+        ${parentNote.showTime ? `<div class="note-clock folder-meta-clock" data-tz="${escapeHtml(parentNote.timezone || '')}"></div>` : ''}
         ${parentNote.img ? `<div class="folder-meta-img-wrap img-loading"><img class="folder-meta-img" src="${escapeHtml(parentNote.img)}" alt="" loading="lazy"></div><span class="folder-meta-img-error hidden">Не удалось загрузить изображение</span>` : ''}
       `;
       if (parentNote.img) {
@@ -1318,7 +1323,7 @@ function render() {
 
 // --- CRUD ---
 
-function addNote(copyText, description, url, img, isFastCopy) {
+function addNote(copyText, description, url, img, isFastCopy, showTime, timezone) {
   const now = Date.now();
   const note = {
     id: makeId(),
@@ -1329,6 +1334,8 @@ function addNote(copyText, description, url, img, isFastCopy) {
     parentId: getCurrentParentId(),
     parentIdsOther: [],
     isFastCopy: !!isFastCopy,
+    showTime: !!showTime,
+    timezone: timezone || '',
     order: 0,
     createdAt: now,
     updatedAt: now,
@@ -1342,7 +1349,7 @@ function addNote(copyText, description, url, img, isFastCopy) {
   });
 }
 
-function updateNote(id, copyText, description, url, img, isFastCopy) {
+function updateNote(id, copyText, description, url, img, isFastCopy, showTime, timezone) {
   const note = notes.find((n) => n.id === id);
   if (note) {
     note.copyText = copyText;
@@ -1350,6 +1357,8 @@ function updateNote(id, copyText, description, url, img, isFastCopy) {
     note.url = url;
     note.img = img;
     note.isFastCopy = !!isFastCopy;
+    note.showTime = !!showTime;
+    note.timezone = timezone || '';
     note.updatedAt = Date.now();
     const navItem = navStack.find((item) => item.id === id);
     if (navItem) { navItem.copyText = copyText; updateNavBar(); }
@@ -1478,6 +1487,9 @@ function hideForm() {
   inputUrl.value = '';
   inputImg.value = '';
   inputFastCopy.checked = false;
+  inputShowTime.checked = false;
+  inputTimezone.value = '';
+  showTimeOptions.classList.add('hidden');
   formIdRow.classList.add('hidden');
   formIdValue.textContent = '';
   editingId = null;
@@ -1490,7 +1502,10 @@ function startEdit(note) {
   inputUrl.value = note.url || '';
   inputImg.value = note.img || '';
   inputFastCopy.checked = !!note.isFastCopy;
-  formAdvanced.open = !!note.isFastCopy;
+  inputShowTime.checked = !!note.showTime;
+  inputTimezone.value = note.timezone || '';
+  showTimeOptions.classList.toggle('hidden', !note.showTime);
+  formAdvanced.open = !!note.isFastCopy || !!note.showTime;
   formIdValue.textContent = note.id;
   formIdRow.classList.remove('hidden');
   showForm();
@@ -1507,6 +1522,21 @@ addBtn.addEventListener('click', () => {
 
 cancelBtn.addEventListener('click', hideForm);
 
+// F27F: show/hide timezone input when "Show current time" checkbox changes
+inputShowTime.addEventListener('change', () => {
+  showTimeOptions.classList.toggle('hidden', !inputShowTime.checked);
+});
+
+// Populate timezone datalist
+try {
+  const tzList = document.getElementById('timezone-list');
+  Intl.supportedValuesOf('timeZone').forEach((tz) => {
+    const opt = document.createElement('option');
+    opt.value = tz;
+    tzList.appendChild(opt);
+  });
+} catch (_) { /* older browsers without supportedValuesOf */ }
+
 saveBtn.addEventListener('click', () => {
   const copyText = inputCopy.value.trim();
   if (!copyText) {
@@ -1517,11 +1547,13 @@ saveBtn.addEventListener('click', () => {
   const url = inputUrl.value.trim();
   const img = inputImg.value.trim();
   const isFastCopy = inputFastCopy.checked;
+  const showTime = inputShowTime.checked;
+  const timezone = showTime ? inputTimezone.value.trim() : '';
 
   if (editingId) {
-    updateNote(editingId, copyText, description, url, img, isFastCopy);
+    updateNote(editingId, copyText, description, url, img, isFastCopy, showTime, timezone);
   } else {
-    addNote(copyText, description, url, img, isFastCopy);
+    addNote(copyText, description, url, img, isFastCopy, showTime, timezone);
   }
   hideForm();
 });
@@ -1659,6 +1691,8 @@ function serverRowToNote(row) {
     parentId: row.parent_id || null,
     parentIdsOther: ensureArray(row.parent_ids_other),
     isFastCopy: row.is_fast_copy || false,
+    showTime: row.show_time || false,
+    timezone: row.timezone || '',
     order: row.order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -2105,6 +2139,25 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 });
 
+// --- F27F: Live clocks ---
+
+function updateClocks() {
+  document.querySelectorAll('.note-clock').forEach((el) => {
+    const tz = el.dataset.tz;
+    try {
+      const opts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+      if (tz) opts.timeZone = tz;
+      const time = new Date().toLocaleTimeString([], opts);
+      const label = tz ? tz.replace(/_/g, ' ') : '';
+      el.innerHTML = `<span class="clock-time">${time}</span>${label ? `<span class="clock-tz">${escapeHtml(label)}</span>` : ''}`;
+    } catch (_) {
+      el.textContent = '??:??:??';
+    }
+  });
+}
+
+setInterval(updateClocks, 1000);
+
 // --- Init ---
 
-loadNotes().then(render).then(loadFontSize).then(loadTheme).then(loadThumbs).then(initSync);
+loadNotes().then(render).then(loadFontSize).then(loadTheme).then(loadThumbs).then(initSync).then(updateClocks);

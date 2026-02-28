@@ -99,6 +99,14 @@
         <input type="checkbox" id="input-fast-copy">
         Fast copy (click copies text)
       </label>
+      <label class="form-check" title="Show live clock with selected timezone on this note">
+        <input type="checkbox" id="input-show-time">
+        Show current time
+      </label>
+      <div id="show-time-options" class="form-sub-options hidden">
+        <input type="text" id="input-timezone" list="timezone-list" placeholder="e.g. Europe/Moscow" title="IANA timezone name">
+        <datalist id="timezone-list"></datalist>
+      </div>
     </details>
     <div class="form-actions">
       <button id="save-btn" title="Save note (Enter)">Save</button>

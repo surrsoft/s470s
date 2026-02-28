@@ -93,14 +93,23 @@
           <details>
             <summary>SQL schema for Supabase</summary>
             <pre><code>create table notes (
-  id           uuid primary key default gen_random_uuid(),
-  user_id      uuid references auth.users not null,
-  local_id     text not null,
-  copy_text    text not null,
-  description  text,
-  "order"      integer not null default 0,
-  created_at   bigint not null,
-  updated_at   bigint not null,
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid references auth.users not null,
+  local_id         text not null,
+  copy_text        text not null,
+  description      text,
+  url              text,
+  img              text,
+  parent_id        text,
+  parent_ids_other text[],
+  is_fast_copy     boolean not null default false,
+  show_time        boolean not null default false,
+  timezone         text,
+  "order"          integer not null default 0,
+  created_at       bigint not null,
+  updated_at       bigint not null,
+  date_actual      timestamp with time zone,
+  deleted_at       timestamp with time zone,
   unique(user_id, local_id)
 );
 

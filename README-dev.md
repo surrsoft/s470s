@@ -2,7 +2,7 @@
 
 ## счётчик F_F
 
-- 26
+- 27
 ## понятия
 
 - `!!s470s-select-mode!!`: режим выбора
@@ -71,10 +71,13 @@ create table notes (
   parent_id        text,             -- ссылка на local_id родительской заметки
   parent_ids_other text[],           -- массив local_id дополнительных родителей (симлинки)
   is_fast_copy boolean not null default false,
+  show_time    boolean not null default false, -- F27F: отображать текущее время
+  timezone     text,                           -- F27F: IANA часовой пояс (e.g. Europe/Moscow)
   "order"      integer not null default 0,
   created_at   bigint not null,
   updated_at   bigint not null,
-  deleted_at   timestamp,                 -- soft-delete: when moved to trash (null = active)
+  date_actual  timestamp with time zone,       -- дата актуальности
+  deleted_at   timestamp with time zone,       -- soft-delete: when moved to trash (null = active)
   unique(user_id, local_id)
 );
 
@@ -154,6 +157,9 @@ F7F Поисковый блок:
   - Поле: Image URL (необязательное) — URL картинки, отображается в мета-блоке папки
   - Раскрывающийся блок 'Advanced':
     - Чекбокс: Fast copy — клик по заметке сразу копирует текст без захода внутрь
+    - F27F чекбокс: "отображать текущее время"
+      - если чекбокс включен: 
+        - поле для ввода смещения времени в соответствии с часовым поясом
   - Кнопки: Save · Cancel
 
 F17F Список заметок (динамический)

@@ -417,6 +417,38 @@ body.dark .folder-count {
   background: #333;
 }
 
+.note-clock {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 5px;
+  font-family: 'SF Mono', 'Fira Mono', Menlo, monospace;
+}
+
+.clock-time {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.clock-tz {
+  font-size: 0.75em;
+  color: #888;
+  font-weight: 400;
+}
+
+.folder-meta-clock {
+  margin: 8px 0;
+}
+
+.folder-meta-clock .clock-time {
+  font-size: 1.5em;
+}
+
+.folder-meta-clock .clock-tz {
+  font-size: 0.85em;
+}
+
 .btn-img {
   display: inline-block;
   margin-top: 5px;
@@ -609,6 +641,24 @@ body.dark .form-id-value {
   cursor: pointer;
   accent-color: #1a1a1a;
   flex-shrink: 0;
+}
+
+.form-sub-options {
+  margin: 6px 0 0 22px;
+}
+
+.form-sub-options input[type="text"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+}
+
+.form-sub-options input[type="text"]:focus {
+  border-color: #888;
 }
 
 .form-actions {
@@ -1447,6 +1497,24 @@ body.dark .btn-url {
   background: #1e2e3e;
   border-color: #2a4a6a;
   color: #7ab8f5;
+}
+
+body.dark .clock-time {
+  color: #e8e8e8;
+}
+
+body.dark .clock-tz {
+  color: #666;
+}
+
+body.dark .form-sub-options input[type="text"] {
+  background: #1c1c1e;
+  border-color: #3a3a3c;
+  color: #e8e8e8;
+}
+
+body.dark .form-sub-options input[type="text"]:focus {
+  border-color: #666;
 }
 
 body.dark .btn-img {
