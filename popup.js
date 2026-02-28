@@ -55,6 +55,7 @@ const sortPickerHeader = document.getElementById('sort-picker-header');
 const sortPickerValue = document.getElementById('sort-picker-value');
 const sortPickerArrow = document.getElementById('sort-picker-arrow');
 const sortPickerDropdown = document.getElementById('sort-picker-dropdown');
+const sortDirBtn = document.getElementById('sort-dir-btn');
 
 // Side panel detection: popup height is constrained by CSS max-height (500px),
 // side panel fills the full window height
@@ -75,7 +76,8 @@ const TRASH_ID = '__trash__';
 
 // --- Sort picker ---
 let currentSort = 'default';
-const SORT_LABELS = { default: 'по умолч.', date: 'по дате', created: 'по созданию', updated: 'по изменению' };
+let sortReversed = false;
+const SORT_LABELS = { default: 'по умолчанию', date: 'по дате актуальности', created: 'по дате создания', updated: 'по дате изменения' };
 
 sortPickerHeader.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -92,6 +94,12 @@ sortPickerDropdown.querySelectorAll('input[name="note-sort"]').forEach((radio) =
     sortPickerArrow.textContent = '▾';
     render();
   });
+});
+
+sortDirBtn.addEventListener('click', () => {
+  sortReversed = !sortReversed;
+  sortDirBtn.textContent = sortReversed ? '↑' : '↓';
+  render();
 });
 
 document.addEventListener('click', (e) => {
@@ -945,23 +953,20 @@ function renderSearchResults(query) {
     return fields.some((f) => f.includes(q));
   });
 
+  const dir = sortReversed ? -1 : 1;
   if (currentSort === 'date') {
     const now = Date.now();
-    matched.sort((a, b) => {
-      const da = Math.abs((a.dateActual || a.createdAt) - now);
-      const db = Math.abs((b.dateActual || b.createdAt) - now);
-      return da - db;
-    });
+    matched.sort((a, b) => dir * (Math.abs((a.dateActual || a.createdAt) - now) - Math.abs((b.dateActual || b.createdAt) - now)));
   } else if (currentSort === 'created') {
-    matched.sort((a, b) => b.createdAt - a.createdAt);
+    matched.sort((a, b) => dir * (b.createdAt - a.createdAt));
   } else if (currentSort === 'updated') {
-    matched.sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
+    matched.sort((a, b) => dir * ((b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt)));
   } else {
     // F15F: title matches first
     matched.sort((a, b) => {
       const aHit = (caseSensitive ? a.copyText : a.copyText.toLowerCase()).includes(q) ? 0 : 1;
       const bHit = (caseSensitive ? b.copyText : b.copyText.toLowerCase()).includes(q) ? 0 : 1;
-      return aHit - bHit;
+      return dir * (aHit - bHit);
     });
   }
 
@@ -1165,13 +1170,14 @@ function render() {
       return isPrimary || isSymlink;
     })
     .sort((a, b) => {
+      const dir = sortReversed ? -1 : 1;
       if (currentSort === 'date') {
         const now = Date.now();
-        return Math.abs((a.dateActual || a.createdAt) - now) - Math.abs((b.dateActual || b.createdAt) - now);
+        return dir * (Math.abs((a.dateActual || a.createdAt) - now) - Math.abs((b.dateActual || b.createdAt) - now));
       }
-      if (currentSort === 'created') return b.createdAt - a.createdAt;
-      if (currentSort === 'updated') return (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt);
-      return a.order - b.order;
+      if (currentSort === 'created') return dir * (b.createdAt - a.createdAt);
+      if (currentSort === 'updated') return dir * ((b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
+      return dir * (a.order - b.order);
     });
 
   if (currentNotes.length === 0) {
