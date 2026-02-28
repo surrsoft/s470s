@@ -75,7 +75,7 @@ const TRASH_ID = '__trash__';
 
 // --- Sort picker ---
 let currentSort = 'default';
-const SORT_LABELS = { default: 'по умолч.', date: 'по дате' };
+const SORT_LABELS = { default: 'по умолч.', date: 'по дате', created: 'по созданию', updated: 'по изменению' };
 
 sortPickerHeader.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -952,6 +952,10 @@ function renderSearchResults(query) {
       const db = Math.abs((b.dateActual || b.createdAt) - now);
       return da - db;
     });
+  } else if (currentSort === 'created') {
+    matched.sort((a, b) => b.createdAt - a.createdAt);
+  } else if (currentSort === 'updated') {
+    matched.sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
   } else {
     // F15F: title matches first
     matched.sort((a, b) => {
@@ -1165,6 +1169,8 @@ function render() {
         const now = Date.now();
         return Math.abs((a.dateActual || a.createdAt) - now) - Math.abs((b.dateActual || b.createdAt) - now);
       }
+      if (currentSort === 'created') return b.createdAt - a.createdAt;
+      if (currentSort === 'updated') return (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt);
       return a.order - b.order;
     });
 
