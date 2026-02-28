@@ -98,6 +98,11 @@ body.side-panel {
   color: #1a1a1a;
 }
 
+.icon-btn.active {
+  color: #2a6096;
+  background: #eef4fb;
+}
+
 .font-btn {
   font-size: 13px;
   font-weight: 600;
@@ -329,6 +334,19 @@ body.dark .folder-count {
   font-size: 0.769em;
   font-family: inherit;
   color: #a08000;
+}
+
+.note-thumb {
+  display: none;
+  max-width: 100%;
+  max-height: 120px;
+  border-radius: 4px;
+  margin-top: 6px;
+  object-fit: cover;
+}
+
+body.show-thumbs .note-thumb {
+  display: block;
 }
 
 .copy-icon {
@@ -1079,6 +1097,11 @@ body.dark .icon-btn {
 body.dark .icon-btn:hover {
   background: #2a2a2c;
   color: #e8e8e8;
+}
+
+body.dark .icon-btn.active {
+  color: #7ab8f5;
+  background: #1e2e3e;
 }
 
 body.dark #add-btn {

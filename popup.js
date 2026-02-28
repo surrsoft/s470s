@@ -43,6 +43,7 @@ const statusClose = document.getElementById('status-close');
 const fontDecBtn = document.getElementById('font-dec-btn');
 const fontIncBtn = document.getElementById('font-inc-btn');
 const themeBtn = document.getElementById('theme-btn');
+const thumbsBtn = document.getElementById('thumbs-btn');
 const searchInput = document.getElementById('search-input');
 const searchClear = document.getElementById('search-clear');
 const searchTitleCb = document.getElementById('search-title');
@@ -529,6 +530,32 @@ themeBtn.addEventListener('click', () => {
   chrome.storage.local.set({ theme });
 });
 
+// --- Thumbnails ---
+
+let showThumbs = false;
+
+function applyThumbs() {
+  document.body.classList.toggle('show-thumbs', showThumbs);
+  thumbsBtn.classList.toggle('active', showThumbs);
+  thumbsBtn.title = showThumbs ? 'Hide image thumbnails' : 'Show image thumbnails';
+}
+
+function loadThumbs() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get({ showThumbs: false }, (data) => {
+      showThumbs = data.showThumbs;
+      applyThumbs();
+      resolve();
+    });
+  });
+}
+
+thumbsBtn.addEventListener('click', () => {
+  showThumbs = !showThumbs;
+  applyThumbs();
+  chrome.storage.local.set({ showThumbs });
+});
+
 // --- Storage ---
 
 function loadNotes() {
@@ -640,6 +667,7 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
       ${pathHtml}
       ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       ${note.img ? '<span class="btn-img" title="Has image">img</span>' : ''}
+      ${note.img ? `<img class="note-thumb" src="${escapeHtml(note.img)}" alt="" loading="lazy">` : ''}
     </div>
     ${note.isFastCopy ? '<span class="copy-icon" title="Fast copy: click copies text directly">&#10697;</span>' : ''}
     <div class="note-menu">
@@ -2004,4 +2032,4 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 
 // --- Init ---
 
-loadNotes().then(render).then(loadFontSize).then(loadTheme).then(initSync);
+loadNotes().then(render).then(loadFontSize).then(loadTheme).then(loadThumbs).then(initSync);
