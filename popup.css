@@ -625,6 +625,15 @@ body.dark .form-id-value {
   background: #e8e8e8;
 }
 
+.folder-meta-img {
+  display: block;
+  max-width: 100%;
+  max-height: 280px;
+  border-radius: 6px;
+  margin-top: 8px;
+  object-fit: contain;
+}
+
 .folder-meta-top {
   display: flex;
   align-items: flex-start;

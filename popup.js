@@ -19,6 +19,7 @@ const formContainer = document.getElementById('form-container');
 const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
+const inputImg = document.getElementById('input-img');
 const inputFastCopy = document.getElementById('input-fast-copy');
 const formAdvanced = document.getElementById('form-advanced');
 const formIdRow = document.getElementById('form-id-row');
@@ -981,6 +982,7 @@ function render() {
           <span class="folder-meta-actual-date" title="Date last marked as relevant">${escapeHtml(dateActualStr)}</span>
           <button class="folder-meta-actual-btn" title="Mark as relevant now">update date actual</button>
         </div>
+        ${parentNote.img ? `<img class="folder-meta-img" src="${escapeHtml(parentNote.img)}" alt="" loading="lazy">` : ''}
       `;
       const folderMenuBtn = metaEl.querySelector('.folder-meta-btn-menu');
       const folderDropdown = metaEl.querySelector('.folder-meta-dropdown');
@@ -1206,13 +1208,14 @@ function render() {
 
 // --- CRUD ---
 
-function addNote(copyText, description, url, isFastCopy) {
+function addNote(copyText, description, url, img, isFastCopy) {
   const now = Date.now();
   const note = {
     id: makeId(),
     copyText,
     description,
     url,
+    img,
     parentId: getCurrentParentId(),
     parentIdsOther: [],
     isFastCopy: !!isFastCopy,
@@ -1229,12 +1232,13 @@ function addNote(copyText, description, url, isFastCopy) {
   });
 }
 
-function updateNote(id, copyText, description, url, isFastCopy) {
+function updateNote(id, copyText, description, url, img, isFastCopy) {
   const note = notes.find((n) => n.id === id);
   if (note) {
     note.copyText = copyText;
     note.description = description;
     note.url = url;
+    note.img = img;
     note.isFastCopy = !!isFastCopy;
     note.updatedAt = Date.now();
     const navItem = navStack.find((item) => item.id === id);
@@ -1362,6 +1366,7 @@ function hideForm() {
   inputCopy.value = '';
   inputDesc.value = '';
   inputUrl.value = '';
+  inputImg.value = '';
   inputFastCopy.checked = false;
   formIdRow.classList.add('hidden');
   formIdValue.textContent = '';
@@ -1373,6 +1378,7 @@ function startEdit(note) {
   inputCopy.value = note.copyText;
   inputDesc.value = note.description;
   inputUrl.value = note.url || '';
+  inputImg.value = note.img || '';
   inputFastCopy.checked = !!note.isFastCopy;
   formAdvanced.open = !!note.isFastCopy;
   formIdValue.textContent = note.id;
@@ -1385,6 +1391,7 @@ addBtn.addEventListener('click', () => {
   inputCopy.value = '';
   inputDesc.value = '';
   inputUrl.value = '';
+  inputImg.value = '';
   showForm();
 });
 
@@ -1398,18 +1405,23 @@ saveBtn.addEventListener('click', () => {
   }
   const description = inputDesc.value.trim();
   const url = inputUrl.value.trim();
+  const img = inputImg.value.trim();
   const isFastCopy = inputFastCopy.checked;
 
   if (editingId) {
-    updateNote(editingId, copyText, description, url, isFastCopy);
+    updateNote(editingId, copyText, description, url, img, isFastCopy);
   } else {
-    addNote(copyText, description, url, isFastCopy);
+    addNote(copyText, description, url, img, isFastCopy);
   }
   hideForm();
 });
 
 // Save on Enter in last field
 inputUrl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') inputImg.focus();
+});
+
+inputImg.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') saveBtn.click();
 });
 
@@ -1533,6 +1545,7 @@ function serverRowToNote(row) {
     copyText: row.copy_text,
     description: row.description || '',
     url: row.url || '',
+    img: row.img || '',
     parentId: row.parent_id || null,
     parentIdsOther: ensureArray(row.parent_ids_other),
     isFastCopy: row.is_fast_copy || false,
