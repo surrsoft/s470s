@@ -50,7 +50,11 @@ const searchTitleCb = document.getElementById('search-title');
 const searchDescCb = document.getElementById('search-desc');
 const searchUrlCb = document.getElementById('search-url');
 const searchCaseCb = document.getElementById('search-case');
-const searchSort = document.getElementById('search-sort');
+const sortPicker = document.getElementById('sort-picker');
+const sortPickerHeader = document.getElementById('sort-picker-header');
+const sortPickerValue = document.getElementById('sort-picker-value');
+const sortPickerArrow = document.getElementById('sort-picker-arrow');
+const sortPickerDropdown = document.getElementById('sort-picker-dropdown');
 
 // Side panel detection: popup height is constrained by CSS max-height (500px),
 // side panel fills the full window height
@@ -68,6 +72,34 @@ let selectMode = false; // F19F/F20F/F21F select mode
 let selectedNoteIds = new Set(); // selected note ids in select mode
 
 const TRASH_ID = '__trash__';
+
+// --- Sort picker ---
+let currentSort = 'default';
+const SORT_LABELS = { default: 'по умолч.', date: 'по дате' };
+
+sortPickerHeader.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const isOpen = !sortPickerDropdown.classList.contains('hidden');
+  sortPickerDropdown.classList.toggle('hidden', isOpen);
+  sortPickerArrow.textContent = isOpen ? '▾' : '▴';
+});
+
+sortPickerDropdown.querySelectorAll('input[name="note-sort"]').forEach((radio) => {
+  radio.addEventListener('change', () => {
+    currentSort = radio.value;
+    sortPickerValue.textContent = SORT_LABELS[currentSort];
+    sortPickerDropdown.classList.add('hidden');
+    sortPickerArrow.textContent = '▾';
+    render();
+  });
+});
+
+document.addEventListener('click', (e) => {
+  if (!sortPicker.contains(e.target)) {
+    sortPickerDropdown.classList.add('hidden');
+    sortPickerArrow.textContent = '▾';
+  }
+});
 
 // --- Undo delete state ---
 let deletedSnapshot = null; // { affectedIds: string[], syncIds: string[] }
@@ -913,7 +945,7 @@ function renderSearchResults(query) {
     return fields.some((f) => f.includes(q));
   });
 
-  if (searchSort.value === 'date') {
+  if (currentSort === 'date') {
     const now = Date.now();
     matched.sort((a, b) => {
       const da = Math.abs((a.dateActual || a.createdAt) - now);
@@ -1128,7 +1160,13 @@ function render() {
         : ensureArray(n.parentIdsOther).includes(parentId);
       return isPrimary || isSymlink;
     })
-    .sort((a, b) => a.order - b.order);
+    .sort((a, b) => {
+      if (currentSort === 'date') {
+        const now = Date.now();
+        return Math.abs((a.dateActual || a.createdAt) - now) - Math.abs((b.dateActual || b.createdAt) - now);
+      }
+      return a.order - b.order;
+    });
 
   if (currentNotes.length === 0) {
     const hasTrash = parentId === null && notes.some(n => !!n.deletedAt);
@@ -1170,7 +1208,7 @@ function render() {
     const isSymlink = parentId === null
       ? note.parentId !== null && ensureArray(note.parentIdsOther).includes('')
       : ensureArray(note.parentIdsOther).includes(parentId);
-    notesList.appendChild(createNoteEl(note, isSymlink, true));
+    notesList.appendChild(createNoteEl(note, isSymlink, currentSort === 'default'));
   });
 
   // Symlinks: show other parent locations of the current folder note
@@ -1861,7 +1899,7 @@ searchClear.addEventListener('click', () => {
   searchInput.focus();
 });
 
-[searchTitleCb, searchDescCb, searchUrlCb, searchCaseCb, searchSort].forEach((el) => {
+[searchTitleCb, searchDescCb, searchUrlCb, searchCaseCb].forEach((el) => {
   el.addEventListener('change', () => {
     if (searchInput.value) render();
   });

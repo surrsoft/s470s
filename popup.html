@@ -32,10 +32,17 @@
       <label class="search-check" title="Search in description"><input type="checkbox" id="search-desc" checked> описание</label>
       <label class="search-check" title="Search in URL"><input type="checkbox" id="search-url"> url</label>
       <label class="search-check" title="Case-sensitive search"><input type="checkbox" id="search-case"> Aa</label>
-      <select id="search-sort" class="search-sort-select" title="Sort search results">
-        <option value="default">по умолч.</option>
-        <option value="date">по дате</option>
-      </select>
+      <div class="sort-picker" id="sort-picker" title="Sort notes">
+        <div class="sort-picker-header" id="sort-picker-header">
+          <span class="sort-picker-value" id="sort-picker-value">по умолч.</span>
+          <span class="sort-picker-arrow" id="sort-picker-arrow">▾</span>
+        </div>
+        <div class="sort-picker-dropdown hidden" id="sort-picker-dropdown">
+          <div class="sort-picker-title">сортировка</div>
+          <label class="sort-option"><input type="radio" name="note-sort" value="default" checked> по умолчанию</label>
+          <label class="sort-option"><input type="radio" name="note-sort" value="date"> по дате актуальности</label>
+        </div>
+      </div>
     </div>
   </div>
 
