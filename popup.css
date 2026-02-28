@@ -21,6 +21,14 @@ body.side-panel {
   min-height: 100vh;
 }
 
+body.web-app {
+  width: 100%;
+  max-width: 480px;
+  max-height: none;
+  min-height: 100vh;
+  margin: 0 auto;
+}
+
 .hidden {
   display: none !important;
 }
