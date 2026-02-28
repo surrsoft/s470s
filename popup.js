@@ -639,6 +639,7 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${pathHtml}
       ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
+      ${note.img ? '<span class="img-icon" title="Has image">&#128247;</span>' : ''}
     </div>
     ${note.isFastCopy ? '<span class="copy-icon" title="Fast copy: click copies text directly">&#10697;</span>' : ''}
     <div class="note-menu">

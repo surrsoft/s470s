@@ -319,6 +319,13 @@ body.dark .folder-count {
   background: #333;
 }
 
+.img-icon {
+  font-size: 0.9em;
+  line-height: 1;
+  opacity: 0.5;
+  vertical-align: middle;
+}
+
 .copy-icon {
   flex-shrink: 0;
   margin-left: 6px;
