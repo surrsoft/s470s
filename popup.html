@@ -112,12 +112,20 @@
         <input type="text" id="input-timezone" list="timezone-list" placeholder="e.g. Europe/Moscow" title="IANA timezone name">
         <datalist id="timezone-list"></datalist>
       </div>
-      <label class="form-radio" title="Show today's minimum temperature for a city">
+      <label class="form-radio" title="Show today's weather temperature for a city">
         <input type="radio" name="special-mode" id="special-weather" value="weather">
-        Min temperature today
+        Weather
       </label>
       <div id="show-weather-options" class="form-sub-options hidden">
         <input type="text" id="input-weather-city" placeholder="e.g. Moscow" title="City name for weather forecast">
+        <label class="form-radio form-radio-sub" title="Show today's minimum temperature">
+          <input type="radio" name="weather-type" id="weather-min" value="min" checked>
+          Min temperature today
+        </label>
+        <label class="form-radio form-radio-sub" title="Show today's maximum temperature">
+          <input type="radio" name="weather-type" id="weather-max" value="max">
+          Max temperature today
+        </label>
       </div>
     </details>
     <div class="form-actions">

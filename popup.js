@@ -71,7 +71,7 @@ if (window.innerHeight > 550) {
 let notes = [];
 let editingId = null;
 
-// F27F/F28F: Advanced Special radio helpers
+// F27F/F28F/F30F/F31F: Advanced Special radio helpers
 function getSpecialMode() {
   return document.querySelector('input[name="special-mode"]:checked')?.value || 'none';
 }
@@ -80,6 +80,13 @@ function setSpecialMode(mode) {
   if (radio) radio.checked = true;
   showTimeOptions.classList.toggle('hidden', mode !== 'time');
   showWeatherOptions.classList.toggle('hidden', mode !== 'weather');
+}
+function getWeatherType() {
+  return document.querySelector('input[name="weather-type"]:checked')?.value || 'min';
+}
+function setWeatherType(type) {
+  const radio = document.querySelector(`input[name="weather-type"][value="${type}"]`);
+  if (radio) radio.checked = true;
 }
 let draggedId = null;
 let dropMode = null; // 'before' | 'nest'
@@ -726,7 +733,7 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${pathHtml}
       ${note.showTime ? `<span class="note-clock" data-tz="${escapeHtml(note.timezone || '')}"></span>` : ''}
-      ${note.showWeather && note.weatherCity ? `<span class="note-weather" data-city="${escapeHtml(note.weatherCity)}"><span class="weather-temp">...</span><span class="weather-city">${escapeHtml(note.weatherCity)}</span></span>` : ''}
+      ${note.showWeather && note.weatherCity ? `<span class="note-weather" data-city="${escapeHtml(note.weatherCity)}" data-weather-type="${escapeHtml(note.weatherType || 'min')}"><span class="weather-temp">...</span><span class="weather-city">${escapeHtml(note.weatherCity)}</span></span>` : ''}
       ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       ${note.img ? '<span class="btn-img" title="Has image">img</span>' : ''}
       ${note.img ? `<div class="note-thumb-wrap img-loading"><img class="note-thumb" src="${escapeHtml(note.img)}" alt="" loading="lazy"></div>` : ''}
@@ -929,7 +936,7 @@ function startInlineEdit(el, note) {
     committed = true;
     const val = input.value.trim();
     if (val && val !== original) {
-      updateNote(note.id, val, note.description, note.url, note.img, note.isFastCopy, note.showTime, note.timezone, note.showWeather, note.weatherCity);
+      updateNote(note.id, val, note.description, note.url, note.img, note.isFastCopy, note.showTime, note.timezone, note.showWeather, note.weatherCity, note.weatherType);
     } else {
       render();
     }
@@ -1089,7 +1096,7 @@ function render() {
           <button class="folder-meta-actual-btn" title="Mark as relevant now">update date actual</button>
         </div>
         ${parentNote.showTime ? `<div class="note-clock folder-meta-clock" data-tz="${escapeHtml(parentNote.timezone || '')}"></div>` : ''}
-        ${parentNote.showWeather && parentNote.weatherCity ? `<div class="note-weather folder-meta-weather" data-city="${escapeHtml(parentNote.weatherCity)}"><span class="weather-temp">...</span><span class="weather-city">${escapeHtml(parentNote.weatherCity)}</span></div>` : ''}
+        ${parentNote.showWeather && parentNote.weatherCity ? `<div class="note-weather folder-meta-weather" data-city="${escapeHtml(parentNote.weatherCity)}" data-weather-type="${escapeHtml(parentNote.weatherType || 'min')}"><span class="weather-temp">...</span><span class="weather-city">${escapeHtml(parentNote.weatherCity)}</span></div>` : ''}
         ${parentNote.img ? `<div class="folder-meta-img-wrap img-loading"><img class="folder-meta-img" src="${escapeHtml(parentNote.img)}" alt="" loading="lazy"></div><span class="folder-meta-img-error hidden">Не удалось загрузить изображение</span>` : ''}
       `;
       if (parentNote.img) {
@@ -1339,7 +1346,7 @@ function render() {
 
 // --- CRUD ---
 
-function addNote(copyText, description, url, img, isFastCopy, showTime, timezone, showWeather, weatherCity) {
+function addNote(copyText, description, url, img, isFastCopy, showTime, timezone, showWeather, weatherCity, weatherType) {
   const now = Date.now();
   const note = {
     id: makeId(),
@@ -1354,6 +1361,7 @@ function addNote(copyText, description, url, img, isFastCopy, showTime, timezone
     timezone: timezone || '',
     showWeather: !!showWeather,
     weatherCity: weatherCity || '',
+    weatherType: weatherType || 'min',
     order: 0,
     createdAt: now,
     updatedAt: now,
@@ -1367,7 +1375,7 @@ function addNote(copyText, description, url, img, isFastCopy, showTime, timezone
   });
 }
 
-function updateNote(id, copyText, description, url, img, isFastCopy, showTime, timezone, showWeather, weatherCity) {
+function updateNote(id, copyText, description, url, img, isFastCopy, showTime, timezone, showWeather, weatherCity, weatherType) {
   const note = notes.find((n) => n.id === id);
   if (note) {
     note.copyText = copyText;
@@ -1379,6 +1387,7 @@ function updateNote(id, copyText, description, url, img, isFastCopy, showTime, t
     note.timezone = timezone || '';
     note.showWeather = !!showWeather;
     note.weatherCity = weatherCity || '';
+    note.weatherType = weatherType || 'min';
     note.updatedAt = Date.now();
     const navItem = navStack.find((item) => item.id === id);
     if (navItem) { navItem.copyText = copyText; updateNavBar(); }
@@ -1509,6 +1518,7 @@ function hideForm() {
   inputImg.value = '';
   inputFastCopy.checked = false;
   setSpecialMode('none');
+  setWeatherType('min');
   inputTimezone.value = '';
   inputWeatherCity.value = '';
   formIdRow.classList.add('hidden');
@@ -1525,6 +1535,7 @@ function startEdit(note) {
   inputFastCopy.checked = !!note.isFastCopy;
   const specialMode = note.showTime ? 'time' : note.showWeather ? 'weather' : 'none';
   setSpecialMode(specialMode);
+  setWeatherType(note.weatherType || 'min');
   inputTimezone.value = note.timezone || '';
   inputWeatherCity.value = note.weatherCity || '';
   formAdvanced.open = !!note.isFastCopy;
@@ -1575,11 +1586,12 @@ saveBtn.addEventListener('click', () => {
   const timezone = showTime ? inputTimezone.value.trim() : '';
   const showWeather = specialMode === 'weather';
   const weatherCity = showWeather ? inputWeatherCity.value.trim() : '';
+  const weatherType = showWeather ? getWeatherType() : 'min';
 
   if (editingId) {
-    updateNote(editingId, copyText, description, url, img, isFastCopy, showTime, timezone, showWeather, weatherCity);
+    updateNote(editingId, copyText, description, url, img, isFastCopy, showTime, timezone, showWeather, weatherCity, weatherType);
   } else {
-    addNote(copyText, description, url, img, isFastCopy, showTime, timezone, showWeather, weatherCity);
+    addNote(copyText, description, url, img, isFastCopy, showTime, timezone, showWeather, weatherCity, weatherType);
   }
   hideForm();
 });
@@ -1721,6 +1733,7 @@ function serverRowToNote(row) {
     timezone: row.timezone || '',
     showWeather: row.show_weather || false,
     weatherCity: row.weather_city || '',
+    weatherType: row.weather_type || 'min',
     order: row.order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -2191,30 +2204,34 @@ setInterval(updateClocks, 1000);
 const _weatherCache = {};
 const WEATHER_CACHE_TTL = 30 * 60 * 1000; // 30 min
 
-async function fetchMinTemp(city) {
+async function fetchWeatherData(city) {
   const key = city.toLowerCase();
   const cached = _weatherCache[key];
   if (cached && Date.now() - cached.fetchedAt < WEATHER_CACHE_TTL) {
-    return cached.minTemp;
+    return cached;
   }
   const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
   const geoData = await geoRes.json();
   if (!geoData.results?.length) return null;
   const { latitude, longitude } = geoData.results[0];
-  const wxRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_min&timezone=auto&forecast_days=1`);
+  const wxRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_min,temperature_2m_max&timezone=auto&forecast_days=1`);
   const wxData = await wxRes.json();
-  const minTemp = wxData.daily?.temperature_2m_min?.[0];
-  if (minTemp == null) return null;
-  _weatherCache[key] = { minTemp, fetchedAt: Date.now() };
-  return minTemp;
+  const minTemp = wxData.daily?.temperature_2m_min?.[0] ?? null;
+  const maxTemp = wxData.daily?.temperature_2m_max?.[0] ?? null;
+  if (minTemp == null && maxTemp == null) return null;
+  const entry = { minTemp, maxTemp, fetchedAt: Date.now() };
+  _weatherCache[key] = entry;
+  return entry;
 }
 
 function updateWeather() {
   document.querySelectorAll('.note-weather').forEach(async (el) => {
     const city = el.dataset.city;
+    const type = el.dataset.weatherType || 'min';
     if (!city) return;
     try {
-      const temp = await fetchMinTemp(city);
+      const data = await fetchWeatherData(city);
+      const temp = data ? (type === 'max' ? data.maxTemp : data.minTemp) : null;
       if (temp != null) {
         const sign = temp > 0 ? '+' : '';
         el.innerHTML = `<span class="weather-temp">${sign}${Math.round(temp)}°C</span><span class="weather-city">${escapeHtml(city)}</span>`;

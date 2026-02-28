@@ -697,6 +697,10 @@ body.dark .form-id-value {
   margin: 6px 0 0 22px;
 }
 
+.form-radio-sub {
+  margin-left: 22px;
+}
+
 .form-sub-options input[type="text"] {
   width: 100%;
   padding: 6px 8px;
