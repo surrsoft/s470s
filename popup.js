@@ -130,7 +130,6 @@ function updateClipboardBar() {
     ? `${count} note${count > 1 ? 's' : ''} to copy`
     : `${count} note${count > 1 ? 's' : ''} cut`;
   clipboardBar.querySelector('.clipboard-icon').textContent = isCopy ? '⧉' : '✂';
-  clipboardSymlinkBtn.classList.toggle('hidden', isCopy);
   clipboardBar.classList.remove('hidden');
   if (!clipboardPreview.classList.contains('hidden')) {
     renderClipboardPreview();
