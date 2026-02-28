@@ -97,16 +97,23 @@
         <input type="checkbox" id="input-fast-copy">
         Fast copy (click copies text)
       </label>
-      <label class="form-check" title="Show live clock with selected timezone on this note">
-        <input type="checkbox" id="input-show-time">
+    </details>
+    <details id="form-advanced-special" class="form-advanced">
+      <summary class="form-advanced-summary" title="Special display options for this note">Advanced Special</summary>
+      <label class="form-radio" title="No special display">
+        <input type="radio" name="special-mode" id="special-none" value="none" checked>
+        None
+      </label>
+      <label class="form-radio" title="Show live clock with selected timezone on this note">
+        <input type="radio" name="special-mode" id="special-time" value="time">
         Show current time
       </label>
       <div id="show-time-options" class="form-sub-options hidden">
         <input type="text" id="input-timezone" list="timezone-list" placeholder="e.g. Europe/Moscow" title="IANA timezone name">
         <datalist id="timezone-list"></datalist>
       </div>
-      <label class="form-check" title="Show today's minimum temperature for a city">
-        <input type="checkbox" id="input-show-weather">
+      <label class="form-radio" title="Show today's minimum temperature for a city">
+        <input type="radio" name="special-mode" id="special-weather" value="weather">
         Min temperature today
       </label>
       <div id="show-weather-options" class="form-sub-options hidden">

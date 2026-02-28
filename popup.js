@@ -21,13 +21,12 @@ const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
 const inputImg = document.getElementById('input-img');
 const inputFastCopy = document.getElementById('input-fast-copy');
-const inputShowTime = document.getElementById('input-show-time');
 const showTimeOptions = document.getElementById('show-time-options');
 const inputTimezone = document.getElementById('input-timezone');
-const inputShowWeather = document.getElementById('input-show-weather');
 const showWeatherOptions = document.getElementById('show-weather-options');
 const inputWeatherCity = document.getElementById('input-weather-city');
 const formAdvanced = document.getElementById('form-advanced');
+const formAdvancedSpecial = document.getElementById('form-advanced-special');
 const formIdRow = document.getElementById('form-id-row');
 const formIdValue = document.getElementById('form-id-value');
 const addBtn = document.getElementById('add-btn');
@@ -71,6 +70,17 @@ if (window.innerHeight > 550) {
 
 let notes = [];
 let editingId = null;
+
+// F27F/F28F: Advanced Special radio helpers
+function getSpecialMode() {
+  return document.querySelector('input[name="special-mode"]:checked')?.value || 'none';
+}
+function setSpecialMode(mode) {
+  const radio = document.querySelector(`input[name="special-mode"][value="${mode}"]`);
+  if (radio) radio.checked = true;
+  showTimeOptions.classList.toggle('hidden', mode !== 'time');
+  showWeatherOptions.classList.toggle('hidden', mode !== 'weather');
+}
 let draggedId = null;
 let dropMode = null; // 'before' | 'nest'
 let toastTimeout = null;
@@ -1491,18 +1501,16 @@ function showForm() {
 function hideForm() {
   formContainer.classList.add('hidden');
   formAdvanced.open = false;
+  formAdvancedSpecial.open = false;
   updateNavBar();
   inputCopy.value = '';
   inputDesc.value = '';
   inputUrl.value = '';
   inputImg.value = '';
   inputFastCopy.checked = false;
-  inputShowTime.checked = false;
+  setSpecialMode('none');
   inputTimezone.value = '';
-  showTimeOptions.classList.add('hidden');
-  inputShowWeather.checked = false;
   inputWeatherCity.value = '';
-  showWeatherOptions.classList.add('hidden');
   formIdRow.classList.add('hidden');
   formIdValue.textContent = '';
   editingId = null;
@@ -1515,13 +1523,12 @@ function startEdit(note) {
   inputUrl.value = note.url || '';
   inputImg.value = note.img || '';
   inputFastCopy.checked = !!note.isFastCopy;
-  inputShowTime.checked = !!note.showTime;
+  const specialMode = note.showTime ? 'time' : note.showWeather ? 'weather' : 'none';
+  setSpecialMode(specialMode);
   inputTimezone.value = note.timezone || '';
-  showTimeOptions.classList.toggle('hidden', !note.showTime);
-  inputShowWeather.checked = !!note.showWeather;
   inputWeatherCity.value = note.weatherCity || '';
-  showWeatherOptions.classList.toggle('hidden', !note.showWeather);
-  formAdvanced.open = !!note.isFastCopy || !!note.showTime || !!note.showWeather;
+  formAdvanced.open = !!note.isFastCopy;
+  formAdvancedSpecial.open = !!note.showTime || !!note.showWeather;
   formIdValue.textContent = note.id;
   formIdRow.classList.remove('hidden');
   showForm();
@@ -1538,9 +1545,9 @@ addBtn.addEventListener('click', () => {
 
 cancelBtn.addEventListener('click', hideForm);
 
-// F27F: show/hide timezone input when "Show current time" checkbox changes
-inputShowTime.addEventListener('change', () => {
-  showTimeOptions.classList.toggle('hidden', !inputShowTime.checked);
+// F27F/F28F: show/hide sub-options when Advanced Special radio changes
+document.querySelectorAll('input[name="special-mode"]').forEach((radio) => {
+  radio.addEventListener('change', () => setSpecialMode(getSpecialMode()));
 });
 
 // Populate timezone datalist
@@ -1553,11 +1560,6 @@ try {
   });
 } catch (_) { /* older browsers without supportedValuesOf */ }
 
-// F28F: show/hide city input when "Min temperature today" checkbox changes
-inputShowWeather.addEventListener('change', () => {
-  showWeatherOptions.classList.toggle('hidden', !inputShowWeather.checked);
-});
-
 saveBtn.addEventListener('click', () => {
   const copyText = inputCopy.value.trim();
   if (!copyText) {
@@ -1568,9 +1570,10 @@ saveBtn.addEventListener('click', () => {
   const url = inputUrl.value.trim();
   const img = inputImg.value.trim();
   const isFastCopy = inputFastCopy.checked;
-  const showTime = inputShowTime.checked;
+  const specialMode = getSpecialMode();
+  const showTime = specialMode === 'time';
   const timezone = showTime ? inputTimezone.value.trim() : '';
-  const showWeather = inputShowWeather.checked;
+  const showWeather = specialMode === 'weather';
   const weatherCity = showWeather ? inputWeatherCity.value.trim() : '';
 
   if (editingId) {

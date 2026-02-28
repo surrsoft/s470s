@@ -674,6 +674,25 @@ body.dark .form-id-value {
   flex-shrink: 0;
 }
 
+.form-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+}
+
+.form-radio input[type="radio"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #1a1a1a;
+  flex-shrink: 0;
+}
+
 .form-sub-options {
   margin: 6px 0 0 22px;
 }
@@ -1343,6 +1362,14 @@ body.dark .form-check {
 }
 
 body.dark .form-check input[type="checkbox"] {
+  accent-color: #e8e8e8;
+}
+
+body.dark .form-radio {
+  color: #999;
+}
+
+body.dark .form-radio input[type="radio"] {
   accent-color: #e8e8e8;
 }
 
