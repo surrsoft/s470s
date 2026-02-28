@@ -982,8 +982,14 @@ function render() {
           <span class="folder-meta-actual-date" title="Date last marked as relevant">${escapeHtml(dateActualStr)}</span>
           <button class="folder-meta-actual-btn" title="Mark as relevant now">update date actual</button>
         </div>
-        ${parentNote.img ? `<img class="folder-meta-img" src="${escapeHtml(parentNote.img)}" alt="" loading="lazy">` : ''}
+        ${parentNote.img ? `<img class="folder-meta-img" src="${escapeHtml(parentNote.img)}" alt="" loading="lazy"><span class="folder-meta-img-error hidden">Не удалось загрузить изображение</span>` : ''}
       `;
+      if (parentNote.img) {
+        metaEl.querySelector('.folder-meta-img').addEventListener('error', () => {
+          metaEl.querySelector('.folder-meta-img').classList.add('hidden');
+          metaEl.querySelector('.folder-meta-img-error').classList.remove('hidden');
+        });
+      }
       const folderMenuBtn = metaEl.querySelector('.folder-meta-btn-menu');
       const folderDropdown = metaEl.querySelector('.folder-meta-dropdown');
       const folderMenu = metaEl.querySelector('.folder-meta-menu');

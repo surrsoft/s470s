@@ -634,6 +634,13 @@ body.dark .form-id-value {
   object-fit: contain;
 }
 
+.folder-meta-img-error {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.846em;
+  color: #c0392b;
+}
+
 .folder-meta-top {
   display: flex;
   align-items: flex-start;
