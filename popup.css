@@ -633,6 +633,8 @@ body.dark .form-id-value {
 
 .folder-meta-edit,
 .folder-meta-cut,
+.folder-meta-copy,
+.folder-meta-copy-deep,
 .folder-meta-delete {
   font-size: 0.769em;
   padding: 2px 8px;
@@ -660,6 +662,18 @@ body.dark .form-id-value {
 
 .folder-meta-cut:hover {
   background: #e8e8e8;
+}
+
+.folder-meta-copy,
+.folder-meta-copy-deep {
+  border: 1px solid #a8c4e0;
+  background: #eef4fb;
+  color: #2a6096;
+}
+
+.folder-meta-copy:hover,
+.folder-meta-copy-deep:hover {
+  background: #d8eaf8;
 }
 
 .folder-meta-delete {
@@ -1150,6 +1164,18 @@ body.dark .folder-meta-cut {
 body.dark .folder-meta-edit:hover,
 body.dark .folder-meta-cut:hover {
   background: #333;
+}
+
+body.dark .folder-meta-copy,
+body.dark .folder-meta-copy-deep {
+  background: #152030;
+  border-color: #2a4a6a;
+  color: #6aabdd;
+}
+
+body.dark .folder-meta-copy:hover,
+body.dark .folder-meta-copy-deep:hover {
+  background: #1e3045;
 }
 
 body.dark .folder-meta-delete {

@@ -970,6 +970,8 @@ function render() {
         <div class="folder-meta-actions">
           <button class="folder-meta-edit" title="Edit this folder">&#9998; edit</button>
           <button class="folder-meta-cut" title="Cut this folder to clipboard">&#9986; cut</button>
+          <button class="folder-meta-copy" title="Copy this folder (without children)">&#10697; copy</button>
+          <button class="folder-meta-copy-deep" title="Copy this folder with all children">&#10697; copy with children</button>
           <button class="folder-meta-delete" title="Delete this folder and all its contents">&#10005; delete</button>
         </div>
       `;
@@ -996,6 +998,14 @@ function render() {
         cutToClipboard([{ id: parentNote.id, isSymlink: false }], originParentId);
         navStack.pop();
         updateNavBar();
+        render();
+      });
+      metaEl.querySelector('.folder-meta-copy').addEventListener('click', () => {
+        markForCopy(parentNote.id, 'copy-shallow');
+        render();
+      });
+      metaEl.querySelector('.folder-meta-copy-deep').addEventListener('click', () => {
+        markForCopy(parentNote.id, 'copy-deep');
         render();
       });
       // F3F: delete current folder and navigate to parent (soft delete)
