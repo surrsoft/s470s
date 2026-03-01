@@ -480,6 +480,12 @@ body.dark .folder-count {
   font-size: 0.85em;
 }
 
+.note-weather-empty {
+  font-size: 0.8em;
+  color: #b88;
+  font-style: italic;
+}
+
 .btn-img {
   display: inline-block;
   margin-top: 5px;

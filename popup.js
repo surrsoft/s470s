@@ -733,7 +733,7 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${pathHtml}
       ${note.showTime ? `<span class="note-clock" data-tz="${escapeHtml(note.timezone || '')}"></span>` : ''}
-      ${note.showWeather && note.weatherCity ? `<span class="note-weather" data-city="${escapeHtml(note.weatherCity)}" data-weather-type="${escapeHtml(note.weatherType || 'min')}"><span class="weather-temp">...</span><span class="weather-city">${escapeHtml(note.weatherCity)}</span></span>` : ''}
+      ${note.showWeather ? (note.weatherCity ? `<span class="note-weather" data-city="${escapeHtml(note.weatherCity)}" data-weather-type="${escapeHtml(note.weatherType || 'min')}"><span class="weather-temp">...</span><span class="weather-city">${escapeHtml(note.weatherCity)}</span></span>` : '<span class="note-weather note-weather-empty">city not set</span>') : ''}
       ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       ${note.img ? '<span class="btn-img" title="Has image">img</span>' : ''}
       ${note.img ? `<div class="note-thumb-wrap img-loading"><img class="note-thumb" src="${escapeHtml(note.img)}" alt="" loading="lazy"></div>` : ''}
@@ -1096,7 +1096,7 @@ function render() {
           <button class="folder-meta-actual-btn" title="Mark as relevant now">update date actual</button>
         </div>
         ${parentNote.showTime ? `<div class="note-clock folder-meta-clock" data-tz="${escapeHtml(parentNote.timezone || '')}"></div>` : ''}
-        ${parentNote.showWeather && parentNote.weatherCity ? `<div class="note-weather folder-meta-weather" data-city="${escapeHtml(parentNote.weatherCity)}" data-weather-type="${escapeHtml(parentNote.weatherType || 'min')}"><span class="weather-temp">...</span><span class="weather-city">${escapeHtml(parentNote.weatherCity)}</span></div>` : ''}
+        ${parentNote.showWeather ? (parentNote.weatherCity ? `<div class="note-weather folder-meta-weather" data-city="${escapeHtml(parentNote.weatherCity)}" data-weather-type="${escapeHtml(parentNote.weatherType || 'min')}"><span class="weather-temp">...</span><span class="weather-city">${escapeHtml(parentNote.weatherCity)}</span></div>` : '<div class="note-weather folder-meta-weather note-weather-empty">city not set</div>') : ''}
         ${parentNote.img ? `<div class="folder-meta-img-wrap img-loading"><img class="folder-meta-img" src="${escapeHtml(parentNote.img)}" alt="" loading="lazy"></div><span class="folder-meta-img-error hidden">Не удалось загрузить изображение</span>` : ''}
       `;
       if (parentNote.img) {
