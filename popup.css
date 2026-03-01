@@ -914,6 +914,25 @@ body.dark .form-id-value {
 .folder-meta-menu {
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.folder-meta-edit-hover-btn {
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  color: #888;
+  padding: 4px 8px;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.1s;
+  display: flex;
+  align-items: center;
+  line-height: 1;
 }
 
 .folder-meta-btn-menu {
@@ -934,11 +953,13 @@ body.dark .form-id-value {
   padding: 0;
 }
 
+.folder-meta:hover .folder-meta-edit-hover-btn,
 .folder-meta:hover .folder-meta-btn-menu,
 .folder-meta-menu.open .folder-meta-btn-menu {
   opacity: 1;
 }
 
+.folder-meta-edit-hover-btn:hover,
 .folder-meta-btn-menu:hover {
   background: #e8e8e8;
   color: #1a1a1a;
@@ -1464,8 +1485,9 @@ body.dark .folder-meta-actual-btn:hover {
   background: #333;
 }
 
+body.dark .folder-meta-edit-hover-btn:hover,
 body.dark .folder-meta-btn-menu:hover {
-  background: #333;
+  background: #2a2a2a;
   color: #e8e8e8;
 }
 

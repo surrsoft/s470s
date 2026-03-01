@@ -501,7 +501,7 @@ function ensureArray(val) {
     if (val.startsWith('{') && val.endsWith('}')) {
       return val.slice(1, -1).split(',').filter(Boolean);
     }
-    try { const parsed = JSON.parse(val); if (Array.isArray(parsed)) return parsed; } catch {}
+    try { const parsed = JSON.parse(val); if (Array.isArray(parsed)) return parsed; } catch { }
   }
   return [];
 }
@@ -717,8 +717,8 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
     : escapeHtml(note.copyText);
   const descHtml = note.description
     ? (searchCtx
-        ? highlightText(note.description, searchCtx.query, searchCtx.caseSensitive)
-        : escapeHtml(note.description))
+      ? highlightText(note.description, searchCtx.query, searchCtx.caseSensitive)
+      : escapeHtml(note.description))
     : '';
   const path = searchCtx ? getNotePath(note) : [];
   const pathHtml = path.length > 0
@@ -1079,6 +1079,7 @@ function render() {
         <div class="folder-meta-top">
           <div class="folder-meta-title">${escapeHtml(parentNote.copyText)}</div>
           <div class="folder-meta-menu">
+            <button class="folder-meta-edit-hover-btn" title="Edit">&#9998; Edit</button>
             <button class="folder-meta-btn-menu" title="Actions">&#8943;</button>
             <div class="folder-meta-dropdown hidden">
               <button class="folder-meta-edit">&#9998; Edit</button>
@@ -1142,6 +1143,10 @@ function render() {
       });
       // F2F: edit current folder
       metaEl.querySelector('.folder-meta-edit').addEventListener('click', () => {
+        startEdit(parentNote);
+      });
+      // F41F: hover edit button
+      metaEl.querySelector('.folder-meta-edit-hover-btn').addEventListener('click', () => {
         startEdit(parentNote);
       });
       // cut current folder and navigate to parent so it's visible as cut
@@ -2252,16 +2257,16 @@ function formatWeatherValue(type, data) {
     return `${sign}${Math.round(val)}°C`;
   };
   switch (type) {
-    case 'min':          return fmtTemp(data.minTemp);
-    case 'max':          return fmtTemp(data.maxTemp);
-    case 'feels_min':    return fmtTemp(data.feelsMin);
-    case 'feels_max':    return fmtTemp(data.feelsMax);
+    case 'min': return fmtTemp(data.minTemp);
+    case 'max': return fmtTemp(data.maxTemp);
+    case 'feels_min': return fmtTemp(data.feelsMin);
+    case 'feels_max': return fmtTemp(data.feelsMax);
     case 'precipitation': return data.precipitation != null ? `${+data.precipitation.toFixed(1)}mm` : '—';
     case 'weather_code': return data.weatherCode != null ? (WMO_EMOJI[data.weatherCode] || '?') : '—';
-    case 'wind_avg':     return data.windSpeedCurrent != null ? `${+data.windSpeedCurrent.toFixed(1)}\u00a0m/s` : '—';
-    case 'wind':         return data.windSpeed != null ? `${+data.windSpeed.toFixed(1)}\u00a0m/s` : '—';
-    case 'uv':           return data.uvIndex != null ? `UV\u00a0${Math.round(data.uvIndex)}` : '—';
-    default:             return '—';
+    case 'wind_avg': return data.windSpeedCurrent != null ? `${+data.windSpeedCurrent.toFixed(1)}\u00a0m/s` : '—';
+    case 'wind': return data.windSpeed != null ? `${+data.windSpeed.toFixed(1)}\u00a0m/s` : '—';
+    case 'uv': return data.uvIndex != null ? `UV\u00a0${Math.round(data.uvIndex)}` : '—';
+    default: return '—';
   }
 }
 
