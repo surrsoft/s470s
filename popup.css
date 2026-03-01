@@ -143,8 +143,15 @@ body.web-app {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
 }
 
 /* Search block (F7F) */
@@ -288,7 +295,7 @@ body.web-app {
   border-radius: 6px;
   padding: 8px 10px;
   min-width: 160px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .sort-picker-title {
@@ -545,7 +552,9 @@ body.show-thumbs .note-thumb-wrap {
 }
 
 @keyframes img-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Status bar */
@@ -642,7 +651,7 @@ body.dark .form-id-value {
   border-color: #888;
 }
 
-.form-container input + input {
+.form-container input+input {
   margin-top: 8px;
 }
 
@@ -928,8 +937,8 @@ body.dark .form-id-value {
   font-family: inherit;
   color: #888;
   padding: 4px 8px;
-  opacity: 0;
-  transition: opacity 0.15s, background 0.1s;
+  opacity: 1;
+  transition: background 0.1s;
   display: flex;
   align-items: center;
   line-height: 1;
@@ -947,20 +956,15 @@ body.dark .form-id-value {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.15s, background 0.1s;
+  opacity: 1;
+  transition: background 0.1s;
   line-height: 1;
   padding: 0;
 }
 
-.folder-meta:hover .folder-meta-edit-hover-btn,
-.folder-meta:hover .folder-meta-btn-menu,
-.folder-meta-menu.open .folder-meta-btn-menu {
-  opacity: 1;
-}
-
 .folder-meta-edit-hover-btn:hover,
-.folder-meta-btn-menu:hover {
+.folder-meta-btn-menu:hover,
+.folder-meta-menu.open .folder-meta-btn-menu {
   background: #e8e8e8;
   color: #1a1a1a;
 }
@@ -1032,18 +1036,14 @@ body.dark .form-id-value {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.15s, background 0.1s;
+  opacity: 1;
+  transition: background 0.1s;
   line-height: 1;
   padding: 0;
 }
 
-.note-item:hover .btn-menu,
+.btn-menu:hover,
 .note-menu.open .btn-menu {
-  opacity: 1;
-}
-
-.btn-menu:hover {
   background: #e8e8e8;
   color: #1a1a1a;
 }
@@ -1141,6 +1141,7 @@ body.dark .form-id-value {
     opacity: 0;
     transform: translateX(-50%) translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -1486,7 +1487,8 @@ body.dark .folder-meta-actual-btn:hover {
 }
 
 body.dark .folder-meta-edit-hover-btn:hover,
-body.dark .folder-meta-btn-menu:hover {
+body.dark .folder-meta-btn-menu:hover,
+body.dark .folder-meta-menu.open .folder-meta-btn-menu {
   background: #2a2a2a;
   color: #e8e8e8;
 }
@@ -1556,7 +1558,8 @@ body.dark .btn-menu {
   color: #999;
 }
 
-body.dark .btn-menu:hover {
+body.dark .btn-menu:hover,
+body.dark .note-menu.open .btn-menu {
   background: #2a2a2c;
   color: #e8e8e8;
 }
@@ -1698,7 +1701,7 @@ body.dark .sort-picker-arrow {
 body.dark .sort-picker-dropdown {
   background: #1e1e1e;
   border-color: #3a3a3c;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 body.dark .sort-picker-title {
@@ -1800,8 +1803,15 @@ body.dark .note-item.keyboard-focused {
 
 /* === Paste flash === */
 @keyframes paste-flash {
-  0%, 30% { background: #c8f0c8; }
-  100% { background: transparent; }
+
+  0%,
+  30% {
+    background: #c8f0c8;
+  }
+
+  100% {
+    background: transparent;
+  }
 }
 
 .note-item.paste-flash {
@@ -1813,8 +1823,15 @@ body.dark .note-item.paste-flash {
 }
 
 @keyframes paste-flash-dark {
-  0%, 30% { background: #1a3a1a; }
-  100% { background: transparent; }
+
+  0%,
+  30% {
+    background: #1a3a1a;
+  }
+
+  100% {
+    background: transparent;
+  }
 }
 
 /* === Fast copy visual === */
