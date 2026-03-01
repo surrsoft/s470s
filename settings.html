@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>s470s — Settings</title>
   <link rel="stylesheet" href="settings.css">
 </head>
+
 <body>
   <div class="page">
     <header class="page-header">
@@ -56,7 +58,8 @@
             <p class="section-desc">Enter the 6-digit code sent to <strong id="otp-email-display"></strong>.</p>
             <div class="form-group">
               <label for="auth-code">Code</label>
-              <input type="text" id="auth-code" placeholder="000000" maxlength="6" autocomplete="one-time-code" inputmode="numeric">
+              <input type="text" id="auth-code" placeholder="000000" maxlength="6" autocomplete="one-time-code"
+                inputmode="numeric">
             </div>
             <div class="btn-row">
               <button id="verify-otp-btn" class="btn btn-primary">Verify</button>
@@ -105,6 +108,12 @@
   is_fast_copy     boolean not null default false,
   show_time        boolean not null default false,
   timezone         text,
+  show_weather     boolean not null default false,
+  weather_city     text,
+  weather_type     text not null default 'min',
+  tags             jsonb,
+  is_tag           boolean not null default false,
+  tag_color        text,
   "order"          integer not null default 0,
   created_at       bigint not null,
   updated_at       bigint not null,
@@ -129,4 +138,5 @@ create policy "Users manage own notes" on notes
   <script src="sync/supabase.js"></script>
   <script src="settings.js"></script>
 </body>
+
 </html>
