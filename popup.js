@@ -2199,10 +2199,22 @@ function updateClocks() {
 
 setInterval(updateClocks, 1000);
 
-// --- F28F: Weather (min temperature) ---
+// --- F28F/F30F/F31F/F32F-F37F: Weather ---
 
 const _weatherCache = {};
 const WEATHER_CACHE_TTL = 30 * 60 * 1000; // 30 min
+
+// WMO weather code → emoji (F35F)
+const WMO_EMOJI = {
+  0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+  45: '🌫️', 48: '🌫️',
+  51: '🌦️', 53: '🌦️', 55: '🌧️', 56: '🌦️', 57: '🌧️',
+  61: '🌧️', 63: '🌧️', 65: '🌧️', 66: '🌧️', 67: '🌧️',
+  71: '🌨️', 73: '🌨️', 75: '❄️', 77: '🌨️',
+  80: '🌦️', 81: '🌧️', 82: '⛈️',
+  85: '🌨️', 86: '❄️',
+  95: '⛈️', 96: '⛈️', 99: '⛈️',
+};
 
 async function fetchWeatherData(city) {
   const key = city.toLowerCase();
@@ -2214,14 +2226,41 @@ async function fetchWeatherData(city) {
   const geoData = await geoRes.json();
   if (!geoData.results?.length) return null;
   const { latitude, longitude } = geoData.results[0];
-  const wxRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_min,temperature_2m_max&timezone=auto&forecast_days=1`);
+  const wxRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_min,temperature_2m_max,apparent_temperature_min,apparent_temperature_max,precipitation_sum,weather_code,wind_speed_10m_max,uv_index_max&timezone=auto&forecast_days=1`);
   const wxData = await wxRes.json();
-  const minTemp = wxData.daily?.temperature_2m_min?.[0] ?? null;
-  const maxTemp = wxData.daily?.temperature_2m_max?.[0] ?? null;
-  if (minTemp == null && maxTemp == null) return null;
-  const entry = { minTemp, maxTemp, fetchedAt: Date.now() };
+  const d = wxData.daily;
+  const entry = {
+    minTemp: d?.temperature_2m_min?.[0] ?? null,
+    maxTemp: d?.temperature_2m_max?.[0] ?? null,
+    feelsMin: d?.apparent_temperature_min?.[0] ?? null,
+    feelsMax: d?.apparent_temperature_max?.[0] ?? null,
+    precipitation: d?.precipitation_sum?.[0] ?? null,
+    weatherCode: d?.weather_code?.[0] ?? null,
+    windSpeed: d?.wind_speed_10m_max?.[0] ?? null,
+    uvIndex: d?.uv_index_max?.[0] ?? null,
+    fetchedAt: Date.now(),
+  };
   _weatherCache[key] = entry;
   return entry;
+}
+
+function formatWeatherValue(type, data) {
+  const fmtTemp = (val) => {
+    if (val == null) return '—';
+    const sign = val > 0 ? '+' : '';
+    return `${sign}${Math.round(val)}°C`;
+  };
+  switch (type) {
+    case 'min':          return fmtTemp(data.minTemp);
+    case 'max':          return fmtTemp(data.maxTemp);
+    case 'feels_min':    return fmtTemp(data.feelsMin);
+    case 'feels_max':    return fmtTemp(data.feelsMax);
+    case 'precipitation': return data.precipitation != null ? `${+data.precipitation.toFixed(1)}mm` : '—';
+    case 'weather_code': return data.weatherCode != null ? (WMO_EMOJI[data.weatherCode] || '?') : '—';
+    case 'wind':         return data.windSpeed != null ? `${Math.round(data.windSpeed)}km/h` : '—';
+    case 'uv':           return data.uvIndex != null ? `UV\u00a0${Math.round(data.uvIndex)}` : '—';
+    default:             return '—';
+  }
 }
 
 function updateWeather() {
@@ -2231,13 +2270,8 @@ function updateWeather() {
     if (!city) return;
     try {
       const data = await fetchWeatherData(city);
-      const temp = data ? (type === 'max' ? data.maxTemp : data.minTemp) : null;
-      if (temp != null) {
-        const sign = temp > 0 ? '+' : '';
-        el.innerHTML = `<span class="weather-temp">${sign}${Math.round(temp)}°C</span><span class="weather-city">${escapeHtml(city)}</span>`;
-      } else {
-        el.innerHTML = `<span class="weather-temp">—</span><span class="weather-city">${escapeHtml(city)}</span>`;
-      }
+      const val = data ? formatWeatherValue(type, data) : '—';
+      el.innerHTML = `<span class="weather-temp">${val}</span><span class="weather-city">${escapeHtml(city)}</span>`;
     } catch (_) {
       el.innerHTML = `<span class="weather-temp">—</span><span class="weather-city">${escapeHtml(city)}</span>`;
     }
