@@ -2226,7 +2226,7 @@ async function fetchWeatherData(city) {
   const geoData = await geoRes.json();
   if (!geoData.results?.length) return null;
   const { latitude, longitude } = geoData.results[0];
-  const wxRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_min,temperature_2m_max,apparent_temperature_min,apparent_temperature_max,precipitation_sum,weather_code,wind_speed_10m_max,uv_index_max&timezone=auto&forecast_days=1`);
+  const wxRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_min,temperature_2m_max,apparent_temperature_min,apparent_temperature_max,precipitation_sum,weather_code,wind_speed_10m_max,uv_index_max&current=wind_speed_10m&wind_speed_unit=ms&timezone=auto&forecast_days=1`);
   const wxData = await wxRes.json();
   const d = wxData.daily;
   const entry = {
@@ -2237,6 +2237,7 @@ async function fetchWeatherData(city) {
     precipitation: d?.precipitation_sum?.[0] ?? null,
     weatherCode: d?.weather_code?.[0] ?? null,
     windSpeed: d?.wind_speed_10m_max?.[0] ?? null,
+    windSpeedCurrent: wxData.current?.wind_speed_10m ?? null,
     uvIndex: d?.uv_index_max?.[0] ?? null,
     fetchedAt: Date.now(),
   };
@@ -2257,7 +2258,8 @@ function formatWeatherValue(type, data) {
     case 'feels_max':    return fmtTemp(data.feelsMax);
     case 'precipitation': return data.precipitation != null ? `${+data.precipitation.toFixed(1)}mm` : '—';
     case 'weather_code': return data.weatherCode != null ? (WMO_EMOJI[data.weatherCode] || '?') : '—';
-    case 'wind':         return data.windSpeed != null ? `${Math.round(data.windSpeed)}km/h` : '—';
+    case 'wind_avg':     return data.windSpeedCurrent != null ? `${+data.windSpeedCurrent.toFixed(1)}\u00a0m/s` : '—';
+    case 'wind':         return data.windSpeed != null ? `${+data.windSpeed.toFixed(1)}\u00a0m/s` : '—';
     case 'uv':           return data.uvIndex != null ? `UV\u00a0${Math.round(data.uvIndex)}` : '—';
     default:             return '—';
   }
