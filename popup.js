@@ -487,6 +487,8 @@ function updateNavBar() {
   // F23F: show select-mode buttons block only when in select mode
   selectModeBtns.classList.toggle('hidden', !selectMode);
   updateSelectCount();
+
+  saveNavStack();
 }
 
 function updateSelectCount() {
@@ -627,7 +629,7 @@ thumbsBtn.addEventListener('click', () => {
 
 function loadNotes() {
   return new Promise((resolve) => {
-    chrome.storage.local.get({ notes: [] }, (data) => {
+    chrome.storage.local.get({ notes: [], navStack: [] }, (data) => {
       notes = data.notes.sort((a, b) => a.order - b.order);
       let sanitized = false;
       for (const n of notes) {
@@ -636,10 +638,23 @@ function loadNotes() {
           sanitized = true;
         }
       }
+
+      // Restore valid navStack items
+      let restoredNavStack = Array.isArray(data.navStack) ? data.navStack : [];
+      navStack = restoredNavStack.filter(item => {
+        if (item.id === TRASH_ID) return true;
+        const n = notes.find(x => x.id === item.id);
+        return n && !n.deletedAt;
+      });
+
       if (sanitized) saveNotes();
       resolve();
     });
   });
+}
+
+function saveNavStack() {
+  chrome.storage.local.set({ navStack });
 }
 
 function saveNotes() {
