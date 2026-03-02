@@ -32,6 +32,32 @@ const tagsAddGroupBtn = document.getElementById('tags-add-group-btn');
 const inputIsTag = document.getElementById('input-is-tag');
 const tagColorContainer = document.getElementById('tag-color-container');
 const inputTagColor = document.getElementById('input-tag-color');
+const tagColorPalette = document.getElementById('tag-color-palette');
+
+const TAG_COLORS = [
+  '#e74c3c', '#e67e22', '#f39c12', '#f1c40f', '#2ecc71',
+  '#1abc9c', '#3498db', '#2980b9', '#9b59b6', '#8e44ad',
+  '#e91e63', '#ff5722', '#795548', '#607d8b', '#00bcd4',
+  '#8bc34a', '#ff9800', '#673ab7', '#4caf50', '#009688',
+];
+
+TAG_COLORS.forEach(color => {
+  const sw = document.createElement('button');
+  sw.type = 'button';
+  sw.className = 'tag-color-swatch';
+  sw.style.background = color;
+  sw.dataset.color = color;
+  sw.title = color;
+  sw.addEventListener('click', () => setTagColor(color));
+  tagColorPalette.appendChild(sw);
+});
+
+function setTagColor(color) {
+  inputTagColor.value = color;
+  tagColorPalette.querySelectorAll('.tag-color-swatch').forEach(sw => {
+    sw.classList.toggle('selected', sw.dataset.color === color);
+  });
+}
 const formAdvancedSpecial = document.getElementById('form-advanced-special');
 const formIdRow = document.getElementById('form-id-row');
 const formIdValue = document.getElementById('form-id-value');
@@ -1612,7 +1638,7 @@ function hideForm() {
   tagsContainer.innerHTML = '';
   inputIsTag.checked = false;
   tagColorContainer.classList.add('hidden');
-  inputTagColor.value = '#4a90d9';
+  setTagColor('#4a90d9');
   setSpecialMode('none');
   setWeatherType('min');
   inputTimezone.value = '';
@@ -1633,7 +1659,7 @@ function startEdit(note) {
   renderTagsForm(note.tags || []);
   inputIsTag.checked = !!note.isTag;
   tagColorContainer.classList.toggle('hidden', !note.isTag);
-  inputTagColor.value = note.tagColor || '#4a90d9';
+  setTagColor(note.tagColor || '#4a90d9');
   const specialMode = note.showTime ? 'time' : note.showWeather ? 'weather' : 'none';
   setSpecialMode(specialMode);
   setWeatherType(note.weatherType || 'min');
@@ -1655,7 +1681,7 @@ addBtn.addEventListener('click', () => {
   renderTagsForm([]);
   inputIsTag.checked = false;
   tagColorContainer.classList.add('hidden');
-  inputTagColor.value = '#4a90d9';
+  setTagColor('#4a90d9');
   showForm();
 });
 
