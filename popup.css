@@ -1167,6 +1167,17 @@ body.dark .note-tag-group-display {
   border-color: #7060b0;
 }
 
+.note-tag-item {
+  display: inline;
+}
+
+.note-tag-sep {
+  margin: 0 4px;
+  opacity: 0.35;
+  font-size: 10px;
+  font-weight: 400;
+}
+
 .folder-meta-delete {
   color: #c0392b;
 }

@@ -786,8 +786,8 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
   let tagsDisplayHtml = '';
   if (note.tags && note.tags.length > 0) {
     const groupsHtml = note.tags.map(group => {
-      const groupText = ensureArray(group).map(escapeHtml).join(' ');
-      return `<span class="note-tag-group-display">${groupText}</span>`;
+      const items = ensureArray(group).map(t => `<span class="note-tag-item">${escapeHtml(t)}</span>`).join('<span class="note-tag-sep">|</span>');
+      return `<span class="note-tag-group-display">${items}</span>`;
     }).join('');
     tagsDisplayHtml = `<div class="note-tags-display">${groupsHtml}</div>`;
   }
@@ -1158,8 +1158,8 @@ function render() {
       let metaTagsDisplayHtml = '';
       if (parentNote.tags && parentNote.tags.length > 0) {
         const groupsHtml = parentNote.tags.map(group => {
-          const groupText = ensureArray(group).map(escapeHtml).join(' ');
-          return `<span class="note-tag-group-display">${groupText}</span>`;
+          const items = ensureArray(group).map(t => `<span class="note-tag-item">${escapeHtml(t)}</span>`).join('<span class="note-tag-sep">|</span>');
+          return `<span class="note-tag-group-display">${items}</span>`;
         }).join('');
         metaTagsDisplayHtml = `<div class="note-tags-display">${groupsHtml}</div>`;
       }
