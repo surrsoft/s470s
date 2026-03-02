@@ -151,6 +151,7 @@ sortPickerDropdown.querySelectorAll('input[name="note-sort"]').forEach((radio) =
     sortPickerValue.textContent = SORT_LABELS[currentSort];
     sortPickerDropdown.classList.add('hidden');
     sortPickerArrow.textContent = '▾';
+    chrome.storage.local.set({ sortKey: currentSort });
     render();
   });
 });
@@ -158,8 +159,23 @@ sortPickerDropdown.querySelectorAll('input[name="note-sort"]').forEach((radio) =
 sortDirBtn.addEventListener('click', () => {
   sortReversed = !sortReversed;
   sortDirBtn.textContent = sortReversed ? '↑' : '↓';
+  chrome.storage.local.set({ sortReversed });
   render();
 });
+
+function loadSort() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get({ sortKey: 'default', sortReversed: false }, (data) => {
+      currentSort = data.sortKey;
+      sortReversed = data.sortReversed;
+      sortPickerValue.textContent = SORT_LABELS[currentSort] || SORT_LABELS.default;
+      const radio = sortPickerDropdown.querySelector(`input[value="${currentSort}"]`);
+      if (radio) radio.checked = true;
+      sortDirBtn.textContent = sortReversed ? '↑' : '↓';
+      resolve();
+    });
+  });
+}
 
 document.addEventListener('click', (e) => {
   if (!sortPicker.contains(e.target)) {
@@ -2501,4 +2517,4 @@ setInterval(updateWeather, WEATHER_CACHE_TTL);
 
 // --- Init ---
 
-loadNotes().then(render).then(loadFontSize).then(loadTheme).then(loadThumbs).then(initSync).then(updateClocks).then(updateWeather);
+loadNotes().then(loadSort).then(render).then(loadFontSize).then(loadTheme).then(loadThumbs).then(initSync).then(updateClocks).then(updateWeather);
