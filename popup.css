@@ -1175,7 +1175,16 @@ body.dark .note-tag-group-display {
   margin: 0 4px;
   opacity: 0.35;
   font-size: 10px;
-  font-weight: 400;
+}
+
+.tag-select {
+  font-size: 12px;
+  padding: 2px 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-color);
+  color: var(--text-color);
+  cursor: pointer;
 }
 
 .folder-meta-delete {

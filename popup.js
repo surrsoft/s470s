@@ -448,29 +448,6 @@ function navigateBack() {
 function updateNavBar() {
   if (!navBar) return;
 
-  // Build a list of all existing tags across notes
-  const allTags = new Set();
-  notes.forEach(n => {
-    if (n.tags) {
-      ensureArray(n.tags).forEach(g => ensureArray(g).forEach(t => allTags.add(t)));
-    }
-    if (n.isTag) {
-      allTags.add(n.copyText);
-    }
-  });
-
-  const datalist = document.getElementById('tags-datalist') || (() => {
-    const dl = document.createElement('datalist');
-    dl.id = 'tags-datalist';
-    document.body.appendChild(dl);
-    return dl;
-  })();
-  datalist.innerHTML = '';
-  [...allTags].sort().forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t;
-    datalist.appendChild(opt);
-  });
   if (navStack.length === 0 && !selectMode) {
     navBar.classList.add('hidden');
     return;
@@ -786,10 +763,17 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
   let tagsDisplayHtml = '';
   if (note.tags && note.tags.length > 0) {
     const groupsHtml = note.tags.map(group => {
-      const items = ensureArray(group).map(t => `<span class="note-tag-item">${escapeHtml(t)}</span>`).join('<span class="note-tag-sep">|</span>');
-      return `<span class="note-tag-group-display">${items}</span>`;
-    }).join('');
-    tagsDisplayHtml = `<div class="note-tags-display">${groupsHtml}</div>`;
+      const ids = ensureArray(group);
+      const itemsHtml = ids.map(tagId => {
+        const tagNote = notes.find(n => n.id === tagId && n.isTag);
+        return tagNote ? `<span class="note-tag-item">${escapeHtml(tagNote.copyText)}</span>` : '';
+      }).filter(Boolean).join('<span class="note-tag-sep">|</span>');
+      if (!itemsHtml) return '';
+      const firstTag = ids.map(id => notes.find(n => n.id === id && n.isTag)).find(Boolean);
+      const color = firstTag ? (firstTag.tagColor || '#4a90d9') : '#4a90d9';
+      return `<span class="note-tag-group-display" style="background-color:${color}22;border-color:${color};color:${color};">${itemsHtml}</span>`;
+    }).filter(Boolean).join('');
+    if (groupsHtml) tagsDisplayHtml = `<div class="note-tags-display">${groupsHtml}</div>`;
   }
 
   el.innerHTML = `
@@ -1158,10 +1142,17 @@ function render() {
       let metaTagsDisplayHtml = '';
       if (parentNote.tags && parentNote.tags.length > 0) {
         const groupsHtml = parentNote.tags.map(group => {
-          const items = ensureArray(group).map(t => `<span class="note-tag-item">${escapeHtml(t)}</span>`).join('<span class="note-tag-sep">|</span>');
-          return `<span class="note-tag-group-display">${items}</span>`;
-        }).join('');
-        metaTagsDisplayHtml = `<div class="note-tags-display">${groupsHtml}</div>`;
+          const ids = ensureArray(group);
+          const itemsHtml = ids.map(tagId => {
+            const tagNote = notes.find(n => n.id === tagId && n.isTag);
+            return tagNote ? `<span class="note-tag-item">${escapeHtml(tagNote.copyText)}</span>` : '';
+          }).filter(Boolean).join('<span class="note-tag-sep">|</span>');
+          if (!itemsHtml) return '';
+          const firstTag = ids.map(id => notes.find(n => n.id === id && n.isTag)).find(Boolean);
+          const color = firstTag ? (firstTag.tagColor || '#4a90d9') : '#4a90d9';
+          return `<span class="note-tag-group-display" style="background-color:${color}22;border-color:${color};color:${color};">${itemsHtml}</span>`;
+        }).filter(Boolean).join('');
+        if (groupsHtml) metaTagsDisplayHtml = `<div class="note-tags-display">${groupsHtml}</div>`;
       }
       metaEl.innerHTML = `
         <div class="folder-meta-top">
@@ -1682,10 +1673,10 @@ inputIsTag.addEventListener('change', () => {
 });
 
 // Tags Helpers
+
 function renderTagsForm(tagsData) {
   tagsContainer.innerHTML = '';
-  const groups = ensureArray(tagsData);
-  groups.forEach(group => addTagGroup(group));
+  ensureArray(tagsData).forEach(group => addTagGroup(ensureArray(group)));
 }
 
 function addTagGroup(group = []) {
@@ -1706,47 +1697,54 @@ function addTagGroup(group = []) {
   addBtn.className = 'tag-add-btn';
   addBtn.textContent = '+';
   addBtn.type = 'button';
-  addBtn.title = 'Add tag';
+  addBtn.title = 'Add tag option';
   addBtn.onclick = () => addTagItem(tagsList, addBtn, '');
 
   tagsList.appendChild(addBtn);
-
-  ensureArray(group).forEach(tag => addTagItem(tagsList, addBtn, tag));
+  group.forEach(tagId => addTagItem(tagsList, addBtn, tagId));
 
   groupEl.appendChild(removeBtn);
   groupEl.appendChild(tagsList);
   tagsContainer.appendChild(groupEl);
 }
 
-function addTagItem(listEl, addBtn, val) {
+function addTagItem(listEl, addBtn, tagId) {
   const itemEl = document.createElement('div');
   itemEl.className = 'tag-item';
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'tag-input';
-  input.value = val;
-  input.placeholder = 'tag';
-  input.setAttribute('list', 'tags-datalist');
+
+  const sel = document.createElement('select');
+  sel.className = 'tag-select';
+  const blank = document.createElement('option');
+  blank.value = '';
+  blank.textContent = '— select tag —';
+  sel.appendChild(blank);
+  notes.filter(n => n.isTag && !n.deletedAt).forEach(tagNote => {
+    const opt = document.createElement('option');
+    opt.value = tagNote.id;
+    opt.textContent = tagNote.copyText;
+    if (tagNote.id === tagId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
   const delBtn = document.createElement('button');
   delBtn.className = 'tag-remove-btn';
   delBtn.textContent = '✕';
   delBtn.type = 'button';
   delBtn.onclick = () => itemEl.remove();
-  itemEl.appendChild(input);
+
+  itemEl.appendChild(sel);
   itemEl.appendChild(delBtn);
   listEl.insertBefore(itemEl, addBtn);
-  if (!val) input.focus();
 }
 
 function getTagsFromForm() {
   const groups = [];
   tagsContainer.querySelectorAll('.tag-group').forEach(groupEl => {
-    const tags = [];
-    groupEl.querySelectorAll('.tag-input').forEach(inp => {
-      const v = inp.value.trim();
-      if (v) tags.push(v);
+    const ids = [];
+    groupEl.querySelectorAll('.tag-select').forEach(sel => {
+      if (sel.value) ids.push(sel.value);
     });
-    if (tags.length > 0) groups.push(tags);
+    if (ids.length > 0) groups.push(ids);
   });
   return groups;
 }
@@ -1924,6 +1922,9 @@ function serverRowToNote(row) {
     showWeather: row.show_weather || false,
     weatherCity: row.weather_city || '',
     weatherType: row.weather_type || 'min',
+    tags: ensureArray(row.tags),
+    isTag: row.is_tag || false,
+    tagColor: row.tag_color || '#4a90d9',
     order: row.order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
