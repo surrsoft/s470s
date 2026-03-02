@@ -2210,7 +2210,11 @@ syncBtn.addEventListener('click', () => {
 });
 
 settingsBtn.addEventListener('click', () => {
-  chrome.runtime.openOptionsPage();
+  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.openOptionsPage) {
+    chrome.runtime.openOptionsPage();
+  } else {
+    window.open('settings.html', '_blank');
+  }
 });
 
 // F7F: search controls
