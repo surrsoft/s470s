@@ -1153,12 +1153,18 @@ body.dark .tag-add-btn:hover {
 
 .note-tag-group-display {
   font-size: 11px;
-  background: var(--bg-hover);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
+  background: #eee8ff;
+  color: #5a3fa0;
+  border: 1.5px solid #b09ae0;
   padding: 2px 6px;
   border-radius: 12px;
   white-space: nowrap;
+}
+
+body.dark .note-tag-group-display {
+  background: #2a2040;
+  color: #c0aff0;
+  border-color: #7060b0;
 }
 
 .folder-meta-delete {

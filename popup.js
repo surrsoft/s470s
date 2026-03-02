@@ -802,7 +802,6 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
         ${folderCountHtml}
         ${tagBadgeHtml}
         ${isSymlink ? '<span class="symlink-badge" title="Symlink: this note appears here via an additional parent">symlink</span>' : ''}
-        ${tagsDisplayHtml}
       </div>
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${pathHtml}
@@ -810,6 +809,7 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
       ${note.showWeather ? (note.weatherCity ? `<span class="note-weather" data-city="${escapeHtml(note.weatherCity)}" data-weather-type="${escapeHtml(note.weatherType || 'min')}"><span class="weather-temp">...</span><span class="weather-city">${escapeHtml(note.weatherCity)}</span></span>` : '<span class="note-weather note-weather-empty">city not set</span>') : ''}
       ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       ${note.img ? '<span class="btn-img" title="Has image">img</span>' : ''}
+      ${tagsDisplayHtml}
       ${note.img ? `<div class="note-thumb-wrap img-loading"><img class="note-thumb" src="${escapeHtml(note.img)}" alt="" loading="lazy"></div>` : ''}
     </div>
     ${note.isFastCopy ? '<span class="copy-icon" title="Fast copy: click copies text directly">&#10697;</span>' : ''}
@@ -1150,9 +1150,22 @@ function render() {
       const dateActualStr = parentNote.dateActual
         ? new Date(parentNote.dateActual).toLocaleString()
         : new Date(parentNote.createdAt).toLocaleString();
+      let metaTagBadgeHtml = '';
+      if (parentNote.isTag) {
+        const color = parentNote.tagColor || '#4a90d9';
+        metaTagBadgeHtml = `<span class="note-tag-badge" style="background-color: ${color}33; border-color: ${color}; color: ${color};">tag</span>`;
+      }
+      let metaTagsDisplayHtml = '';
+      if (parentNote.tags && parentNote.tags.length > 0) {
+        const groupsHtml = parentNote.tags.map(group => {
+          const groupText = ensureArray(group).map(escapeHtml).join(' ');
+          return `<span class="note-tag-group-display">${groupText}</span>`;
+        }).join('');
+        metaTagsDisplayHtml = `<div class="note-tags-display">${groupsHtml}</div>`;
+      }
       metaEl.innerHTML = `
         <div class="folder-meta-top">
-          <div class="folder-meta-title">${escapeHtml(parentNote.copyText)}</div>
+          <div class="folder-meta-title">${escapeHtml(parentNote.copyText)}${metaTagBadgeHtml}</div>
           <div class="folder-meta-menu">
             <button class="folder-meta-edit-hover-btn" title="Edit">&#9998; Edit</button>
             <button class="folder-meta-btn-menu" title="Actions">&#8943;</button>
@@ -1166,6 +1179,7 @@ function render() {
           </div>
         </div>
         ${parentNote.description ? `<div class="folder-meta-description">${escapeHtml(parentNote.description)}</div>` : ''}
+        ${metaTagsDisplayHtml}
         ${parentNote.url ? `<button class="btn-url folder-meta-url" title="${escapeHtml(parentNote.url)}">${escapeHtml(parentNote.url)}</button>` : ''}
         <div class="folder-meta-actual">
           <span class="folder-meta-actual-date" title="Date last marked as relevant">${escapeHtml(dateActualStr)}</span>
