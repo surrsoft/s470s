@@ -1095,6 +1095,7 @@ function render() {
   focusedNoteIndex = -1;
   notesList.innerHTML = '';
   emptyState.classList.add('hidden');
+  updateNavBar();
 
   const parentId = getCurrentParentId();
 
