@@ -1217,6 +1217,13 @@ body.dark .note-tag-group-display {
   cursor: pointer;
 }
 
+body.dark .tag-select {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  border-color: #555;
+  color-scheme: dark;
+}
+
 .folder-meta-delete {
   color: #c0392b;
 }
