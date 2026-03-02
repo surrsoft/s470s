@@ -41,20 +41,22 @@ const TAG_COLORS = [
   '#8bc34a', '#ff9800', '#673ab7', '#4caf50', '#009688',
 ];
 
-TAG_COLORS.forEach(color => {
-  const sw = document.createElement('button');
-  sw.type = 'button';
-  sw.className = 'tag-color-swatch';
-  sw.style.background = color;
-  sw.dataset.color = color;
-  sw.title = color;
-  sw.addEventListener('click', () => setTagColor(color));
-  tagColorPalette.appendChild(sw);
-});
+if (tagColorPalette) {
+  TAG_COLORS.forEach(color => {
+    const sw = document.createElement('button');
+    sw.type = 'button';
+    sw.className = 'tag-color-swatch';
+    sw.style.background = color;
+    sw.dataset.color = color;
+    sw.title = color;
+    sw.addEventListener('click', () => setTagColor(color));
+    tagColorPalette.appendChild(sw);
+  });
+}
 
 function setTagColor(color) {
-  inputTagColor.value = color;
-  tagColorPalette.querySelectorAll('.tag-color-swatch').forEach(sw => {
+  if (inputTagColor) inputTagColor.value = color;
+  tagColorPalette?.querySelectorAll('.tag-color-swatch').forEach(sw => {
     sw.classList.toggle('selected', sw.dataset.color === color);
   });
 }
@@ -1490,8 +1492,8 @@ function addNote(copyText, description, url, img, isFastCopy, showTime, timezone
     weatherCity: weatherCity || '',
     weatherType: weatherType || 'min',
     tags: getTagsFromForm(),
-    isTag: inputIsTag.checked,
-    tagColor: inputTagColor.value,
+    isTag: inputIsTag ? inputIsTag.checked : false,
+    tagColor: inputTagColor ? inputTagColor.value : '#4a90d9',
     order: 0,
     createdAt: now,
     updatedAt: now,
@@ -1519,8 +1521,8 @@ function updateNote(id, copyText, description, url, img, isFastCopy, showTime, t
     note.weatherCity = weatherCity || '';
     note.weatherType = weatherType || 'min';
     note.tags = getTagsFromForm();
-    note.isTag = inputIsTag.checked;
-    note.tagColor = inputTagColor.value;
+    note.isTag = inputIsTag ? inputIsTag.checked : false;
+    note.tagColor = inputTagColor ? inputTagColor.value : '#4a90d9';
     note.updatedAt = Date.now();
     const navItem = navStack.find((item) => item.id === id);
     if (navItem) { navItem.copyText = copyText; updateNavBar(); }
@@ -1650,10 +1652,10 @@ function hideForm() {
   inputUrl.value = '';
   inputImg.value = '';
   inputFastCopy.checked = false;
-  formTags.open = false;
-  tagsContainer.innerHTML = '';
-  inputIsTag.checked = false;
-  tagColorContainer.classList.add('hidden');
+  if (formTags) formTags.open = false;
+  if (tagsContainer) tagsContainer.innerHTML = '';
+  if (inputIsTag) inputIsTag.checked = false;
+  tagColorContainer?.classList.add('hidden');
   setTagColor('#4a90d9');
   setSpecialMode('none');
   setWeatherType('min');
@@ -1671,10 +1673,10 @@ function startEdit(note) {
   inputUrl.value = note.url || '';
   inputImg.value = note.img || '';
   inputFastCopy.checked = !!note.isFastCopy;
-  formTags.open = !!(note.tags && note.tags.length > 0);
+  if (formTags) formTags.open = !!(note.tags && note.tags.length > 0);
   renderTagsForm(note.tags || []);
-  inputIsTag.checked = !!note.isTag;
-  tagColorContainer.classList.toggle('hidden', !note.isTag);
+  if (inputIsTag) inputIsTag.checked = !!note.isTag;
+  tagColorContainer?.classList.toggle('hidden', !note.isTag);
   setTagColor(note.tagColor || '#4a90d9');
   const specialMode = note.showTime ? 'time' : note.showWeather ? 'weather' : 'none';
   setSpecialMode(specialMode);
@@ -1695,8 +1697,8 @@ addBtn.addEventListener('click', () => {
   inputUrl.value = '';
   inputImg.value = '';
   renderTagsForm([]);
-  inputIsTag.checked = false;
-  tagColorContainer.classList.add('hidden');
+  if (inputIsTag) inputIsTag.checked = false;
+  tagColorContainer?.classList.add('hidden');
   setTagColor('#4a90d9');
   showForm();
 });
@@ -1708,15 +1710,16 @@ document.querySelectorAll('input[name="special-mode"]').forEach((radio) => {
   radio.addEventListener('change', () => setSpecialMode(getSpecialMode()));
 });
 
-tagsAddGroupBtn.addEventListener('click', () => addTagGroup());
+tagsAddGroupBtn?.addEventListener('click', () => addTagGroup());
 
-inputIsTag.addEventListener('change', () => {
-  tagColorContainer.classList.toggle('hidden', !inputIsTag.checked);
+inputIsTag?.addEventListener('change', () => {
+  tagColorContainer?.classList.toggle('hidden', !inputIsTag.checked);
 });
 
 // Tags Helpers
 
 function renderTagsForm(tagsData) {
+  if (!tagsContainer) return;
   tagsContainer.innerHTML = '';
   ensureArray(tagsData).forEach(group => addTagGroup(ensureArray(group)));
 }
@@ -1780,6 +1783,7 @@ function addTagItem(listEl, addBtn, tagId) {
 }
 
 function getTagsFromForm() {
+  if (!tagsContainer) return [];
   const groups = [];
   tagsContainer.querySelectorAll('.tag-group').forEach(groupEl => {
     const ids = [];
