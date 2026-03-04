@@ -33,6 +33,9 @@ const inputIsTag = document.getElementById('input-is-tag');
 const tagColorContainer = document.getElementById('tag-color-container');
 const inputTagColor = document.getElementById('input-tag-color');
 const tagColorPalette = document.getElementById('tag-color-palette');
+const inputLsRead = document.getElementById('input-ls-read');
+const inputLsPath = document.getElementById('input-ls-path');
+const lsReadOptions = document.getElementById('ls-read-options');
 
 const TAG_COLORS = [
   '#e74c3c', '#e67e22', '#f39c12', '#f1c40f', '#2ecc71',
@@ -820,6 +823,17 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
     if (groupsHtml) tagsDisplayHtml = `<div class="note-tags-display">${groupsHtml}</div>`;
   }
 
+  let lsHtml = '';
+  if (note.lsPath) {
+    const result = readLsValue(note.lsPath);
+    const displayVal = result.found
+      ? (typeof result.value === 'object' && result.value !== null
+          ? JSON.stringify(result.value, null, 2)
+          : String(result.value))
+      : 'not found';
+    lsHtml = `<div class="note-ls"><span class="note-ls-badge">is LS</span><span class="note-ls-path">${escapeHtml(note.lsPath)}</span><pre class="note-ls-value">${escapeHtml(displayVal)}</pre></div>`;
+  }
+
   el.innerHTML = `
     ${showDragHandle ? '<div class="drag-handle" title="Drag to reorder">&#8942;&#8942;</div>' : ''}
     ${showCheckbox ? `<label class="note-select-wrap" title="Select"><input type="checkbox" class="note-select-cb"${selectedNoteIds.has(note.id) ? ' checked' : ''}></label>` : ''}
@@ -838,6 +852,7 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
       ${note.url ? `<button class="btn-url" title="${escapeHtml(note.url)}">${escapeHtml(urlHostname(note.url))}</button>` : ''}
       ${note.img ? '<span class="btn-img" title="Has image">img</span>' : ''}
       ${tagsDisplayHtml}
+      ${lsHtml}
       ${note.img ? `<div class="note-thumb-wrap img-loading"><img class="note-thumb" src="${escapeHtml(note.img)}" alt="" loading="lazy"></div>` : ''}
     </div>
     ${note.isFastCopy ? '<span class="copy-icon" title="Fast copy: click copies text directly">&#10697;</span>' : ''}
@@ -1494,6 +1509,7 @@ function addNote(copyText, description, url, img, isFastCopy, showTime, timezone
     tags: getTagsFromForm(),
     isTag: inputIsTag ? inputIsTag.checked : false,
     tagColor: inputTagColor ? inputTagColor.value : '#4a90d9',
+    lsPath: (inputLsRead && inputLsRead.checked && inputLsPath) ? inputLsPath.value.trim() : '',
     order: 0,
     createdAt: now,
     updatedAt: now,
@@ -1523,6 +1539,7 @@ function updateNote(id, copyText, description, url, img, isFastCopy, showTime, t
     note.tags = getTagsFromForm();
     note.isTag = inputIsTag ? inputIsTag.checked : false;
     note.tagColor = inputTagColor ? inputTagColor.value : '#4a90d9';
+    note.lsPath = (inputLsRead && inputLsRead.checked && inputLsPath) ? inputLsPath.value.trim() : '';
     note.updatedAt = Date.now();
     const navItem = navStack.find((item) => item.id === id);
     if (navItem) { navItem.copyText = copyText; updateNavBar(); }
@@ -1657,6 +1674,9 @@ function hideForm() {
   if (inputIsTag) inputIsTag.checked = false;
   tagColorContainer?.classList.add('hidden');
   setTagColor('#4a90d9');
+  if (inputLsRead) inputLsRead.checked = false;
+  if (inputLsPath) inputLsPath.value = '';
+  lsReadOptions?.classList.add('hidden');
   setSpecialMode('none');
   setWeatherType('min');
   inputTimezone.value = '';
@@ -1678,6 +1698,9 @@ function startEdit(note) {
   if (inputIsTag) inputIsTag.checked = !!note.isTag;
   tagColorContainer?.classList.toggle('hidden', !note.isTag);
   setTagColor(note.tagColor || '#4a90d9');
+  if (inputLsRead) inputLsRead.checked = !!note.lsPath;
+  if (inputLsPath) inputLsPath.value = note.lsPath || '';
+  lsReadOptions?.classList.toggle('hidden', !note.lsPath);
   const specialMode = note.showTime ? 'time' : note.showWeather ? 'weather' : 'none';
   setSpecialMode(specialMode);
   setWeatherType(note.weatherType || 'min');
@@ -1700,6 +1723,9 @@ addBtn.addEventListener('click', () => {
   if (inputIsTag) inputIsTag.checked = false;
   tagColorContainer?.classList.add('hidden');
   setTagColor('#4a90d9');
+  if (inputLsRead) inputLsRead.checked = false;
+  if (inputLsPath) inputLsPath.value = '';
+  lsReadOptions?.classList.add('hidden');
   showForm();
 });
 
@@ -1715,6 +1741,27 @@ tagsAddGroupBtn?.addEventListener('click', () => addTagGroup());
 inputIsTag?.addEventListener('change', () => {
   tagColorContainer?.classList.toggle('hidden', !inputIsTag.checked);
 });
+
+inputLsRead?.addEventListener('change', () => {
+  lsReadOptions?.classList.toggle('hidden', !inputLsRead.checked);
+});
+
+function readLsValue(path) {
+  if (!path) return { found: false };
+  const dotIdx = path.indexOf('.');
+  const key = dotIdx >= 0 ? path.slice(0, dotIdx) : path;
+  const rest = dotIdx >= 0 ? path.slice(dotIdx + 1).split('.') : [];
+  const raw = localStorage.getItem(key);
+  if (raw === null) return { found: false };
+  let value;
+  try { value = JSON.parse(raw); } catch { value = raw; }
+  for (const part of rest) {
+    if (value === null || typeof value !== 'object') return { found: false };
+    value = value[part];
+    if (value === undefined) return { found: false };
+  }
+  return { found: true, value };
+}
 
 // Tags Helpers
 
@@ -1971,6 +2018,7 @@ function serverRowToNote(row) {
     tags: ensureArray(row.tags),
     isTag: row.is_tag || false,
     tagColor: row.tag_color || '#4a90d9',
+    lsPath: row.ls_path || '',
     order: row.order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

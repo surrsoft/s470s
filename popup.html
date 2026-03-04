@@ -111,6 +111,13 @@
         <input type="hidden" id="input-tag-color" value="#4a90d9">
         <div id="tag-color-palette" class="tag-color-palette"></div>
       </div>
+      <label class="form-check" title="Read and display a value from localStorage on this note (F49F)">
+        <input type="checkbox" id="input-ls-read">
+        read local storage
+      </label>
+      <div id="ls-read-options" class="form-sub-options hidden">
+        <input type="text" id="input-ls-path" placeholder="e.g. settings.theme" title="Format: key.path — key is localStorage key, path is dot-separated path inside the value (F50F)">
+      </div>
     </details>
     <details id="form-advanced-special" class="form-advanced">
       <summary class="form-advanced-summary" title="Special display options for this note">Advanced Special</summary>

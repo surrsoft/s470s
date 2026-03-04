@@ -1207,6 +1207,57 @@ body.dark .note-tag-group-display {
   font-size: 10px;
 }
 
+/* F49F: localStorage value display on note */
+.note-ls {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+
+.note-ls-badge {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+body.dark .note-ls-badge {
+  background: #3a2e00;
+  color: #ffd060;
+  border-color: #7a6000;
+}
+
+.note-ls-path {
+  color: #777;
+  font-size: 11px;
+}
+
+body.dark .note-ls-path {
+  color: #999;
+}
+
+.note-ls-value {
+  font-family: monospace;
+  font-size: 11px;
+  color: #2c7a2c;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+
+body.dark .note-ls-value {
+  color: #6dbf6d;
+}
+
 .tag-select {
   font-size: 12px;
   padding: 2px 4px;
