@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(git -C /Users/macprosha/devs/026-s470s log --oneline -10)",
+      "Bash(wc -l /Users/macprosha/devs/026-s470s/*.js /Users/macprosha/devs/026-s470s/sync/*.js)"
     ]
   }
 }
