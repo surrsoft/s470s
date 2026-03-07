@@ -855,7 +855,6 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
         ${folderCountHtml}
         ${tagBadgeHtml}
         ${isSymlink ? '<span class="symlink-badge" title="Symlink: this note appears here via an additional parent">symlink</span>' : ''}
-        ${note.isSynonyms ? '<span class="synonyms-badge" title="Synonyms note: description contains synonyms used in search (F55F)">synonyms</span>' : ''}
       </div>
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${pathHtml}
@@ -866,6 +865,7 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
       ${tagsDisplayHtml}
       ${lsHtml}
       ${note.img ? `<div class="note-thumb-wrap img-loading"><img class="note-thumb" src="${escapeHtml(note.img)}" alt="" loading="lazy"></div>` : ''}
+      ${note.isSynonyms ? '<div><span class="synonyms-badge" title="Synonyms note: description contains synonyms used in search (F55F)">synonyms</span></div>' : ''}
     </div>
     ${note.isFastCopy ? '<span class="copy-icon" title="Fast copy: click copies text directly">&#10697;</span>' : ''}
     <div class="note-menu">
@@ -1250,6 +1250,7 @@ function render() {
         ${parentNote.showTime ? `<div class="note-clock folder-meta-clock" data-tz="${escapeHtml(parentNote.timezone || '')}"></div>` : ''}
         ${parentNote.showWeather ? (parentNote.weatherCity ? `<div class="note-weather folder-meta-weather" data-city="${escapeHtml(parentNote.weatherCity)}" data-weather-type="${escapeHtml(parentNote.weatherType || 'min')}"><span class="weather-temp">...</span><span class="weather-city">${escapeHtml(parentNote.weatherCity)}</span></div>` : '<div class="note-weather folder-meta-weather note-weather-empty">city not set</div>') : ''}
         ${parentNote.img ? `<div class="folder-meta-img-wrap img-loading"><img class="folder-meta-img" src="${escapeHtml(parentNote.img)}" alt="" loading="lazy"></div><span class="folder-meta-img-error hidden">Не удалось загрузить изображение</span>` : ''}
+        ${parentNote.isSynonyms ? '<div style="margin-top:6px;"><span class="synonyms-badge" title="Synonyms note: description contains synonyms used in search (F55F)">synonyms</span></div>' : ''}
       `;
       if (parentNote.img) {
         const metaImg = metaEl.querySelector('.folder-meta-img');

@@ -963,6 +963,7 @@ body.dark .tag-color-swatch.selected {
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  padding-bottom: 2px;
 }
 
 .note-copy-text {
