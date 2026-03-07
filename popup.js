@@ -20,7 +20,7 @@ const inputCopy = document.getElementById('input-copy');
 const inputDesc = document.getElementById('input-desc');
 const inputUrl = document.getElementById('input-url');
 const inputImg = document.getElementById('input-img');
-const inputFastCopy = document.getElementById('input-fast-copy');
+const inputFastCopy = document.getElementById('advanced-fast-copy');
 const showTimeOptions = document.getElementById('show-time-options');
 const inputTimezone = document.getElementById('input-timezone');
 const showWeatherOptions = document.getElementById('show-weather-options');
@@ -29,11 +29,11 @@ const formAdvanced = document.getElementById('form-advanced');
 const formTags = document.getElementById('form-tags');
 const tagsContainer = document.getElementById('tags-container');
 const tagsAddGroupBtn = document.getElementById('tags-add-group-btn');
-const inputIsTag = document.getElementById('input-is-tag');
+const inputIsTag = document.getElementById('advanced-is-tag');
 const tagColorContainer = document.getElementById('tag-color-container');
 const inputTagColor = document.getElementById('input-tag-color');
 const tagColorPalette = document.getElementById('tag-color-palette');
-const inputLsRead = document.getElementById('input-ls-read');
+const inputLsRead = document.getElementById('advanced-ls-read');
 const inputLsPath = document.getElementById('input-ls-path');
 const lsReadOptions = document.getElementById('ls-read-options');
 
@@ -117,6 +117,16 @@ function setSpecialMode(mode) {
   if (radio) radio.checked = true;
   showTimeOptions.classList.toggle('hidden', mode !== 'time');
   showWeatherOptions.classList.toggle('hidden', mode !== 'weather');
+}
+// F43F/F49F: Advanced radio helpers
+function getAdvancedMode() {
+  return document.querySelector('input[name="advanced-mode"]:checked')?.value || 'none';
+}
+function setAdvancedMode(mode) {
+  const radio = document.querySelector(`input[name="advanced-mode"][value="${mode}"]`);
+  if (radio) radio.checked = true;
+  tagColorContainer?.classList.toggle('hidden', mode !== 'is-tag');
+  lsReadOptions?.classList.toggle('hidden', mode !== 'ls-read');
 }
 function getWeatherType() {
   return document.querySelector('input[name="weather-type"]:checked')?.value || 'min';
@@ -1507,9 +1517,9 @@ function addNote(copyText, description, url, img, isFastCopy, showTime, timezone
     weatherCity: weatherCity || '',
     weatherType: weatherType || 'min',
     tags: getTagsFromForm(),
-    isTag: inputIsTag ? inputIsTag.checked : false,
+    isTag: getAdvancedMode() === 'is-tag',
     tagColor: inputTagColor ? inputTagColor.value : '#4a90d9',
-    lsPath: (inputLsRead && inputLsRead.checked && inputLsPath) ? inputLsPath.value.trim() : '',
+    lsPath: getAdvancedMode() === 'ls-read' && inputLsPath ? inputLsPath.value.trim() : '',
     order: 0,
     createdAt: now,
     updatedAt: now,
@@ -1537,9 +1547,9 @@ function updateNote(id, copyText, description, url, img, isFastCopy, showTime, t
     note.weatherCity = weatherCity || '';
     note.weatherType = weatherType || 'min';
     note.tags = getTagsFromForm();
-    note.isTag = inputIsTag ? inputIsTag.checked : false;
+    note.isTag = getAdvancedMode() === 'is-tag';
     note.tagColor = inputTagColor ? inputTagColor.value : '#4a90d9';
-    note.lsPath = (inputLsRead && inputLsRead.checked && inputLsPath) ? inputLsPath.value.trim() : '';
+    note.lsPath = getAdvancedMode() === 'ls-read' && inputLsPath ? inputLsPath.value.trim() : '';
     note.updatedAt = Date.now();
     const navItem = navStack.find((item) => item.id === id);
     if (navItem) { navItem.copyText = copyText; updateNavBar(); }
@@ -1668,15 +1678,11 @@ function hideForm() {
   inputDesc.value = '';
   inputUrl.value = '';
   inputImg.value = '';
-  inputFastCopy.checked = false;
+  setAdvancedMode('none');
   if (formTags) formTags.open = false;
   if (tagsContainer) tagsContainer.innerHTML = '';
-  if (inputIsTag) inputIsTag.checked = false;
-  tagColorContainer?.classList.add('hidden');
   setTagColor('#4a90d9');
-  if (inputLsRead) inputLsRead.checked = false;
   if (inputLsPath) inputLsPath.value = '';
-  lsReadOptions?.classList.add('hidden');
   setSpecialMode('none');
   setWeatherType('min');
   inputTimezone.value = '';
@@ -1692,21 +1698,18 @@ function startEdit(note) {
   inputDesc.value = note.description;
   inputUrl.value = note.url || '';
   inputImg.value = note.img || '';
-  inputFastCopy.checked = !!note.isFastCopy;
+  const advMode = note.isFastCopy ? 'fast-copy' : note.isTag ? 'is-tag' : note.lsPath ? 'ls-read' : 'none';
+  setAdvancedMode(advMode);
   if (formTags) formTags.open = !!(note.tags && note.tags.length > 0);
   renderTagsForm(note.tags || []);
-  if (inputIsTag) inputIsTag.checked = !!note.isTag;
-  tagColorContainer?.classList.toggle('hidden', !note.isTag);
   setTagColor(note.tagColor || '#4a90d9');
-  if (inputLsRead) inputLsRead.checked = !!note.lsPath;
   if (inputLsPath) inputLsPath.value = note.lsPath || '';
-  lsReadOptions?.classList.toggle('hidden', !note.lsPath);
   const specialMode = note.showTime ? 'time' : note.showWeather ? 'weather' : 'none';
   setSpecialMode(specialMode);
   setWeatherType(note.weatherType || 'min');
   inputTimezone.value = note.timezone || '';
   inputWeatherCity.value = note.weatherCity || '';
-  formAdvanced.open = !!note.isFastCopy;
+  formAdvanced.open = advMode !== 'none';
   formAdvancedSpecial.open = !!note.showTime || !!note.showWeather;
   formIdValue.textContent = note.id;
   formIdRow.classList.remove('hidden');
@@ -1720,12 +1723,9 @@ addBtn.addEventListener('click', () => {
   inputUrl.value = '';
   inputImg.value = '';
   renderTagsForm([]);
-  if (inputIsTag) inputIsTag.checked = false;
-  tagColorContainer?.classList.add('hidden');
+  setAdvancedMode('none');
   setTagColor('#4a90d9');
-  if (inputLsRead) inputLsRead.checked = false;
   if (inputLsPath) inputLsPath.value = '';
-  lsReadOptions?.classList.add('hidden');
   showForm();
 });
 
@@ -1738,12 +1738,8 @@ document.querySelectorAll('input[name="special-mode"]').forEach((radio) => {
 
 tagsAddGroupBtn?.addEventListener('click', () => addTagGroup());
 
-inputIsTag?.addEventListener('change', () => {
-  tagColorContainer?.classList.toggle('hidden', !inputIsTag.checked);
-});
-
-inputLsRead?.addEventListener('change', () => {
-  lsReadOptions?.classList.toggle('hidden', !inputLsRead.checked);
+document.querySelectorAll('input[name="advanced-mode"]').forEach((radio) => {
+  radio.addEventListener('change', () => setAdvancedMode(getAdvancedMode()));
 });
 
 function readLsValue(path) {
@@ -1861,7 +1857,7 @@ saveBtn.addEventListener('click', () => {
   const description = inputDesc.value.trim();
   const url = inputUrl.value.trim();
   const img = inputImg.value.trim();
-  const isFastCopy = inputFastCopy.checked;
+  const isFastCopy = getAdvancedMode() === 'fast-copy';
   const specialMode = getSpecialMode();
   const showTime = specialMode === 'time';
   const timezone = showTime ? inputTimezone.value.trim() : '';

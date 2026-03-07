@@ -91,15 +91,23 @@
     <input type="text" id="input-desc" placeholder="Description" title="Optional description shown below the title">
     <input type="url" id="input-url" placeholder="URL (optional)" title="Optional URL — shown as a button on the note">
     <input type="url" id="input-img" placeholder="Image URL (optional)" title="Optional image URL — shown at the top when inside the note">
-    
+    <details id="form-tags" class="form-advanced">
+      <summary class="form-advanced-summary" title="Manage tags">Tags</summary>
+      <div id="tags-container" class="tags-container"></div>
+      <button type="button" id="tags-add-group-btn" class="secondary" title="Add tag group" style="margin-top: 8px; width: 100%; padding: 4px; font-size: 12px;">✚ Add tag group</button>
+    </details>
     <details id="form-advanced" class="form-advanced">
-      <summary class="form-advanced-summary" title="Additional options: fast copy, is tag">Advanced</summary>
-      <label class="form-check" title="When enabled, clicking the note immediately copies text without navigating inside">
-        <input type="checkbox" id="input-fast-copy">
+      <summary class="form-advanced-summary" title="Additional options: fast copy, is tag, read local storage">Advanced</summary>
+      <label class="form-radio" title="No special mode">
+        <input type="radio" name="advanced-mode" id="advanced-none" value="none" checked>
+        None
+      </label>
+      <label class="form-radio" title="When enabled, clicking the note immediately copies text without navigating inside">
+        <input type="radio" name="advanced-mode" id="advanced-fast-copy" value="fast-copy">
         Fast copy (click copies text)
       </label>
-      <label class="form-check" title="Note is a tag">
-        <input type="checkbox" id="input-is-tag">
+      <label class="form-radio" title="Note is a tag">
+        <input type="radio" name="advanced-mode" id="advanced-is-tag" value="is-tag">
         is tag
       </label>
       <div id="tag-color-container" class="form-sub-options hidden">
@@ -107,8 +115,8 @@
         <input type="hidden" id="input-tag-color" value="#4a90d9">
         <div id="tag-color-palette" class="tag-color-palette"></div>
       </div>
-      <label class="form-check" title="Read and display a value from localStorage on this note (F49F)">
-        <input type="checkbox" id="input-ls-read">
+      <label class="form-radio" title="Read and display a value from localStorage on this note (F49F)">
+        <input type="radio" name="advanced-mode" id="advanced-ls-read" value="ls-read">
         read local storage
       </label>
       <div id="ls-read-options" class="form-sub-options hidden">
@@ -172,11 +180,6 @@
           UV index
         </label>
       </div>
-    </details>
-    <details id="form-tags" class="form-advanced">
-      <summary class="form-advanced-summary" title="Manage tags">Tags</summary>
-      <div id="tags-container" class="tags-container"></div>
-      <button type="button" id="tags-add-group-btn" class="secondary" title="Add tag group" style="margin-top: 8px; width: 100%; padding: 4px; font-size: 12px;">✚ Add tag group</button>
     </details>
     <div class="form-actions">
       <button id="save-btn" title="Save note (Enter)">Save</button>
