@@ -127,6 +127,7 @@ function setAdvancedMode(mode) {
   if (radio) radio.checked = true;
   tagColorContainer?.classList.toggle('hidden', mode !== 'is-tag');
   lsReadOptions?.classList.toggle('hidden', mode !== 'ls-read');
+  if (inputDesc) inputDesc.placeholder = mode === 'synonyms' ? 'Synonyms (comma-separated)' : 'Description';
 }
 function getWeatherType() {
   return document.querySelector('input[name="weather-type"]:checked')?.value || 'min';
@@ -854,6 +855,7 @@ function createNoteEl(note, isSymlink, withDrag, searchCtx = null) {
         ${folderCountHtml}
         ${tagBadgeHtml}
         ${isSymlink ? '<span class="symlink-badge" title="Symlink: this note appears here via an additional parent">symlink</span>' : ''}
+        ${note.isSynonyms ? '<span class="synonyms-badge" title="Synonyms note: description contains synonyms used in search (F55F)">synonyms</span>' : ''}
       </div>
       ${descHtml ? `<div class="note-description">${descHtml}</div>` : ''}
       ${pathHtml}
@@ -1520,6 +1522,7 @@ function addNote(copyText, description, url, img, isFastCopy, showTime, timezone
     isTag: getAdvancedMode() === 'is-tag',
     tagColor: inputTagColor ? inputTagColor.value : '#4a90d9',
     lsPath: getAdvancedMode() === 'ls-read' && inputLsPath ? inputLsPath.value.trim() : '',
+    isSynonyms: getAdvancedMode() === 'synonyms',
     order: 0,
     createdAt: now,
     updatedAt: now,
@@ -1550,6 +1553,7 @@ function updateNote(id, copyText, description, url, img, isFastCopy, showTime, t
     note.isTag = getAdvancedMode() === 'is-tag';
     note.tagColor = inputTagColor ? inputTagColor.value : '#4a90d9';
     note.lsPath = getAdvancedMode() === 'ls-read' && inputLsPath ? inputLsPath.value.trim() : '';
+    note.isSynonyms = getAdvancedMode() === 'synonyms';
     note.updatedAt = Date.now();
     const navItem = navStack.find((item) => item.id === id);
     if (navItem) { navItem.copyText = copyText; updateNavBar(); }
@@ -1698,7 +1702,7 @@ function startEdit(note) {
   inputDesc.value = note.description;
   inputUrl.value = note.url || '';
   inputImg.value = note.img || '';
-  const advMode = note.isFastCopy ? 'fast-copy' : note.isTag ? 'is-tag' : note.lsPath ? 'ls-read' : 'none';
+  const advMode = note.isSynonyms ? 'synonyms' : note.isFastCopy ? 'fast-copy' : note.isTag ? 'is-tag' : note.lsPath ? 'ls-read' : 'none';
   setAdvancedMode(advMode);
   if (formTags) formTags.open = !!(note.tags && note.tags.length > 0);
   renderTagsForm(note.tags || []);
@@ -2015,6 +2019,7 @@ function serverRowToNote(row) {
     isTag: row.is_tag || false,
     tagColor: row.tag_color || '#4a90d9',
     lsPath: row.ls_path || '',
+    isSynonyms: row.is_synonyms || false,
     order: row.order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
